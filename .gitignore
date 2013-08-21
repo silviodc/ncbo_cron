@@ -1,0 +1,11 @@
+# Ignore RubyMine editor files
+.idea/
+config/config.rb
+Gemfile.local
+Gemfile.lock
+
+.ruby-version
+repo*
+*.turtle
+*.swp
+.DS_Store

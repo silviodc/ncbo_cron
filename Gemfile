@@ -1,7 +1,9 @@
 source 'https://rubygems.org'
 
+gem 'rake'
 gem 'pry'
 gem 'redis'
+gem 'minitest', '< 5.0'
 
 # NCBO gems (can be from a local dev path or from rubygems/git)
 gemfile_local = File.expand_path("../Gemfile.local", __FILE__)

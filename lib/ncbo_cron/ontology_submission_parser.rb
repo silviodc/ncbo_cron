@@ -43,6 +43,10 @@ module NcboCron
         end
       end
 
+      def get_prefixed_id(id)
+        return "#{IDPREFIX}#{id}"
+      end
+
       private
 
       def parse_submission(submissionId, actions)
@@ -62,10 +66,6 @@ module NcboCron
 
       end
 
-
-      def get_prefixed_id(id)
-        return "#{IDPREFIX}#{id}"
-      end
     end
   end
 end

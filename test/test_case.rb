@@ -1,5 +1,5 @@
 require "ontologies_linked_data"
-require_relative "../lib/ontology_submission_parser"
+require_relative "../lib/ncbo_cron"
 require_relative "../config/config.rb"
 
 require "test/unit"

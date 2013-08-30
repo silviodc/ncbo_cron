@@ -38,7 +38,7 @@ class TestCron < TestCase
 
   def test_parse_submissions
     parser = NcboCron::Models::OntologySubmissionParser.new
-    parser.queue_submission(@@ontologies[0].submissions[0], ["all", "index"])
+    parser.queue_submission(@@ontologies[0].submissions[0], actions=[:metrics, :index])
     parser.parse_submissions
 
   end

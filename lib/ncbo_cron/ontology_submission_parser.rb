@@ -7,7 +7,7 @@ module NcboCron
       IDPREFIX = "sub:"
 
       ACTION_DELIM = "|"
-      ACTIONS = [:all, :index, :metrics]
+      ACTIONS = [:all, :index_search, :run_metrics, :process_annotator]
 
       def initialize()
       end
@@ -19,27 +19,36 @@ module NcboCron
 
         actions.each do |action|
           if (ACTIONS.include?(action))
-            actionStr << action.to_s
+            act = action.to_s
 
-            if i < actions.length
-              actionStr << ACTION_DELIM
+            if (act == "all")
+              actionStr = act
+              break
+            else
+              actionStr << act
+              actionStr << ACTION_DELIM if i < actions.length
             end
           end
           i += 1
         end
-        redis.hset(QUEUE_HOLDER, get_prefixed_id(submission.id), actionStr)
+        redis.hset(QUEUE_HOLDER, get_prefixed_id(submission.id), actionStr) unless actionStr.empty?
       end
 
-      def parse_submissions
+      def process_queue_submissions
         redis = Redis.new(:host => LinkedData.settings.redis_host, :port => LinkedData.settings.redis_port)
         all = redis.hgetall(QUEUE_HOLDER)
         prefix_remove = Regexp.new(/^#{IDPREFIX}/)
 
         all.each do |key, val|
+          valArr = val.split(ACTION_DELIM)
+
+          if valArr.include?("all")
+            valArr = ACTIONS.dup
+          end
+          actions = Hash[valArr.map {|v| [v, true]}]
           realKey = key.sub prefix_remove, ''
-          valArr = val.split(ACTION_DELIM).sort
           redis.hdel(QUEUE_HOLDER, key)
-          parse_submission(realKey, valArr)
+          process_queue_submission(realKey, actions)
         end
       end
 
@@ -49,31 +58,35 @@ module NcboCron
 
       private
 
-      def parse_submission(submissionId, actions)
+      def process_queue_submission(submissionId, actions={})
         logger = Kernel.const_defined?("LOGGER") ? Kernel.const_get("LOGGER") : Logger.new(STDOUT)
         sub = LinkedData::Models::OntologySubmission.find(RDF::IRI.new(submissionId)).first
 
         if sub
-          process_rdf = false
-          index_search = false
-          run_metrics = false
-          all = false
+          sub.process_submission(logger, actions)
 
-          actions.each do |action|
-            case action
-              when "all"
-                process_rdf = true
-                index_search = true
-                run_metrics = true
-                all = true
-              when "index"
-                index_search = true
-              when "metrics"
-                run_metrics = true
+          if (actions[:process_annotator])
+            sub.bring(:ontology) if sub.bring?(:ontology)
+            to_bring = [:acronym, :submissionId].select {|x| sub.bring?(x)}
+            sub.ontology.bring(to_bring) if to_bring.length > 0
+            parsed = sub.ready?(status: [:rdf, :rdf_labels])
+
+            raise Exception, "Annotator entries cannot be generated on the submission #{sub.ontology.acronym}/submissions/#{sub.submissionId} because it has not been successfully parsed" unless parsed
+            status = LinkedData::Models::SubmissionStatus.find("ANNOTATOR").first
+            #remove ANNOTATOR status before starting
+            sub.remove_submission_status(status)
+
+            begin
+              annotator = Annotator::Models::NcboAnnotator.new
+              annotator.create_cache_for_submission(logger, self)
+              annotator.generate_dictionary_file()
+              sub.add_submission_status(status)
+            rescue Exception => e
+              sub.add_submission_status(status.get_error_status)
+              logger.info(e.message)
+              logger.flush
             end
-            break if all
           end
-          sub.process_submission(logger, process_rdf, index_search, run_metrics)
         end
       end
 

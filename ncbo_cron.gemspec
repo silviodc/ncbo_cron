@@ -14,7 +14,8 @@ Gem::Specification.new do |gem|
   gem.name          = "ncbo_cron"
   gem.require_paths = ["lib"]
 
-  gem.add_dependency("ontologies_linked_data")
   gem.add_dependency("goo")
+  gem.add_dependency("ontologies_linked_data")
+  gem.add_dependency("ncbo_annotator")
   gem.add_dependency("redis")
 end

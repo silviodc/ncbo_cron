@@ -86,6 +86,7 @@ module NcboCron
               logger.info(e.message)
               logger.flush
             end
+            sub.save()
           end
         end
       end

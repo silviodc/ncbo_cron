@@ -78,13 +78,10 @@ class TestCron < TestCase
     sub1.bring(:submissionStatus) if sub1.bring?(:submissionStatus)
     sub2 = LinkedData::Models::OntologySubmission.find(RDF::IRI.new(sub2.id)).first
     sub2.bring(:submissionStatus) if sub2.bring?(:submissionStatus)
-
-
-binding.pry
-
-
+    sub1statusCodes = LinkedData::Models::SubmissionStatus.get_status_codes(sub1.submissionStatus)
+    assert_equal [], ["UPLOADED", "RDF", "RDF_LABELS", "INDEXED"] - sub1statusCodes
+    sub2statusCodes = LinkedData::Models::SubmissionStatus.get_status_codes(sub2.submissionStatus)
+    assert_equal [], ["UPLOADED", "RDF", "RDF_LABELS", "ANNOTATOR"] - sub2statusCodes
   end
-
-
 
 end

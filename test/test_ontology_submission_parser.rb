@@ -54,17 +54,39 @@ class TestCron < TestCase
     parser = NcboCron::Models::OntologySubmissionParser.new
     o1 = @@ontologies[0]
     o1.bring(:submissions) if o1.bring?(:submissions)
+    sub1 = o1.submissions[0]
+    sub1.bring(:submissionStatus) if sub1.bring?(:submissionStatus)
+
+
+
     o2 = @@ontologies[1]
     o2.bring(:submissions) if o2.bring?(:submissions)
-    parser.queue_submission(o1.submissions[0], {
-        :dummy_action => true, :index_search => true, :metrics => false,
-        :process_annotator => true, :another_dummy_action => false, :all => false})
-    parser.queue_submission(o2.submissions[0], {
-        dummy_action: false, index_search: false, metrics: true,
-        process_annotator: true, another_dummy_action: true, all: false})
+    sub2 = o2.submissions[0]
+    sub2.bring(:submissionStatus) if sub2.bring?(:submissionStatus)
+
+
+    parser.queue_submission(sub1, {
+        :dummy_action => true, :process_rdf => true, :index_search => true,
+        :dummy_metrics => false, :run_metrics => false, :process_annotator => false,
+        :another_dummy_action => false, :all => false})
+
+
+
+    parser.queue_submission(sub2, {
+        dummy_action: false, process_rdf: true, index_search: false,
+        dummy_metrics: true, run_metrics: false, process_annotator: true,
+        another_dummy_action: true, all: false})
+
+
+
+binding.pry
+
+
     parser.process_queue_submissions
 
 
+
+binding.pry
 
 
   end

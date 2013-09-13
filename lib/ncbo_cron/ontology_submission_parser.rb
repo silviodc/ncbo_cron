@@ -6,46 +6,35 @@ module NcboCron
       QUEUE_HOLDER = "parseQueue"
       IDPREFIX = "sub:"
 
-      ACTION_DELIM = "|"
-      ACTIONS = [:all, :index_search, :run_metrics, :process_annotator]
+      ACTIONS = {
+        :process_rdf => true,
+        :index_search => true,
+        :run_metrics => true,
+        :process_annotator => true
+      }
 
       def initialize()
       end
 
-      def queue_submission(submission, actions=[:all])
+      def queue_submission(submission, actions={:all => true})
         redis = Redis.new(:host => LinkedData.settings.redis_host, :port => LinkedData.settings.redis_port)
-        actionStr = ""
-        i = 1
 
-        actions.each do |action|
-          if (ACTIONS.include?(action))
-            act = action.to_s
-
-            if (act == "all")
-              actionStr = act
-              break
-            else
-              actionStr << act
-              actionStr << ACTION_DELIM if i < actions.length
-            end
-          end
-          i += 1
+        if (actions[:all])
+          actions = ACTIONS.dup
+        else
+          actions.delete_if {|k, v| !ACTIONS.has_key?(k)}
         end
-        redis.hset(QUEUE_HOLDER, get_prefixed_id(submission.id), actionStr) unless actionStr.empty?
+        actionStr = MultiJson.dump(actions)
+        redis.hset(QUEUE_HOLDER, get_prefixed_id(submission.id), actionStr) unless actions.empty?
       end
 
-      def process_queue_submissions
+      def process_queue_submissions()
         redis = Redis.new(:host => LinkedData.settings.redis_host, :port => LinkedData.settings.redis_port)
         all = redis.hgetall(QUEUE_HOLDER)
         prefix_remove = Regexp.new(/^#{IDPREFIX}/)
 
         all.each do |key, val|
-          valArr = val.split(ACTION_DELIM)
-
-          if valArr.include?("all")
-            valArr = ACTIONS.dup
-          end
-          actions = Hash[valArr.map {|v| [v, true]}]
+          actions = MultiJson.load(val, symbolize_keys: true)
           realKey = key.sub prefix_remove, ''
           redis.hdel(QUEUE_HOLDER, key)
           process_queue_submission(realKey, actions)
@@ -64,31 +53,32 @@ module NcboCron
 
         if sub
           sub.process_submission(logger, actions)
-
-          if (actions[:process_annotator])
-            sub.bring(:ontology) if sub.bring?(:ontology)
-            to_bring = [:acronym, :submissionId].select {|x| sub.bring?(x)}
-            sub.ontology.bring(to_bring) if to_bring.length > 0
-            parsed = sub.ready?(status: [:rdf, :rdf_labels])
-
-            raise Exception, "Annotator entries cannot be generated on the submission #{sub.ontology.acronym}/submissions/#{sub.submissionId} because it has not been successfully parsed" unless parsed
-            status = LinkedData::Models::SubmissionStatus.find("ANNOTATOR").first
-            #remove ANNOTATOR status before starting
-            sub.remove_submission_status(status)
-
-            begin
-              annotator = Annotator::Models::NcboAnnotator.new
-              annotator.create_cache_for_submission(logger, self)
-              annotator.generate_dictionary_file()
-              sub.add_submission_status(status)
-            rescue Exception => e
-              sub.add_submission_status(status.get_error_status)
-              logger.info(e.message)
-              logger.flush
-            end
-            sub.save()
-          end
+          process_annotator(logger, sub) if actions[:process_annotator]
         end
+      end
+
+      def process_annotator(logger, sub)
+        to_bring = [:ontology, :submissionId].select {|x| sub.bring?(x)}
+        sub.bring(to_bring) if to_bring.length > 0
+        sub.ontology.bring(:acronym) if sub.ontology.bring?(:acronym)
+        parsed = sub.ready?(status: [:rdf, :rdf_labels])
+
+        raise Exception, "Annotator entries cannot be generated on the submission #{sub.ontology.acronym}/submissions/#{sub.submissionId} because it has not been successfully parsed" unless parsed
+        status = LinkedData::Models::SubmissionStatus.find("ANNOTATOR").first
+        #remove ANNOTATOR status before starting
+        sub.remove_submission_status(status)
+
+        begin
+          annotator = Annotator::Models::NcboAnnotator.new
+          annotator.create_cache_for_submission(logger, sub)
+          annotator.generate_dictionary_file()
+          sub.add_submission_status(status)
+        rescue Exception => e
+          sub.add_submission_status(status.get_error_status())
+          logger.info(e.message)
+          logger.flush()
+        end
+        sub.save()
       end
 
     end

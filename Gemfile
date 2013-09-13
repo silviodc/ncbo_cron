@@ -2,6 +2,7 @@ source 'https://rubygems.org'
 
 gem 'rake'
 gem 'pry'
+gem 'multi_json'
 gem 'redis'
 gem 'minitest', '< 5.0'
 

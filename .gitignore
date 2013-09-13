@@ -9,3 +9,4 @@ repo*
 *.turtle
 *.swp
 .DS_Store
+tmp

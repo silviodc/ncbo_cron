@@ -27,6 +27,7 @@ class TestScheduler < MiniTest::Unit::TestCase
       assert job1_thread.alive?
       job1_thread.kill
       job1_thread.join
+      refute job1_thread.alive?
     ensure
       if defined?(job1_thread) && job1_thread.alive?
         job1_thread.kill
@@ -69,6 +70,12 @@ class TestScheduler < MiniTest::Unit::TestCase
       assert job2_thread.alive?
       assert job1
       refute job2
+      job1_thread.kill
+      job1_thread.join
+      refute job1_thread.alive?
+      job2_thread.kill
+      job2_thread.join
+      refute job2_thread.alive?
     ensure
       if defined?(job1_thread)
         job1_thread.kill

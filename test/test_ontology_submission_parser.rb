@@ -3,7 +3,7 @@ require 'json'
 require 'multi_json'
 require 'redis'
 
-class TestCron < TestCase
+class TestOntologySubmission < TestCase
 
   def self.before_suite
     @@redis = Redis.new(:host => LinkedData.settings.redis_host, :port => LinkedData.settings.redis_port)
@@ -21,6 +21,7 @@ class TestCron < TestCase
   end
 
   def self.after_suite
+    @@redis.del NcboCron::Models::OntologySubmissionParser::QUEUE_HOLDER
     LinkedData::SampleData::Ontology.delete_ontologies_and_submissions
   end
 

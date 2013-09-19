@@ -2,6 +2,7 @@ LinkedData.config do |config|
   config.goo_host = "localhost"
   config.goo_port = 8080
   config.search_server_url = "http://localhost:8983/solr/"
+  config.repository_folder = "./test/data/ontology_files/repo"
   config.redis_host = "localhost"
   config.redis_port = 6379
 end

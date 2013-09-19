@@ -12,3 +12,4 @@ repo*
 tmp
 
 *.log
+*.pid

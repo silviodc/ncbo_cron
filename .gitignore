@@ -10,3 +10,5 @@ repo*
 *.swp
 .DS_Store
 tmp
+
+*.log

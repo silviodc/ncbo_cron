@@ -38,7 +38,7 @@ class TestScheduler < MiniTest::Unit::TestCase
   def test_scheduler_locking
     begin
       options = {
-        job_name: "test_scheduled_job",
+        job_name: "test_scheduled_job_locking",
         seconds_between: 5
       }
       job1 = false

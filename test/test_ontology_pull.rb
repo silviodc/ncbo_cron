@@ -5,8 +5,8 @@ class TestOntologyPull < TestCase
 
   def self.before_suite
     file = File.new("#{LinkedData.settings.repository_folder}/BROTEST-0/1/BRO_v3.2.owl")
-    @@port = 4567
-    @@url = "http://localhost:#{@@port}/"
+    port = 4567
+    @@url = "http://localhost:#{port}/"
 
     @@thread = Thread.new do
       Rack::Server.start(

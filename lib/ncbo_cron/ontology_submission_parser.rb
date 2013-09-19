@@ -32,15 +32,29 @@ module NcboCron
 
       def process_queue_submissions()
         redis = Redis.new(:host => LinkedData.settings.redis_host, :port => LinkedData.settings.redis_port)
-        all = redis.hgetall(QUEUE_HOLDER)
-        prefix_remove = Regexp.new(/^#{IDPREFIX}/)
+        all = queued_items(redis)
 
-        all.each do |key, val|
-          actions = MultiJson.load(val, symbolize_keys: true)
-          realKey = key.sub prefix_remove, ''
+        all.each do |process_data|
+          actions = process_data[:actions]
+          realKey = process_data[:key]
+          key = process_data[:redis_key]
           redis.hdel(QUEUE_HOLDER, key)
           process_queue_submission(realKey, actions)
         end
+      end
+      
+      def queued_items(redis)
+        all = redis.hgetall(QUEUE_HOLDER)
+        prefix_remove = Regexp.new(/^#{IDPREFIX}/)
+        items = []
+        all.each do |key, val|
+          items << {
+            key: key.sub(prefix_remove, ''),
+            redis_key: key,
+            actions: MultiJson.load(val, symbolize_keys: true)
+          }
+        end
+        items
       end
 
       def get_prefixed_id(id)

@@ -21,4 +21,5 @@ Gem::Specification.new do |gem|
   gem.add_dependency("ncbo_annotator")
   gem.add_dependency("mlanett-redis-lock")
   gem.add_dependency("rufus-scheduler")
+  gem.add_dependency("dante")
 end

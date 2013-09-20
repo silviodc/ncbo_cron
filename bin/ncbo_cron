@@ -40,7 +40,7 @@ runner.with_options do |opts|
     options[:cron_schedule] = c
   end
   opts.on("-l", "--log-level LEVEL", String, "set the log level (debug, info, error)", "(default: info)") do |c|
-    options[:log_level] = c
+    options[:log_level] = c.to_sym
   end
 
   # Logging

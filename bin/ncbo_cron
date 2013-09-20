@@ -40,7 +40,7 @@ runner.with_options do |opts|
     options[:cron_schedule] = c
   end
   opts.on("-l", "--log-level LEVEL", String, "set the log level (debug, info, error)", "(default: info)") do |c|
-    options[:cron_schedule] = c
+    options[:log_level] = c
   end
 
   # Logging
@@ -55,6 +55,7 @@ runner.with_options do |opts|
   options[:redis_host]    ||= "localhost"
   options[:redis_port]    ||= 6379
   options[:cron_schedule] ||= "00 18 * * 1-5"
+  options[:log_level]     ||= :info
   options.delete(:host)
   options.delete(:port)
 end
@@ -70,6 +71,14 @@ runner.execute do |opts|
   logger = Logger.new(log_file)
   $stderr = log_file
   $stdout = log_file
+  log_levels = {
+    fatal: Logger::FATAL,
+    error: Logger::ERROR,
+    warn:  Logger::WARN,
+    info:  Logger::INFO,
+    debug: Logger::DEBUG
+  }
+  logger.level = log_levels[options[:log_level]]
 
   options = {
     logger: logger
@@ -81,7 +90,7 @@ runner.execute do |opts|
     parse_options.delete(:cron_schedule)
     parse_options[:job_name] = "ncbo_cron_parsing"
     NcboCron::Scheduler.scheduled_locking_job(parse_options) do
-      puts "Starting ontology process queue check"
+      logger.info "Starting ontology process queue check"; logger.flush
       parser = NcboCron::Models::OntologySubmissionParser.new
       parser.process_queue_submissions()
     end
@@ -100,7 +109,7 @@ runner.execute do |opts|
     pull_options[:job_name] = "pull_thread"
     pull_options[:scheduler_type] = :cron
     NcboCron::Scheduler.scheduled_locking_job(pull_options) do
-      puts "Starting ncbo pull"
+      logger.info "Starting ncbo pull"; logger.flush
       puller = NcboCron::Models::OntologyPull.new
       puller.do_remote_ontology_pull()
     end

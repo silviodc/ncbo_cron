@@ -32,13 +32,14 @@ module NcboCron
               md5local = Digest::MD5.hexdigest(file_contents)
 
               unless (md5remote.eql?(md5local))
-                logger.info "New file found for #{ont.acronym}\nold: #{md5local}\nnew: #{md5remote}"; logger.flush
+                logger.info "New file found for #{ont.acronym}\nold: #{md5local}\nnew: #{md5remote}"
+                logger.flush()
                 create_submission(ont, last, file, filename, logger)
               end
-            rescue Exception => e
-              logger.error "Problem retrieving #{ont.acronym}:\n" + e.message + "\n" + e.backtrace.join("\n\t")
-              logger.flush
             end
+          rescue Exception => e
+            logger.error "Problem retrieving #{ont.acronym} in OntologyPull:\n" + e.message + "\n" + e.backtrace.join("\n\t")
+            logger.flush()
           end
         end
       end

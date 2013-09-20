@@ -20,6 +20,7 @@ module NcboCron
 
           if (last.remote_file_exists?(last.pullLocation.to_s) && File.exist?(last.uploadFilePath))
             file, filename = last.download_ontology_file()
+            file.open
             remote_contents  = file.read
             file_contents = open(last.uploadFilePath) { |f| f.read }
             md5remote = Digest::MD5.hexdigest(remote_contents)

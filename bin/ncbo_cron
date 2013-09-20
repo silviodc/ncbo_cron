@@ -94,6 +94,7 @@ runner.execute do |opts|
       logger.info "Starting ontology process queue check"; logger.flush
       parser = NcboCron::Models::OntologySubmissionParser.new
       parser.process_queue_submissions()
+      logger.info "Finished ontology process queue check"; logger.flush
     end
   end
   
@@ -113,6 +114,7 @@ runner.execute do |opts|
       logger.info "Starting ncbo pull"; logger.flush
       puller = NcboCron::Models::OntologyPull.new
       puller.do_remote_ontology_pull()
+      logger.info "Finished ncbo pull"; logger.flush
     end
   end
   

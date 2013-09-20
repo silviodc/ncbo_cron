@@ -1,4 +1,5 @@
 require 'open-uri'
+require 'logger'
 require_relative 'ontology_submission_parser'
 
 module NcboCron
@@ -9,7 +10,8 @@ module NcboCron
       def initialize()
       end
 
-      def do_remote_ontology_pull()
+      def do_remote_ontology_pull(options = {})
+        logger = options[:logger] || Logger.new($stdout)
         ontologies = LinkedData::Models::Ontology.where.include(:acronym).all
 
         ontologies.each do |ont|
@@ -19,6 +21,8 @@ module NcboCron
           last.bring(:uploadFilePath) if last.bring?(:uploadFilePath)
 
           if (last.remote_file_exists?(last.pullLocation.to_s) && File.exist?(last.uploadFilePath))
+            logger.info "Checking download for #{ont.acronym}"
+            logger.info "Location: #{last.pullLocation.to_s}"; logger.flush
             file, filename = last.download_ontology_file()
             file.open
             remote_contents  = file.read
@@ -27,6 +31,7 @@ module NcboCron
             md5local = Digest::MD5.hexdigest(file_contents)
 
             unless (md5remote.eql?(md5local))
+              logger.info "New file found for #{ont.acronym}\nold: #{md5local}\nnew: #{md5remote}"; logger.flush
               create_submission(ont, last, file, filename)
             end
           end

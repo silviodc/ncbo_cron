@@ -19,6 +19,9 @@ runner = Dante::Runner.new('ncbo_cron')
 runner.description = "This will run a scheduled job for NCBO-related processing"
 
 runner.with_options do |opts|
+  opts.on("-P", "--pid FILE", String, "save PID in FILE when using -d option", "(default: ./bin/ncbo_cron.pid)") do |v|
+    options[:pid_path] = File.expand_path(v)
+  end
   opts.on("-h", "--redis-host HOST", String, "redis host (for shared locking)") do |host|
     options[:redis_host] = host
   end
@@ -31,6 +34,12 @@ runner.with_options do |opts|
   opts.on("-s", "--seconds SEC", Integer, "seconds between process queue checks") do |s|
     options[:seconds_between] = s
   end
+  opts.on("-c", "--pull-cron SCHED", String, "cron schedule for ontology pull") do |c|
+    options[:cron_schedule] = c
+  end
+  opts.on("-l", "--log-level LEVEL", String, "set the log level (debug, info, error)", "(default: info)") do |c|
+    options[:cron_schedule] = c
+  end
 
   # Logging
   require 'logger'
@@ -38,12 +47,12 @@ runner.with_options do |opts|
   FileUtils.mkdir_p(log_dir)
   options[:log_path] ||= "#{log_dir}/scheduler.log"
   
-  # pid file
   options[:pid_path] = File.expand_path("../ncbo_cron.pid", __FILE__)
   
   # Defaults
-  options[:redis_host] ||= "localhost"
-  options[:redis_port] ||= 6379
+  options[:redis_host]    ||= "localhost"
+  options[:redis_port]    ||= 6379
+  options[:cron_schedule] ||= "00 18 * * 1-5"
   options.delete(:host)
   options.delete(:port)
 end
@@ -64,8 +73,42 @@ runner.execute do |opts|
     logger: logger
   }.merge(opts)
 
-  NcboCron::Scheduler.scheduled_locking_job(options) do
-    parser = NcboCron::Models::OntologySubmissionParser.new
-    parser.process_queue_submissions
+  parsing_thread = Thread.new do
+    logger.debug "Setting up process queue check job"; logger.flush
+    parse_options = options.dup
+    parse_options.delete(:cron_schedule)
+    parse_options[:job_name] = "ncbo_cron_parsing"
+    NcboCron::Scheduler.scheduled_locking_job(parse_options) do
+      puts "Starting ontology process queue check"
+      parser = NcboCron::Models::OntologySubmissionParser.new
+      # parser.process_queue_submissions()
+    end
   end
+  
+  at_exit do
+    parsing_thread.kill
+    parsing_thread.join
+  end
+  
+  pull_thread = Thread.new do
+    logger.debug "Setting up pull cron job"; logger.flush
+    pull_options = options.dup
+    pull_options.delete(:minutes_between)
+    pull_options.delete(:seconds_between)
+    pull_options[:job_name] = "pull_thread"
+    pull_options[:scheduler_type] = :cron
+    NcboCron::Scheduler.scheduled_locking_job(pull_options) do
+      puts "Starting ncbo pull"
+      puller = NcboCron::Models::OntologyPull.new
+      # puller.do_remote_ontology_pull()
+    end
+  end
+  
+  at_exit do
+    pull_thread.kill
+    pull_thread.join
+  end
+  
+  parsing_thread.join
+  pull_thread.join
 end

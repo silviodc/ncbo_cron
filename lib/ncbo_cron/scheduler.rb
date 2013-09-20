@@ -29,16 +29,24 @@ module NcboCron
       process         = options[:process]
       minutes_between = options[:minutes_between]
       seconds_between = options[:seconds_between]
+      scheduler_type  = options[:scheduler_type] || :every
+      cron_schedule   = options[:cron_schedule]
+
+      if scheduler_type == :every
+        # Minutes/seconds string prep
+        interval = "#{seconds_between*1000}" if seconds_between
+        interval = "#{minutes_between}m" if minutes_between
+        interval = "5m" unless interval
+      end
       
-      # Minutes/seconds string prep
-      interval = "#{seconds_between*1000}" if seconds_between
-      interval = "#{minutes_between}m" if minutes_between
-      interval = "5m" unless interval
+      if scheduler_type == :cron
+        interval = options[:cron_schedule]
+      end
 
       redis = Redis.new(host: redis_host, port: redis_port)
       scheduler = Rufus::Scheduler.start_new(:thread_name => job_name)
 
-      scheduler.every interval, :blocking => true do
+      scheduler.send(scheduler_type, interval, {:allow_overlapping => false}) do
         redis.lock(job_name, life: lock_life) do
           begin
             logger.debug("Lock acquired"); logger.flush

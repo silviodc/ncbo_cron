@@ -8,9 +8,9 @@ require 'bundler/setup'
 
 # Used for getting jobs from the queue and processing them
 require_relative '../lib/ncbo_cron'
-config_exists = File.exist?(File.expand_path('../config/config.rb', __FILE__))
-exit("Please create a config/config.rb file using the config/config.rb.sample as a template") unless config_exists
-require_relative 'config/config'
+config_exists = File.exist?(File.expand_path('../../config/config.rb', __FILE__))
+abort("Please create a config/config.rb file using the config/config.rb.sample as a template") unless config_exists
+require_relative '../config/config'
 
 # redis store for looking up queued jobs
 require 'redis'
@@ -79,7 +79,7 @@ runner.execute do |opts|
     info:  Logger::INFO,
     debug: Logger::DEBUG
   }
-  logger.level = log_levels[options[:log_level]]
+  logger.level = log_levels[opts[:log_level]]
 
   options = {
     logger: logger

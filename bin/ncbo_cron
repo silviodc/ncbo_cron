@@ -113,7 +113,7 @@ runner.execute do |opts|
     NcboCron::Scheduler.scheduled_locking_job(pull_options) do
       logger.info "Starting ncbo pull"; logger.flush
       puller = NcboCron::Models::OntologyPull.new
-      puller.do_remote_ontology_pull()
+      puller.do_remote_ontology_pull(logger: logger)
       logger.info "Finished ncbo pull"; logger.flush
     end
   end

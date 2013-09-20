@@ -81,7 +81,7 @@ runner.execute do |opts|
     NcboCron::Scheduler.scheduled_locking_job(parse_options) do
       puts "Starting ontology process queue check"
       parser = NcboCron::Models::OntologySubmissionParser.new
-      # parser.process_queue_submissions()
+      parser.process_queue_submissions()
     end
   end
   
@@ -100,7 +100,7 @@ runner.execute do |opts|
     NcboCron::Scheduler.scheduled_locking_job(pull_options) do
       puts "Starting ncbo pull"
       puller = NcboCron::Models::OntologyPull.new
-      # puller.do_remote_ontology_pull()
+      puller.do_remote_ontology_pull()
     end
   end
   

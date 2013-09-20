@@ -8,6 +8,8 @@ require 'bundler/setup'
 
 # Used for getting jobs from the queue and processing them
 require_relative '../lib/ncbo_cron'
+exit("Please create a config/config.rb file using the config/config.rb.sample as a template") unless File.exist?('config/config')
+require_relative 'config/config'
 
 # redis store for looking up queued jobs
 require 'redis'

@@ -49,7 +49,7 @@ module NcboCron
       scheduler.send(scheduler_type, interval, {:allow_overlapping => false}) do
         redis.lock(job_name, life: lock_life) do
           begin
-            logger.debug("Lock acquired"); logger.flush
+            logger.debug("#{job_name} -- Lock acquired"); logger.flush
 
             # Spawn a thread to re-acquire the lock every 60 seconds
             thread = Thread.new do
@@ -60,7 +60,7 @@ module NcboCron
       
             # Make sure thread gets killed if we exit abnormally
             at_exit do
-              logger.debug("Killing thread"); logger.flush
+              logger.debug("#{job_name} -- Killing thread"); logger.flush
               Thread.kill(thread)
             end
       
@@ -69,12 +69,12 @@ module NcboCron
             process.call if process
           ensure
             # Release lock
-            logger.debug("Killing thread"); logger.flush
+            logger.debug("#{job_name} -- Killing thread"); logger.flush
             if defined?(thread)
               Thread.kill(thread)
               thread.join
             end
-            logger.debug("Thread alive? #{defined?(thread) ? thread.alive? : 'false'}"); logger.flush
+            logger.debug("#{job_name} -- Thread alive? #{defined?(thread) ? thread.alive? : 'false'}"); logger.flush
           end
         end
       end

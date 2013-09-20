@@ -15,31 +15,36 @@ module NcboCron
         ontologies = LinkedData::Models::Ontology.where.include(:acronym).all
 
         ontologies.each do |ont|
-          last = ont.latest_submission(status: [:uploaded])
-          next if last.nil?
-          last.bring(:pullLocation) if last.bring?(:pullLocation)
-          last.bring(:uploadFilePath) if last.bring?(:uploadFilePath)
+          begin
+            last = ont.latest_submission(status: [:uploaded])
+            next if last.nil?
+            last.bring(:pullLocation) if last.bring?(:pullLocation)
+            last.bring(:uploadFilePath) if last.bring?(:uploadFilePath)
 
-          if (last.remote_file_exists?(last.pullLocation.to_s) && File.exist?(last.uploadFilePath))
-            logger.info "Checking download for #{ont.acronym}"
-            logger.info "Location: #{last.pullLocation.to_s}"; logger.flush
-            file, filename = last.download_ontology_file()
-            file.open
-            remote_contents  = file.read
-            file_contents = open(last.uploadFilePath) { |f| f.read }
-            md5remote = Digest::MD5.hexdigest(remote_contents)
-            md5local = Digest::MD5.hexdigest(file_contents)
+            if (last.remote_file_exists?(last.pullLocation.to_s) && File.exist?(last.uploadFilePath))
+              logger.info "Checking download for #{ont.acronym}"
+              logger.info "Location: #{last.pullLocation.to_s}"; logger.flush
+              file, filename = last.download_ontology_file()
+              file.open
+              remote_contents  = file.read
+              file_contents = open(last.uploadFilePath) { |f| f.read }
+              md5remote = Digest::MD5.hexdigest(remote_contents)
+              md5local = Digest::MD5.hexdigest(file_contents)
 
-            unless (md5remote.eql?(md5local))
-              logger.info "New file found for #{ont.acronym}\nold: #{md5local}\nnew: #{md5remote}"; logger.flush
-              create_submission(ont, last, file, filename)
+              unless (md5remote.eql?(md5local))
+                logger.info "New file found for #{ont.acronym}\nold: #{md5local}\nnew: #{md5remote}"; logger.flush
+                create_submission(ont, last, file, filename, logger)
+              end
+            rescue Exception => e
+              logger.error "Problem retrieving #{ont.acronym}:\n" + e.message + "\n" + e.backtrace.join("\n\t")
+              logger.flush
             end
           end
         end
       end
 
-      def create_submission(ont, sub, file, filename)
-        logger = Kernel.const_defined?("LOGGER") ? Kernel.const_get("LOGGER") : Logger.new(STDOUT)
+      def create_submission(ont, sub, file, filename, logger = nil)
+        logger ||= Kernel.const_defined?("LOGGER") ? Kernel.const_get("LOGGER") : Logger.new(STDOUT)
         new_sub = LinkedData::Models::OntologySubmission.new
 
         sub.bring_remaining

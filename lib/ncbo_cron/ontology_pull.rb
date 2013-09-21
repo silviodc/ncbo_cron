@@ -40,6 +40,7 @@ module NcboCron
           rescue Exception => e
             logger.error "Problem retrieving #{ont.acronym} in OntologyPull:\n" + e.message + "\n" + e.backtrace.join("\n\t")
             logger.flush()
+            next
           end
         end
       end

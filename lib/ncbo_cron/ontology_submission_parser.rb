@@ -48,10 +48,11 @@ module NcboCron
         prefix_remove = Regexp.new(/^#{IDPREFIX}/)
         items = []
         all.each do |key, val|
+          actions = MultiJson.load(val, symbolize_keys: true) rescue next
           items << {
             key: key.sub(prefix_remove, ''),
             redis_key: key,
-            actions: MultiJson.load(val, symbolize_keys: true)
+            actions: actions
           }
         end
         items

@@ -45,7 +45,7 @@ module NcboCron
         end
       end
 
-      def create_submission(ont, sub, file, filename, logger = nil)
+      def create_submission(ont, sub, file, filename, logger=nil)
         logger ||= Kernel.const_defined?("LOGGER") ? Kernel.const_get("LOGGER") : Logger.new(STDOUT)
         new_sub = LinkedData::Models::OntologySubmission.new
 

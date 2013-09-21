@@ -31,24 +31,33 @@ module NcboCron
       end
 
       def process_queue_submissions()
+        logger = Kernel.const_defined?("LOGGER") ? Kernel.const_get("LOGGER") : Logger.new(STDOUT)
         redis = Redis.new(:host => LinkedData.settings.redis_host, :port => LinkedData.settings.redis_port)
-        all = queued_items(redis)
+        all = queued_items(redis, logger)
 
         all.each do |process_data|
           actions = process_data[:actions]
           realKey = process_data[:key]
           key = process_data[:redis_key]
           redis.hdel(QUEUE_HOLDER, key)
-          process_queue_submission(realKey, actions)
+          process_queue_submission(logger, realKey, actions)
         end
       end
       
-      def queued_items(redis)
+      def queued_items(redis, logger=nil)
+        logger ||= Kernel.const_defined?("LOGGER") ? Kernel.const_get("LOGGER") : Logger.new(STDOUT)
         all = redis.hgetall(QUEUE_HOLDER)
         prefix_remove = Regexp.new(/^#{IDPREFIX}/)
         items = []
         all.each do |key, val|
-          actions = MultiJson.load(val, symbolize_keys: true) rescue next
+          begin
+            actions = MultiJson.load(val, symbolize_keys: true)
+          rescue Exception => e
+            logger.error("Invalid record in the parse queue: #{key} - #{val}")
+            logger.error(e.message)
+            logger.flush()
+            next
+          end
           items << {
             key: key.sub(prefix_remove, ''),
             redis_key: key,
@@ -64,8 +73,7 @@ module NcboCron
 
       private
 
-      def process_queue_submission(submissionId, actions={})
-        logger = Kernel.const_defined?("LOGGER") ? Kernel.const_get("LOGGER") : Logger.new(STDOUT)
+      def process_queue_submission(logger, submissionId, actions={})
         sub = LinkedData::Models::OntologySubmission.find(RDF::IRI.new(submissionId)).first
 
         if sub

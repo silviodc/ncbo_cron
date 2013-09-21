@@ -53,8 +53,8 @@ module NcboCron
           begin
             actions = MultiJson.load(val, symbolize_keys: true)
           rescue Exception => e
-            logger.error("Invalid record in the parse queue: #{key} - #{val}")
-            logger.error(e.message)
+            logger.error("Invalid record in the parse queue: #{key} - #{val}:\n")
+            logger.error(e.message + "\n" + e.backtrace.join("\n\t"))
             logger.flush()
             next
           end

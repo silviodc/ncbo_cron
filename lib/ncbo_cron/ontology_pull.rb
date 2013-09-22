@@ -13,7 +13,10 @@ module NcboCron
       def do_remote_ontology_pull(options = {})
         logger = options[:logger] || Logger.new($stdout)
         ontologies = LinkedData::Models::Ontology.where.include(:acronym).all
+        
+        ontologies.sort! {|a,b| a.acronym.downcase <=> b.acronym.downcase}
 
+        new_submissions = []
         ontologies.each do |ont|
           begin
             last = ont.latest_submission(status: [:uploaded])
@@ -34,7 +37,7 @@ module NcboCron
               unless (md5remote.eql?(md5local))
                 logger.info "New file found for #{ont.acronym}\nold: #{md5local}\nnew: #{md5remote}"
                 logger.flush()
-                create_submission(ont, last, file, filename, logger)
+                new_submissions << create_submission(ont, last, file, filename, logger)
               end
             end
           rescue Exception => e
@@ -42,6 +45,8 @@ module NcboCron
             logger.flush()
             next
           end
+          
+          new_submissions
         end
       end
 
@@ -73,6 +78,8 @@ module NcboCron
           logger.error("Unable to create a new submission in OntologyPull: #{new_sub.errors}")
           logger.flush()
         end
+        
+        new_sub
       end
     end
   end

@@ -108,7 +108,7 @@ runner.execute do |opts|
   end
 
   at_exit do
-    if defined?(parsing_thread)
+    if parsing_thread
       parsing_thread.kill
       parsing_thread.join
     end
@@ -133,12 +133,12 @@ runner.execute do |opts|
   end
 
   at_exit do
-    if defined?(pull_thread)
+    if pull_thread
       pull_thread.kill
       pull_thread.join
     end
   end
 
-  parsing_thread.join
-  pull_thread.join
+  parsing_thread.join if parsing_thread
+  pull_thread.join if pull_thread
 end

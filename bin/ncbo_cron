@@ -43,14 +43,13 @@ runner.with_options do |opts|
   opts.on("-l", "--log-level LEVEL", String, "set the log level (debug, info, error)", "(default: info)") do |c|
     options[:log_level] = c.to_sym
   end
-  opts.on("--disable-parse", "disable ontology parse") do |v|
-    options[:disable_parse] = v
+  opts.on("--disable-processing", "disable ontology processing") do |v|
+    options[:disable_processing] = v
   end
   opts.on("--disable-pull", "disable ontology pull") do |v|
     options[:disable_pull] = v
   end
   
-
   # Logging
   require 'logger'
   log_dir = File.expand_path("../../logs", __FILE__)
@@ -92,7 +91,7 @@ runner.execute do |opts|
     logger: logger
   }.merge(opts)
   
-  unless options[:disable_parse]
+  unless options[:disable_processing]
     parsing_thread = Thread.new do
       logger.debug "Setting up process queue check job"; logger.flush
       parse_options = options.dup

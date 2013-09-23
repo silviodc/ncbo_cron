@@ -108,8 +108,10 @@ runner.execute do |opts|
   end
 
   at_exit do
-    parsing_thread.kill
-    parsing_thread.join
+    if defined?(parsing_thread)
+      parsing_thread.kill
+      parsing_thread.join
+    end
   end
 
   unless options[:disable_pull]
@@ -131,8 +133,10 @@ runner.execute do |opts|
   end
 
   at_exit do
-    pull_thread.kill
-    pull_thread.join
+    if defined?(pull_thread)
+      pull_thread.kill
+      pull_thread.join
+    end
   end
 
   parsing_thread.join

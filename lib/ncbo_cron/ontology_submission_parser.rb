@@ -30,8 +30,9 @@ module NcboCron
         redis.hset(QUEUE_HOLDER, get_prefixed_id(submission.id), actionStr) unless actions.empty?
       end
 
-      def process_queue_submissions()
-        logger = Kernel.const_defined?("LOGGER") ? Kernel.const_get("LOGGER") : Logger.new(STDOUT)
+      def process_queue_submissions(options = {})
+        logger = options[:logger] || Logger.new($stdout)
+        logger ||= Kernel.const_defined?("LOGGER") ? Kernel.const_get("LOGGER") : Logger.new(STDOUT)
         redis = Redis.new(:host => LinkedData.settings.redis_host, :port => LinkedData.settings.redis_port)
         all = queued_items(redis, logger)
 

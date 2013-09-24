@@ -6,7 +6,7 @@ require 'redis'
 class TestOntologySubmission < TestCase
 
   def self.before_suite
-    @@redis = Redis.new(:host => LinkedData.settings.redis_host, :port => LinkedData.settings.redis_port)
+    @@redis = Redis.new(:host => $QUEUE_REDIS_HOST, :port => $QUEUE_REDIS_PORT)
     db_size = @@redis.dbsize
 
     if db_size > 2000

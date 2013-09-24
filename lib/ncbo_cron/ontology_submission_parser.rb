@@ -19,7 +19,7 @@ module NcboCron
       end
 
       def queue_submission(submission, actions={:all => true})
-        redis = Redis.new(:host => LinkedData.settings.redis_host, :port => LinkedData.settings.redis_port)
+        redis = Redis.new(:host => $QUEUE_REDIS_HOST, :port => $QUEUE_REDIS_PORT)
 
         if (actions[:all])
           actions = ACTIONS.dup
@@ -33,7 +33,7 @@ module NcboCron
       def process_queue_submissions(options = {})
         logger = options[:logger] || Logger.new($stdout)
         logger ||= Kernel.const_defined?("LOGGER") ? Kernel.const_get("LOGGER") : Logger.new(STDOUT)
-        redis = Redis.new(:host => LinkedData.settings.redis_host, :port => LinkedData.settings.redis_port)
+        redis = Redis.new(:host => $QUEUE_REDIS_HOST, :port => $QUEUE_REDIS_PORT)
         all = queued_items(redis, logger)
 
         all.each do |process_data|

@@ -82,6 +82,10 @@ module NcboCron
 
       def process_queue_submission(logger, submissionId, actions={})
         sub = LinkedData::Models::OntologySubmission.find(RDF::IRI.new(submissionId)).first
+        
+        sub.bring(:uploadFilePath)
+        logger = Logger.new(File.new("#{sub.uploadFilePath}_parsing.log", "a"))
+        logger.debug "Starting parsing for #{submissionId}\n\n\n\n"
 
         if sub
           sub.process_submission(logger, actions)

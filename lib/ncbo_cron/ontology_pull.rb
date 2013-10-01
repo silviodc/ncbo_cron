@@ -34,7 +34,7 @@ module NcboCron
                 file_contents = open(last.uploadFilePath) { |f| f.read }
                 md5remote = Digest::MD5.hexdigest(remote_contents)
                 md5local = Digest::MD5.hexdigest(file_contents)
-                new_file_exists = not md5remote.eql?(md5local)
+                new_file_exists = !md5remote.eql?(md5local)
               else
                 # There is no existing file, so let's create a submission with the downloaded one
                 new_file_exists = true

@@ -24,7 +24,7 @@ module NcboCron
             last.bring(:pullLocation) if last.bring?(:pullLocation)
             last.bring(:uploadFilePath) if last.bring?(:uploadFilePath)
 
-            if (last.remote_file_exists?(last.pullLocation.to_s)
+            if (last.remote_file_exists?(last.pullLocation.to_s))
               logger.info "Checking download for #{ont.acronym}"
               logger.info "Location: #{last.pullLocation.to_s}"; logger.flush
               file, filename = last.download_ontology_file()

@@ -4,7 +4,8 @@ require 'rack'
 class TestOntologyPull < TestCase
 
   def self.before_suite
-    file = File.new("#{LinkedData.settings.repository_folder}/BROTEST-0/1/BRO_v3.2.owl")
+    bro_path = File.expand_path("../data/ontology_files/repo/BROTEST-0/1/BRO_v3.2.owl", __FILE__)
+    file = File.new(bro_path)
     port = 4567
     @@url = "http://localhost:#{port}/"
 

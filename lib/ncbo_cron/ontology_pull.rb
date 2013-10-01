@@ -24,17 +24,23 @@ module NcboCron
             last.bring(:pullLocation) if last.bring?(:pullLocation)
             last.bring(:uploadFilePath) if last.bring?(:uploadFilePath)
 
-            if (last.remote_file_exists?(last.pullLocation.to_s) && File.exist?(last.uploadFilePath))
+            if (last.remote_file_exists?(last.pullLocation.to_s)
               logger.info "Checking download for #{ont.acronym}"
               logger.info "Location: #{last.pullLocation.to_s}"; logger.flush
               file, filename = last.download_ontology_file()
               file.open
               remote_contents  = file.read
-              file_contents = open(last.uploadFilePath) { |f| f.read }
-              md5remote = Digest::MD5.hexdigest(remote_contents)
-              md5local = Digest::MD5.hexdigest(file_contents)
+              if last.uploadFilePath && File.exist?(last.uploadFilePath))
+                file_contents = open(last.uploadFilePath) { |f| f.read }
+                md5remote = Digest::MD5.hexdigest(remote_contents)
+                md5local = Digest::MD5.hexdigest(file_contents)
+                new_file_exists = not md5remote.eql?(md5local)
+              else
+                # There is no existing file, so let's create a submission with the downloaded one
+                new_file_exists = true
+              end
 
-              unless (md5remote.eql?(md5local))
+              if new_file_exists 
                 logger.info "New file found for #{ont.acronym}\nold: #{md5local}\nnew: #{md5remote}"
                 logger.flush()
                 new_submissions << create_submission(ont, last, file, filename, logger)

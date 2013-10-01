@@ -41,7 +41,13 @@ module NcboCron
           realKey = process_data[:key]
           key = process_data[:redis_key]
           redis.hdel(QUEUE_HOLDER, key)
-          process_queue_submission(logger, realKey, actions)
+          begin
+            process_queue_submission(logger, realKey, actions)
+          rescue Exception => e
+            logger.debug "Exception processing #{realKey}"
+            logger.error e.message
+            logger.error e.backtrace.join("\n\t")
+          end
         end
       end
       

@@ -45,8 +45,7 @@ module NcboCron
             process_queue_submission(logger, realKey, actions)
           rescue Exception => e
             logger.debug "Exception processing #{realKey}"
-            logger.error e.message
-            logger.error e.backtrace.join("\n\t")
+            logger.error(e.message + "\n" + e.backtrace.join("\n\t"))
           end
         end
       end
@@ -111,7 +110,7 @@ module NcboCron
           sub.add_submission_status(status)
         rescue Exception => e
           sub.add_submission_status(status.get_error_status())
-          logger.info(e.message)
+          logger.error(e.message + "\n" + e.backtrace.join("\n\t"))
           logger.flush()
         end
         sub.save()

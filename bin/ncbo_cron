@@ -25,10 +25,10 @@ runner.with_options do |opts|
   opts.on("-P", "--pid FILE", String, "save PID in FILE when using -d option", "(default: ./bin/ncbo_cron.pid)") do |v|
     options[:pid_path] = File.expand_path(v)
   end
-  opts.on("-h", "--redis-host HOST", String, "redis host (for shared locking)") do |host|
+  opts.on("-h", "--redis-host HOST", String, "redis host (for shared locking)", "(default: localhost)") do |host|
     options[:redis_host] = host
   end
-  opts.on("-p", "--redis-port PORT", Integer, "redis port (for shared locking)") do |port|
+  opts.on("-p", "--redis-port PORT", Integer, "redis port (for shared locking)", "(default: 6379)") do |port|
     options[:redis_port] = port
   end
   opts.on("-m", "--minutes MIN", Integer, "minutes between process queue checks (override seconds)") do |m|
@@ -51,6 +51,9 @@ runner.with_options do |opts|
   end
   opts.on("-q", "--view-queue", "view queued jobs") do |v|
     options[:view_queue] = v
+  end
+  opts.on("-a", "--add-submission ID", String, "submission id to add to the queue") do |v|
+    options[:queue_submission] = v
   end
   
   # Logging
@@ -82,6 +85,14 @@ runner.execute do |opts|
     queued_items = parser.queued_items(redis).map {|a| {ontology: a[:key], actions: a[:actions]}}
     puts "\n\n"
     queued_items.empty? ? puts("Nothing queued") : pp(queued_items)
+    exit
+  end
+
+  if opts[:queue_submission]
+    puts "\n\nQueueing submission: #{opts[:queue_submission]}"
+    sub = LinkedData::Models::OntologySubmission.find(RDF::URI.new(opts[:queue_submission])).first
+    parser = NcboCron::Models::OntologySubmissionParser.new
+    parser.queue_submission(sub)
     exit
   end
   
@@ -142,7 +153,7 @@ runner.execute do |opts|
         puller = NcboCron::Models::OntologyPull.new
         pulled_onts = puller.do_remote_ontology_pull(logger: pull_logger)
         logger.info "Finished ncbo pull"; logger.flush
-        logger.info "Pull summary:\n#{pulled_onts.map {|os| "#{os.ontology.id.to_s} - submission #{os.submissionId}"}}"
+        logger.info "Pull summary:\n#{pulled_onts.map {|o| os.id.to_s}}"
       end
     end
   end

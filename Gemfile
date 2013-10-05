@@ -1,5 +1,7 @@
 source 'https://rubygems.org'
 
+gemspec
+
 gem 'rake'
 gem 'pry'
 gem 'multi_json'
@@ -7,13 +9,7 @@ gem 'redis'
 gem 'minitest', '< 5.0'
 
 # Monitoring
-# Monitoring
 gem 'cube-ruby', require: 'cube'
-
-# Schedule-related gems
-gem 'mlanett-redis-lock', require: 'redis-lock'
-gem 'rufus-scheduler'
-gem 'dante'
 
 # NCBO gems (can be from a local dev path or from rubygems/git)
 gemfile_local = File.expand_path("../Gemfile.local", __FILE__)

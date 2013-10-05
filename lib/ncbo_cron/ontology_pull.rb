@@ -19,7 +19,7 @@ module NcboCron
         new_submissions = []
         ontologies.each do |ont|
           begin
-            last = ont.latest_submission(status: [:uploaded])
+            last = ont.latest_submission(status: :any)
             next if last.nil?
             last.bring(:pullLocation) if last.bring?(:pullLocation)
             last.bring(:uploadFilePath) if last.bring?(:uploadFilePath)

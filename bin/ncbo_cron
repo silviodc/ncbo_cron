@@ -49,6 +49,9 @@ runner.with_options do |opts|
   opts.on("--disable-pull", "disable ontology pull") do |v|
     options[:disable_pull] = v
   end
+  opts.on("-q", "--view-queue", "view queued jobs") do |v|
+    options[:view_queue] = v
+  end
   
   # Logging
   require 'logger'
@@ -69,9 +72,18 @@ end
 
 runner.execute do |opts|
   redis = Redis.new(host: opts[:redis_host], port: opts[:redis_port])
-
+  
   puts "Running ncbo_cron with options:"
   pp opts
+  
+  # If we're viewing queued entries, show them and quit
+  if opts[:view_queue]
+    parser = NcboCron::Models::OntologySubmissionParser.new
+    queued_items = parser.queued_items(redis).map {|a| {ontology: a[:key], actions: a[:actions]}}
+    puts "\n\n"
+    queued_items.empty? ? puts("Nothing queued") : pp(queued_items)
+    exit
+  end
   
   # Redirect stdout, stderr
   log_file = File.new(opts[:log_path], "a")

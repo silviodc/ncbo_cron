@@ -82,11 +82,20 @@ module NcboCron
       def process_queue_submission(logger, submissionId, actions={})
         sub = LinkedData::Models::OntologySubmission.find(RDF::IRI.new(submissionId)).first
         
-        sub.bring(:uploadFilePath)
+        sub.bring_remaining; sub.ontology.bring(:acronym)
         logger = Logger.new("#{sub.uploadFilePath}_parsing.log", "a")
         logger.debug "Starting parsing for #{submissionId}\n\n\n\n"
 
         if sub
+          # Check to make sure the file has been downloaded
+          if sub.pullLocation && (!sub.uploadFilePath || !File.exist?(sub.uploadFilePath))
+            file, filename = sub.download_ontology_file
+            file_location = sub.class.copy_file_repository(sub.ontology.acronym, sub.submissionId, file, filename)
+            file_location = "../" + file_location if file_location.start_with?(".") # relative path fix
+            sub.uploadFilePath = File.expand_path(file_location, __FILE__)
+            sub.save
+          end
+
           sub.process_submission(logger, actions)
           process_annotator(logger, sub) if actions[:process_annotator]
         end

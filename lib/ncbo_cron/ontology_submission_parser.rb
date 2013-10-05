@@ -42,6 +42,7 @@ module NcboCron
           key = process_data[:redis_key]
           redis.hdel(QUEUE_HOLDER, key)
           begin
+            logger.info "Starting parsing for #{realKey}"
             process_queue_submission(logger, realKey, actions)
           rescue Exception => e
             logger.debug "Exception processing #{realKey}"

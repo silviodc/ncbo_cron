@@ -55,6 +55,10 @@ runner.with_options do |opts|
   opts.on("-a", "--add-submission ID", String, "submission id to add to the queue") do |v|
     options[:queue_submission] = v
   end
+  opts.on("--console", "REPL for working with scheduler") do |v|
+    options[:console] = v
+  end
+  
   
   # Logging
   require 'logger'
@@ -88,11 +92,17 @@ runner.execute do |opts|
     exit
   end
 
+  # Queue a provided submission, then exit
   if opts[:queue_submission]
     puts "\n\nQueueing submission: #{opts[:queue_submission]}"
     sub = LinkedData::Models::OntologySubmission.find(RDF::URI.new(opts[:queue_submission])).first
     parser = NcboCron::Models::OntologySubmissionParser.new
     parser.queue_submission(sub)
+    exit
+  end
+  
+  if opts[:console]
+    require 'pry'; binding.pry(quiet: true)
     exit
   end
   

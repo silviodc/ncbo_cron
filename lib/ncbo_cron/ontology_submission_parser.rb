@@ -44,6 +44,7 @@ module NcboCron
           begin
             logger.info "Starting parsing for #{realKey}"
             process_queue_submission(logger, realKey, actions)
+            logger.info "Finished parsing for #{realKey}"
           rescue Exception => e
             logger.debug "Exception processing #{realKey}"
             logger.error(e.message + "\n" + e.backtrace.join("\n\t"))
@@ -84,7 +85,9 @@ module NcboCron
         sub = LinkedData::Models::OntologySubmission.find(RDF::IRI.new(submissionId)).first
         
         sub.bring_remaining; sub.ontology.bring(:acronym)
-        logger = Logger.new("#{sub.uploadFilePath}_parsing.log", "a")
+        log_path = "#{sub.uploadFilePath}_parsing.log"
+        logger.info "Logging parsing output to #{log_path}"
+        logger = Logger.new(log_path, "a")
         logger.debug "Starting parsing for #{submissionId}\n\n\n\n"
 
         if sub

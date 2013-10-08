@@ -1,3 +1,4 @@
+require_relative '../../config/config'
 require_relative 'ontology_submission_parser'
 
 def get_obo_submissions

@@ -1,5 +1,8 @@
-require_relative '../../config/config'
-require_relative 'ontology_submission_parser'
+require 'redis'
+require 'ontologies_linked_data'
+require 'ncbo_annotator'
+require_relative '../../../config/config'
+require_relative '../ontology_submission_parser'
 
 def get_obo_submissions
   subs = []
@@ -23,6 +26,6 @@ submission_queue = NcboCron::Models::OntologySubmissionParser.new
 
 submissions = get_obo_submissions
 submissions.each do |s|
-  submission_queue.queue_submission(sub, {all: true})
+  submission_queue.queue_submission(s, {all: true})
 end
 puts "Added #{submissions.length} to the queue."

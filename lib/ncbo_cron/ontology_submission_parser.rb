@@ -79,6 +79,31 @@ module NcboCron
         return "#{IDPREFIX}#{id}"
       end
 
+      def process_flush_classes(logger)
+        onts = LinkedData::Models::Ontology.where.include(:acronym,:summaryOnly).all
+        deleted = []
+        onts.each do |ont|
+          if !ont.summaryOnly
+            submissions = LinkedData::Models::OntologySubmission.where(ontology: ont)
+                            .include(:submissionId)
+                            .include(:submissionStatus)
+                            .all
+            submissions.sort_by { |x| x.submissionId }.reverse[0..10]
+            submissions.each do |sub|
+              if sub.archived?
+                logger.info "Deleting graph #{sub.id.to_s} ..."
+                t0 = Time.now
+                sub.delete_classes_graph
+                logger.info "Graph #{sub.id.to_s} deleted in #{Time.now-t0} sec."
+                deleted << sub
+              end
+            end
+          end
+        end
+        return deleted
+      end
+
+
       private
 
       def process_queue_submission(logger, submissionId, actions={})

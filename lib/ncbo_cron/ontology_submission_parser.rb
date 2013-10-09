@@ -90,6 +90,8 @@ module NcboCron
         logger = Logger.new(log_path, "a")
         logger.debug "Starting parsing for #{submissionId}\n\n\n\n"
 
+        status_archived = LinkedData::Models::SubmissionStatus.find("ARCHIVED").first
+
         if sub
           # Check to make sure the file has been downloaded
           if sub.pullLocation && (!sub.uploadFilePath || !File.exist?(sub.uploadFilePath))
@@ -101,6 +103,22 @@ module NcboCron
           end
 
           sub.process_submission(logger, actions)
+          if sub.ready?
+            submissions = LinkedData::Models::OntologySubmission.where(ontology: ont)
+                            .include(:submissionId)
+                            .include(:submissionStatus)
+                            .all
+
+            submissions.sort_by { |x| x.submissionId }.reverse[0..10]
+            submissions.each do |old_sub|
+              next if old_sub.id.to_s == sub.id.to_s
+              unless sub.archived?
+                old_sub.add_submission_status(status_archived)
+                old_sub.save
+              end
+            end
+
+          end
           process_annotator(logger, sub) if actions[:process_annotator]
         end
       end

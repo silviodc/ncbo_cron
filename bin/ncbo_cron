@@ -49,6 +49,9 @@ runner.with_options do |opts|
   opts.on("--disable-pull", "disable ontology pull") do |v|
     options[:disable_pull] = v
   end
+  opts.on("--disable-flush", "disable flush archive class graphs") do |v|
+    options[:disable_flush] = v
+  end
   opts.on("-q", "--view-queue", "view queued jobs") do |v|
     options[:view_queue] = v
   end
@@ -57,6 +60,9 @@ runner.with_options do |opts|
   end
   opts.on("--console", "REPL for working with scheduler") do |v|
     options[:console] = v
+  end
+  opts.on("-f","--flush-old-graphs", "Delete class graphs of archive submissions") do |c|
+    options[:cron_flush] = c
   end
   
   
@@ -72,6 +78,7 @@ runner.with_options do |opts|
   options[:redis_host]    ||= "localhost"
   options[:redis_port]    ||= 6379
   options[:cron_schedule] ||= "00 18 * * 1-5"
+  options[:cron_flush] ||= "00 23 * * 1-5"
   options[:log_level]     ||= :info
   options.delete(:host)
   options.delete(:port)
@@ -176,6 +183,37 @@ runner.execute do |opts|
     end
   end
 
+  unless options[:disable_flush]
+    flush_thread = Thread.new do
+      logger.debug "Setting up the flush cron job"; logger.flush
+      flush_options = options.dup
+      flush_options.delete(:minutes_between)
+      flush_options.delete(:seconds_between)
+      flush_options[:job_name] = "flush_thread"
+      flush_options[:scheduler_type] = :cron
+      NcboCron::Scheduler.scheduled_locking_job(flush_options) do
+        filename = File.basename(options[:log_path]).sub(/\.\w{1,4}$/, "")
+        flush_log_path = options[:log_path].split("/")[0..-2].push("#{filename}-flush.log").join("/")
+        flush_logger = Logger.new(flush_log_path, "a")
+        logger.info "Starting ncbo flush"; logger.flush
+        logger.info "Logging flush details to #{flush_log_path}"; logger.flush
+        t0 = Time.now
+        parser = NcboCron::Models::OntologySubmissionParser.new
+        flush_onts = parser.process_flush_classes(logger)
+        logger.info "Flushed #{flush_onts.length} submissions in #{Time.now - t0} sec."; logger.flush
+        logger.info "Finished flush"; logger.flush
+      end
+    end
+  end
+
+  at_exit do
+    if flush_thread
+      flush_thread.kill
+      flush_thread.join
+    end
+  end
+
   parsing_thread.join if parsing_thread
   pull_thread.join if pull_thread
+  flush_thread.join if flush_thread
 end

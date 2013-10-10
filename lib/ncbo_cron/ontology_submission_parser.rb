@@ -129,7 +129,8 @@ module NcboCron
 
           sub.process_submission(logger, actions)
           if sub.ready?
-            submissions = LinkedData::Models::OntologySubmission.where(ontology: ont)
+            submissions = LinkedData::Models::OntologySubmission
+                            .where(ontology: sub.ontology)
                             .include(:submissionId)
                             .include(:submissionStatus)
                             .all

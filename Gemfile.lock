@@ -1,6 +1,7 @@
 GIT
-  remote: https://github.com/ncbo/goo.git
-  revision: 3dc6c9a0d16662344c0a2a6354bfa512f2dc18c8
+  remote: git://github.com/ncbo/goo.git
+  revision: d01921ffca8bbe777f467043fe3d9a696eb971ce
+  branch: staging
   specs:
     goo (0.0.2)
       rdf
@@ -11,8 +12,9 @@ GIT
       uuid
 
 GIT
-  remote: https://github.com/ncbo/ncbo_annotator.git
-  revision: 753c63f7abf6c64ad1edd5f38b95942c8e774393
+  remote: git://github.com/ncbo/ncbo_annotator.git
+  revision: b1ee3a67b159e38087a8f44191c187f0b1505078
+  branch: staging
   specs:
     ncbo_annotator (0.0.1)
       goo
@@ -20,8 +22,9 @@ GIT
       redis
 
 GIT
-  remote: https://github.com/ncbo/ontologies_linked_data.git
-  revision: 8126ef947d0edfcafb949b4cf0619126cf7b8990
+  remote: git://github.com/ncbo/ontologies_linked_data.git
+  revision: 5ba26282180cbb7f688cf92358f4254892dccf99
+  branch: staging
   specs:
     ontologies_linked_data (0.0.1)
       activesupport
@@ -37,8 +40,9 @@ GIT
       rubyzip
 
 GIT
-  remote: https://github.com/ncbo/sparql-client.git
+  remote: git://github.com/ncbo/sparql-client.git
   revision: de82689e690f400833653b0ecc51676396e945a8
+  branch: staging
   specs:
     sparql-client (1.0.4.1)
       json_pure (>= 1.4)
@@ -84,7 +88,7 @@ GEM
       redis
     multi_json (1.8.1)
     net-http-persistent (2.9)
-    oj (2.1.4)
+    oj (2.1.6)
     pry (0.9.12.2)
       coderay (~> 1.0.5)
       method_source (~> 0.8)

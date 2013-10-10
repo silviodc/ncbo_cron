@@ -14,6 +14,12 @@ class TestOntologySubmission < TestCase
       return
     end
 
+    #for annotator dict creation
+    tmp_folder = "./test/tmp/"
+    if not Dir.exist? tmp_folder
+      FileUtils.mkdir_p tmp_folder
+    end
+
     @@redis.del NcboCron::Models::OntologySubmissionParser::QUEUE_HOLDER
 
     LinkedData::SampleData::Ontology.delete_ontologies_and_submissions

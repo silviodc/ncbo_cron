@@ -23,7 +23,7 @@ class TestOntologySubmission < TestCase
     @@redis.del NcboCron::Models::OntologySubmissionParser::QUEUE_HOLDER
 
     LinkedData::SampleData::Ontology.delete_ontologies_and_submissions
-    @@ont_count, @@acronyms, @@ontologies = LinkedData::SampleData::Ontology.create_ontologies_and_submissions(ont_count: 2, submission_count: 1, process_submission: false)
+    @@ont_count, @@acronyms, @@ontologies = LinkedData::SampleData::Ontology.create_ontologies_and_submissions(ont_count: 2, submission_count: 2, process_submission: false)
   end
 
   def self.after_suite
@@ -60,35 +60,49 @@ class TestOntologySubmission < TestCase
   def test_parse_submissions
     parser = NcboCron::Models::OntologySubmissionParser.new
 
-    o1 = @@ontologies[0]
-    o1.bring(:submissions) if o1.bring?(:submissions)
-    sub1 = o1.submissions[0]
-    sub1.bring(:submissionStatus) if sub1.bring?(:submissionStatus)
+    submission_ids = [1,2]
+    submission_ids.each do |id|
+      o1 = @@ontologies[0]
+      o1.bring(:submissions) if o1.bring?(:submissions)
+      sub1 = o1.submissions.select { |x| x.id.to_s["/submissions/#{id}"]}.first
+      sub1.bring(:submissionStatus) if sub1.bring?(:submissionStatus)
 
-    o2 = @@ontologies[1]
-    o2.bring(:submissions) if o2.bring?(:submissions)
-    sub2 = o2.submissions[0]
-    sub2.bring(:submissionStatus) if sub2.bring?(:submissionStatus)
+      o2 = @@ontologies[1]
+      o2.bring(:submissions) if o2.bring?(:submissions)
+      sub2 = o2.submissions.select { |x| x.id.to_s["/submissions/#{id}"]}.first
+      sub2.bring(:submissionStatus) if sub2.bring?(:submissionStatus)
 
-    parser.queue_submission(sub1, {
-        :dummy_action => true, :process_rdf => true, :index_search => true,
-        :dummy_metrics => false, :run_metrics => false, :process_annotator => false,
-        :another_dummy_action => false, :all => false})
-    parser.queue_submission(sub2, {
-        dummy_action: false, process_rdf: true, index_search: false,
-        dummy_metrics: true, run_metrics: false, process_annotator: true,
-        another_dummy_action: true, all: false})
+      parser.queue_submission(sub1, {
+          :dummy_action => true, :process_rdf => true, :index_search => true,
+          :dummy_metrics => false, :run_metrics => false, :process_annotator => false,
+          :another_dummy_action => false, :all => false})
+      parser.queue_submission(sub2, {
+          dummy_action: false, process_rdf: true, index_search: false,
+          dummy_metrics: true, run_metrics: false, process_annotator: true,
+          another_dummy_action: true, all: false})
 
-    parser.process_queue_submissions
+      parser.process_queue_submissions
 
-    sub1 = LinkedData::Models::OntologySubmission.find(RDF::IRI.new(sub1.id)).first
-    sub1.bring(:submissionStatus) if sub1.bring?(:submissionStatus)
-    sub2 = LinkedData::Models::OntologySubmission.find(RDF::IRI.new(sub2.id)).first
-    sub2.bring(:submissionStatus) if sub2.bring?(:submissionStatus)
-    sub1statusCodes = LinkedData::Models::SubmissionStatus.get_status_codes(sub1.submissionStatus)
-    assert_equal [], ["UPLOADED", "RDF", "RDF_LABELS", "INDEXED"] - sub1statusCodes
-    sub2statusCodes = LinkedData::Models::SubmissionStatus.get_status_codes(sub2.submissionStatus)
-    assert_equal [], ["UPLOADED", "RDF", "RDF_LABELS", "ANNOTATOR"] - sub2statusCodes
+      sub1 = LinkedData::Models::OntologySubmission.find(RDF::IRI.new(sub1.id)).first
+      sub1.bring(:submissionStatus) if sub1.bring?(:submissionStatus)
+      sub2 = LinkedData::Models::OntologySubmission.find(RDF::IRI.new(sub2.id)).first
+      sub2.bring(:submissionStatus) if sub2.bring?(:submissionStatus)
+      sub1statusCodes = LinkedData::Models::SubmissionStatus.get_status_codes(sub1.submissionStatus)
+      assert_equal [], ["UPLOADED", "RDF", "RDF_LABELS", "INDEXED"] - sub1statusCodes
+      sub2statusCodes = LinkedData::Models::SubmissionStatus.get_status_codes(sub2.submissionStatus)
+      assert_equal [], ["UPLOADED", "RDF", "RDF_LABELS", "ANNOTATOR"] - sub2statusCodes
+      if id > 1
+        [o1,o2].each do |os|
+          os.submissions.each do |s|
+            s.bring(:submissionStatus)
+            s.bring(:submissionId)
+            if s.submissionId == 1
+              assert s.archived?
+            end
+          end
+        end
+      end
+    end
   end
 
 end

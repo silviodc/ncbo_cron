@@ -1,8 +1,6 @@
 # Ignore RubyMine editor files
 .idea/
 config/config.rb
-Gemfile.local
-Gemfile.lock
 projectFilesBackup/
 .ruby-version
 repo*

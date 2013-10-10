@@ -1,0 +1,129 @@
+GIT
+  remote: https://github.com/ncbo/goo.git
+  revision: 3dc6c9a0d16662344c0a2a6354bfa512f2dc18c8
+  specs:
+    goo (0.0.2)
+      rdf
+      redis
+      rest-client
+      rsolr
+      sparql-client
+      uuid
+
+GIT
+  remote: https://github.com/ncbo/ncbo_annotator.git
+  revision: 753c63f7abf6c64ad1edd5f38b95942c8e774393
+  specs:
+    ncbo_annotator (0.0.1)
+      goo
+      ontologies_linked_data
+      redis
+
+GIT
+  remote: https://github.com/ncbo/ontologies_linked_data.git
+  revision: 8126ef947d0edfcafb949b4cf0619126cf7b8990
+  specs:
+    ontologies_linked_data (0.0.1)
+      activesupport
+      bcrypt-ruby
+      goo
+      json
+      libxml-ruby
+      multi_json
+      oj
+      rack
+      rack-test
+      rsolr
+      rubyzip
+
+GIT
+  remote: https://github.com/ncbo/sparql-client.git
+  revision: de82689e690f400833653b0ecc51676396e945a8
+  specs:
+    sparql-client (1.0.4.1)
+      json_pure (>= 1.4)
+      net-http-persistent (>= 1.4)
+      rdf (>= 1.0)
+
+PATH
+  remote: .
+  specs:
+    ncbo_cron (0.0.1)
+      dante
+      goo
+      mlanett-redis-lock
+      multi_json
+      ncbo_annotator
+      ontologies_linked_data
+      redis
+      rufus-scheduler (~> 2.0.24)
+
+GEM
+  remote: https://rubygems.org/
+  specs:
+    activesupport (3.2.14)
+      i18n (~> 0.6, >= 0.6.4)
+      multi_json (~> 1.0)
+    addressable (2.3.5)
+    atomic (1.1.14)
+    bcrypt-ruby (3.1.2)
+    builder (3.2.2)
+    coderay (1.0.9)
+    cube-ruby (0.0.3)
+    dante (0.1.5)
+    i18n (0.6.5)
+    json (1.8.0)
+    json_pure (1.8.0)
+    libxml-ruby (2.7.0)
+    macaddr (1.6.1)
+      systemu (~> 2.5.0)
+    method_source (0.8.2)
+    mime-types (1.25)
+    minitest (4.7.5)
+    mlanett-redis-lock (0.2.5)
+      redis
+    multi_json (1.8.1)
+    net-http-persistent (2.9)
+    oj (2.1.4)
+    pry (0.9.12.2)
+      coderay (~> 1.0.5)
+      method_source (~> 0.8)
+      slop (~> 3.4)
+    rack (1.5.2)
+    rack-test (0.6.2)
+      rack (>= 1.0)
+    rake (10.1.0)
+    rdf (1.0.8)
+      addressable (>= 2.2)
+    redis (3.0.5)
+    rest-client (1.6.7)
+      mime-types (>= 1.16)
+    rsolr (1.0.9)
+      builder (>= 2.1.2)
+    rubyzip (1.0.0)
+    rufus-scheduler (2.0.24)
+      tzinfo (>= 0.3.22)
+    slop (3.4.6)
+    systemu (2.5.2)
+    thread_safe (0.1.3)
+      atomic
+    tzinfo (1.1.0)
+      thread_safe (~> 0.1)
+    uuid (2.3.7)
+      macaddr (~> 1.0)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  cube-ruby
+  goo!
+  minitest (< 5.0)
+  multi_json
+  ncbo_annotator!
+  ncbo_cron!
+  ontologies_linked_data!
+  pry
+  rake
+  redis
+  sparql-client!

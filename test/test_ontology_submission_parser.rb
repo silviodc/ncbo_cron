@@ -61,6 +61,8 @@ class TestOntologySubmission < TestCase
     parser = NcboCron::Models::OntologySubmissionParser.new
 
     submission_ids = [1,2]
+    archived_submissions = []
+    not_archived_submissions = []
     submission_ids.each do |id|
       o1 = @@ontologies[0]
       o1.bring(:submissions) if o1.bring?(:submissions)
@@ -98,10 +100,28 @@ class TestOntologySubmission < TestCase
             s.bring(:submissionId)
             if s.submissionId == 1
               assert s.archived?
+              archived_submissions << s
+            else
+              not_archived_submissions << s
             end
           end
         end
       end
+    end
+
+    logger = Logger.new(STDOUT)
+    archived_submissions.each do |s|
+      assert LinkedData::Models::Class.where.in(s).all.count > 0
+    end
+    not_archived_submissions.each do |s|
+      assert LinkedData::Models::Class.where.in(s).all.count > 50
+    end
+    parser.process_flush_classes(logger)
+    archived_submissions.each do |s|
+      assert LinkedData::Models::Class.where.in(s).all.count == 0
+    end
+    not_archived_submissions.each do |s|
+      assert LinkedData::Models::Class.where.in(s).all.count > 50
     end
   end
 

@@ -138,7 +138,9 @@ module NcboCron
             submissions.sort_by { |x| x.submissionId }.reverse[0..10]
             submissions.each do |old_sub|
               next if old_sub.id.to_s == sub.id.to_s
+              next if sub.submissionId < old_sub.submissionId
               unless sub.archived?
+                old_sub.bring_remaining
                 old_sub.add_submission_status(status_archived)
                 old_sub.save
               end

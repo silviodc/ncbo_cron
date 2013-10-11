@@ -123,6 +123,12 @@ class TestOntologySubmission < TestCase
     not_archived_submissions.each do |s|
       assert LinkedData::Models::Class.where.in(s).all.count > 50
     end
+
+    o1 = @@ontologies[0]
+    o1.delete
+    zombies = parser.zombie_classes_graphs
+    assert zombies.length ==  1
+    assert zombies.first["/TEST-ONT-0/submissions/2"]
   end
 
 end

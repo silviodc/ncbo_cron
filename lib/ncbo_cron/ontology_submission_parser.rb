@@ -79,6 +79,25 @@ module NcboCron
         return "#{IDPREFIX}#{id}"
       end
 
+      def zombie_classes_graphs
+        query = "SELECT DISTINCT ?g WHERE { GRAPH ?g { ?s ?p ?o }}"
+        class_graphs = []
+        Goo.sparql_query_client.query(query).each_solution do |sol|
+          if sol[:g].to_s["/submissions/"] && sol[:g].to_s["/ontologies/"]
+            class_graphs << sol[:g].to_s
+          end
+        end
+        onts_set = Set.new
+        onts = LinkedData::Models::Ontology.where.include(:acronym,:summaryOnly).all.each do |o|
+          onts_set << o.id.to_s
+        end
+        zombies = []
+        class_graphs.each do |g|
+          zombies << g unless onts_set.include?(g.split("/")[0..-3].join("/"))
+        end
+        return zombies
+      end
+
       def process_flush_classes(logger)
         onts = LinkedData::Models::Ontology.where.include(:acronym,:summaryOnly).all
         deleted = []
@@ -100,6 +119,11 @@ module NcboCron
             end
           end
         end
+
+        zombie_classes_graphs.each do |zg|
+          logger.info("Zombie class graph #{zg}")
+        end
+
         return deleted
       end
 

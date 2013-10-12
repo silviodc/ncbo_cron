@@ -100,10 +100,12 @@ module NcboCron
 
       def process_flush_classes(logger)
         onts = LinkedData::Models::Ontology.where.include(:acronym,:summaryOnly).all
+        status_archived = LinkedData::Models::SubmissionStatus.find("ARCHIVED").first
         deleted = []
         onts = onts.sort_by { |x| x.acronym }
         onts.each do |ont|
           if !ont.summaryOnly
+            logger.info("Checking graphs to delete for #{ont.id.to_s}"
             submissions = LinkedData::Models::OntologySubmission.where(ontology: ont)
                             .include(:submissionId)
                             .include(:submissionStatus)
@@ -113,14 +115,18 @@ module NcboCron
             submissions.each do |sub|
               if LinkedData::Models::Class.where.in(sub).count > 1
                 if sub.archived?
-                  logger.info "Deleting graph #{sub.id.to_s} ..."
+                  logger.info "Deleting graph #{sub.id.to_s} ..." ; logger.flush
                   t0 = Time.now
                   sub.delete_classes_graph
-                  logger.info "Graph #{sub.id.to_s} deleted in #{Time.now-t0} sec."
+                  logger.info "Graph #{sub.id.to_s} deleted in #{Time.now-t0} sec."; logger.flush
                   deleted << sub
                 else 
                   if sub.id.to_s != last_ready.id.to_s
-                    logger.info "Graph to delete ? #{sub.id.to_s}"
+                    logger.info "DELETE ? #{sub.id.to_s}"; logger.flush
+                    #sub.bring_remaining
+                    #sub.delete_classes_graph
+                    #sub.add_submission_status(status_archived)
+                    #sub.save
                   end
                 end
               end

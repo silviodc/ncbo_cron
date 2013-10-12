@@ -107,7 +107,7 @@ module NcboCron
                             .include(:submissionId)
                             .include(:submissionStatus)
                             .all
-            submissions.sort_by { |x| x.submissionId }.reverse[0..10]
+            submissions = submissions.sort_by { |x| x.submissionId }.reverse[0..10]
             last_ready = ont.latest_submission(status: :ready)
             submissions.each do |sub|
               if LinkedData::Models::Class.where.in(sub).count > 1

@@ -61,7 +61,7 @@ runner.with_options do |opts|
   opts.on("--console", "REPL for working with scheduler") do |v|
     options[:console] = v
   end
-  opts.on("-f","--flush-old-graphs", "Delete class graphs of archive submissions") do |c|
+  opts.on("-f","--flush-old-graphs FSCHED", String, "Delete class graphs of archive submissions") do |c|
     options[:cron_flush] = c
   end
   
@@ -186,11 +186,12 @@ runner.execute do |opts|
   unless options[:disable_flush]
     flush_thread = Thread.new do
       flush_options = options.dup
-      logger.debug "Setting up the flush cron job with options #{flush_options}"; logger.flush
+      logger.debug "Setting up the flush cron job with options #{flush_options[:cron_flush]}"; logger.flush
       flush_options.delete(:minutes_between)
       flush_options.delete(:seconds_between)
       flush_options[:job_name] = "flush_thread"
       flush_options[:scheduler_type] = :cron
+      flush_options[:cron_schedule] = flush_options[:cron_flush]
       NcboCron::Scheduler.scheduled_locking_job(flush_options) do
         logger.info "Starting ncbo flush"; logger.flush
         filename = File.basename(options[:log_path]).sub(/\.\w{1,4}$/, "")

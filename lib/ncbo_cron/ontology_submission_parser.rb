@@ -101,6 +101,7 @@ module NcboCron
       def process_flush_classes(logger)
         onts = LinkedData::Models::Ontology.where.include(:acronym,:summaryOnly).all
         deleted = []
+        onts = onts.sort_by { |x| x.acronym }
         onts.each do |ont|
           if !ont.summaryOnly
             submissions = LinkedData::Models::OntologySubmission.where(ontology: ont)

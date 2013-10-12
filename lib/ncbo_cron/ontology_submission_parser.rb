@@ -123,11 +123,13 @@ module NcboCron
                   deleted << sub
                 else 
                   if sub.id.to_s != last_ready.id.to_s
-                    logger.info "DELETE ? #{sub.id.to_s}"; logger.flush
-                    #sub.bring_remaining
-                    #sub.delete_classes_graph
-                    #sub.add_submission_status(status_archived)
-                    #sub.save
+                    sub.bring_remaining
+                    logger.info "DELETE #{sub.id.to_s}"; logger.flush
+                    sub.delete_classes_graph
+                    logger.info "DELETE setting to archive #{sub.id.to_s}"; logger.flush
+                    sub.add_submission_status(status_archived)
+                    sub.save
+                    logger.info "DELETE DONE"; logger.flush
                   end
                 end
               end
@@ -136,8 +138,10 @@ module NcboCron
         end
 
         zombie_classes_graphs.each do |zg|
-          logger.info("Zombie class graph #{zg}")
+          logger.info("Zombie class graph #{zg}") ; logger.flush
         end
+
+        logger.info("finish process_flush_classes") ; logger.flush
 
         return deleted
       end

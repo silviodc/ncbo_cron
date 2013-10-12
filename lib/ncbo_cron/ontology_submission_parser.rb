@@ -105,7 +105,7 @@ module NcboCron
         onts = onts.sort_by { |x| x.acronym }
         onts.each do |ont|
           if !ont.summaryOnly
-            logger.info("Checking graphs to delete for #{ont.id.to_s}"
+            logger.info("Checking graphs to delete for #{ont.id.to_s}")
             submissions = LinkedData::Models::OntologySubmission.where(ontology: ont)
                             .include(:submissionId)
                             .include(:submissionStatus)

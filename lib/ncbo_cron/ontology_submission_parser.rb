@@ -117,8 +117,10 @@ module NcboCron
                   sub.delete_classes_graph
                   logger.info "Graph #{sub.id.to_s} deleted in #{Time.now-t0} sec."
                   deleted << sub
-                else if sub.id.to_s != last_ready.id.to_s
-                  logger.info "Graph to delete ? #{sub.id.to_s}"
+                else 
+                  if sub.id.to_s != last_ready.id.to_s
+                    logger.info "Graph to delete ? #{sub.id.to_s}"
+                  end
                 end
               end
             end

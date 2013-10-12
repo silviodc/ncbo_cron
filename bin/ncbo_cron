@@ -185,17 +185,17 @@ runner.execute do |opts|
 
   unless options[:disable_flush]
     flush_thread = Thread.new do
-      logger.debug "Setting up the flush cron job"; logger.flush
       flush_options = options.dup
+      logger.debug "Setting up the flush cron job with options #{flush_options}"; logger.flush
       flush_options.delete(:minutes_between)
       flush_options.delete(:seconds_between)
       flush_options[:job_name] = "flush_thread"
       flush_options[:scheduler_type] = :cron
       NcboCron::Scheduler.scheduled_locking_job(flush_options) do
+        logger.info "Starting ncbo flush"; logger.flush
         filename = File.basename(options[:log_path]).sub(/\.\w{1,4}$/, "")
         flush_log_path = options[:log_path].split("/")[0..-2].push("#{filename}-flush.log").join("/")
         flush_logger = Logger.new(flush_log_path, "a")
-        logger.info "Starting ncbo flush"; logger.flush
         logger.info "Logging flush details to #{flush_log_path}"; logger.flush
         t0 = Time.now
         parser = NcboCron::Models::OntologySubmissionParser.new

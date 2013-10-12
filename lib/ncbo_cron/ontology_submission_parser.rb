@@ -112,6 +112,7 @@ module NcboCron
                             .all
             submissions = submissions.sort_by { |x| x.submissionId }.reverse[0..10]
             last_ready = ont.latest_submission(status: :ready)
+            next if last_ready.nil?
             submissions.each do |sub|
               if LinkedData::Models::Class.where.in(sub).count > 1
                 if sub.archived?

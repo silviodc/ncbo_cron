@@ -100,29 +100,48 @@ module NcboCron
 
       def process_flush_classes(logger)
         onts = LinkedData::Models::Ontology.where.include(:acronym,:summaryOnly).all
+        status_archived = LinkedData::Models::SubmissionStatus.find("ARCHIVED").first
         deleted = []
+        onts = onts.sort_by { |x| x.acronym }
         onts.each do |ont|
           if !ont.summaryOnly
+            logger.info("Checking graphs to delete for #{ont.id.to_s}")
             submissions = LinkedData::Models::OntologySubmission.where(ontology: ont)
                             .include(:submissionId)
                             .include(:submissionStatus)
                             .all
-            submissions.sort_by { |x| x.submissionId }.reverse[0..10]
+            submissions = submissions.sort_by { |x| x.submissionId }.reverse[0..10]
+            last_ready = ont.latest_submission(status: :ready)
+            next if last_ready.nil?
             submissions.each do |sub|
-              if sub.archived?
-                logger.info "Deleting graph #{sub.id.to_s} ..."
-                t0 = Time.now
-                sub.delete_classes_graph
-                logger.info "Graph #{sub.id.to_s} deleted in #{Time.now-t0} sec."
-                deleted << sub
+              if LinkedData::Models::Class.where.in(sub).count > 1
+                if sub.archived?
+                  logger.info "Deleting graph #{sub.id.to_s} ..." ; logger.flush
+                  t0 = Time.now
+                  sub.delete_classes_graph
+                  logger.info "Graph #{sub.id.to_s} deleted in #{Time.now-t0} sec."; logger.flush
+                  deleted << sub
+                else 
+                  if sub.id.to_s != last_ready.id.to_s
+                    sub.bring_remaining
+                    logger.info "DELETE #{sub.id.to_s}"; logger.flush
+                    sub.delete_classes_graph
+                    logger.info "DELETE setting to archive #{sub.id.to_s}"; logger.flush
+                    sub.add_submission_status(status_archived)
+                    sub.save
+                    logger.info "DELETE DONE"; logger.flush
+                  end
+                end
               end
             end
           end
         end
 
         zombie_classes_graphs.each do |zg|
-          logger.info("Zombie class graph #{zg}")
+          logger.info("Zombie class graph #{zg}") ; logger.flush
         end
+
+        logger.info("finish process_flush_classes") ; logger.flush
 
         return deleted
       end

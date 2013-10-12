@@ -108,13 +108,18 @@ module NcboCron
                             .include(:submissionStatus)
                             .all
             submissions.sort_by { |x| x.submissionId }.reverse[0..10]
+            last_ready = ont.latest_submission(status: :ready)
             submissions.each do |sub|
-              if sub.archived?
-                logger.info "Deleting graph #{sub.id.to_s} ..."
-                t0 = Time.now
-                sub.delete_classes_graph
-                logger.info "Graph #{sub.id.to_s} deleted in #{Time.now-t0} sec."
-                deleted << sub
+              if LinkedData::Models::Class.where.in(sub).count > 1
+                if sub.archived?
+                  logger.info "Deleting graph #{sub.id.to_s} ..."
+                  t0 = Time.now
+                  sub.delete_classes_graph
+                  logger.info "Graph #{sub.id.to_s} deleted in #{Time.now-t0} sec."
+                  deleted << sub
+                else if sub.id.to_s != last_ready.id.to_s
+                  logger.info "Graph to delete ? #{sub.id.to_s}"
+                end
               end
             end
           end

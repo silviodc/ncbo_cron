@@ -1,6 +1,6 @@
 GIT
   remote: git://github.com/ncbo/goo.git
-  revision: d01921ffca8bbe777f467043fe3d9a696eb971ce
+  revision: 8dccb9b8bbd6e163a2b37b6781e5a6c3a18b472c
   branch: staging
   specs:
     goo (0.0.2)
@@ -13,7 +13,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ncbo_annotator.git
-  revision: b1ee3a67b159e38087a8f44191c187f0b1505078
+  revision: 043c39be3e59c7f38aaf0690697aa7742f602262
   branch: staging
   specs:
     ncbo_annotator (0.0.1)
@@ -23,7 +23,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ontologies_linked_data.git
-  revision: 5ba26282180cbb7f688cf92358f4254892dccf99
+  revision: 1d73c378d0a437005149c83e09acff7b48e25e04
   branch: staging
   specs:
     ontologies_linked_data (0.0.1)
@@ -34,6 +34,7 @@ GIT
       libxml-ruby
       multi_json
       oj
+      pony
       rack
       rack-test
       rsolr
@@ -81,14 +82,20 @@ GEM
     libxml-ruby (2.7.0)
     macaddr (1.6.1)
       systemu (~> 2.5.0)
+    mail (2.5.4)
+      mime-types (~> 1.16)
+      treetop (~> 1.4.8)
     method_source (0.8.2)
     mime-types (1.25)
     minitest (4.7.5)
     mlanett-redis-lock (0.2.5)
       redis
-    multi_json (1.8.1)
+    multi_json (1.8.2)
     net-http-persistent (2.9)
     oj (2.1.6)
+    polyglot (0.3.3)
+    pony (1.5.1)
+      mail (>= 2.0)
     pry (0.9.12.2)
       coderay (~> 1.0.5)
       method_source (~> 0.8)
@@ -97,8 +104,8 @@ GEM
     rack-test (0.6.2)
       rack (>= 1.0)
     rake (10.1.0)
-    rdf (1.0.8)
-      addressable (>= 2.2)
+    rdf (1.0.9)
+      addressable (>= 2.3)
     redis (3.0.5)
     rest-client (1.6.7)
       mime-types (>= 1.16)
@@ -111,6 +118,9 @@ GEM
     systemu (2.5.2)
     thread_safe (0.1.3)
       atomic
+    treetop (1.4.15)
+      polyglot
+      polyglot (>= 0.3.1)
     tzinfo (1.1.0)
       thread_safe (~> 0.1)
     uuid (2.3.7)

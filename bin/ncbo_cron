@@ -77,8 +77,8 @@ runner.with_options do |opts|
   # Defaults
   options[:redis_host]    ||= "localhost"
   options[:redis_port]    ||= 6379
-  options[:cron_schedule] ||= "00 18 * * 1-5"
-  options[:cron_flush] ||= "00 23 * * 1-5"
+  options[:cron_schedule] ||= "30 */4 * * *"
+  options[:cron_flush]    ||= "00 23 * * 1-5"
   options[:log_level]     ||= :info
   options.delete(:host)
   options.delete(:port)

@@ -51,9 +51,8 @@ module NcboCron
             logger.flush()
             next
           end
-          
-          new_submissions
         end
+        new_submissions
       end
 
       def create_submission(ont, sub, file, filename, logger=nil)

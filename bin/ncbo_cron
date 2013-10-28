@@ -94,7 +94,7 @@ runner.execute do |opts|
   if opts[:view_queue]
     parser = NcboCron::Models::OntologySubmissionParser.new
     queued_items = parser.queued_items(redis).map {|a| {ontology: a[:key], actions: a[:actions]}}
-    puts "\n\n"
+    puts "\n"
     queued_items.empty? ? puts("Nothing queued") : pp(queued_items)
     exit
   end

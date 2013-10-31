@@ -12,13 +12,8 @@ gem 'minitest', '< 5.0'
 gem 'cube-ruby', require: 'cube'
 
 # NCBO gems (can be from a local dev path or from rubygems/git)
-gemfile_local = File.expand_path("../Gemfile.local", __FILE__)
-
-if File.exists?(gemfile_local)
-  self.instance_eval(Bundler.read_file(gemfile_local))
-else
-  gem 'sparql-client', :git => 'https://github.com/ncbo/sparql-client.git'
-  gem 'goo', :git => 'https://github.com/ncbo/goo.git'
-  gem 'ontologies_linked_data', :git => 'https://github.com/ncbo/ontologies_linked_data.git'
-  gem 'ncbo_annotator', :git => 'https://github.com/ncbo/ncbo_annotator.git'
-end
+ncbo_branch = ENV["NCBO_BRANCH"] || `git rev-parse --abbrev-ref HEAD`.strip || "staging"
+gem 'goo', github: 'ncbo/goo', branch: ncbo_branch
+gem 'sparql-client', github: 'ncbo/sparql-client', branch: ncbo_branch
+gem 'ontologies_linked_data', github: 'ncbo/ontologies_linked_data', branch: ncbo_branch
+gem 'ncbo_annotator', github: 'ncbo/ncbo_annotator', branch: ncbo_branch

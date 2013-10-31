@@ -31,7 +31,7 @@ module NcboCron
       end
 
       def process_queue_submissions(options = {})
-        logger = options[:logger] || Logger.new($stdout)
+        logger = options[:logger]
         logger ||= Kernel.const_defined?("LOGGER") ? Kernel.const_get("LOGGER") : Logger.new(STDOUT)
         redis = Redis.new(:host => $QUEUE_REDIS_HOST, :port => $QUEUE_REDIS_PORT)
         all = queued_items(redis, logger)
@@ -155,7 +155,7 @@ module NcboCron
         sub.bring_remaining; sub.ontology.bring(:acronym)
         log_path = "#{sub.uploadFilePath}_parsing.log"
         logger.info "Logging parsing output to #{log_path}"
-        logger = Logger.new(log_path, "a")
+        logger = Logger.new(log_path)
         logger.debug "Starting parsing for #{submissionId}\n\n\n\n"
 
         status_archived = LinkedData::Models::SubmissionStatus.find("ARCHIVED").first

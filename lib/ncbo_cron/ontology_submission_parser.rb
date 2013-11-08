@@ -12,7 +12,8 @@ module NcboCron
         :process_rdf => true,
         :index_search => true,
         :run_metrics => true,
-        :process_annotator => true
+        :process_annotator => true,
+        :diff => true
       }
 
       def initialize()
@@ -51,7 +52,7 @@ module NcboCron
           end
         end
       end
-      
+
       def queued_items(redis, logger=nil)
         logger ||= Kernel.const_defined?("LOGGER") ? Kernel.const_get("LOGGER") : Logger.new(STDOUT)
         all = redis.hgetall(QUEUE_HOLDER)
@@ -121,7 +122,7 @@ module NcboCron
                   sub.delete_classes_graph
                   logger.info "Graph #{sub.id.to_s} deleted in #{Time.now-t0} sec."; logger.flush
                   deleted << sub
-                else 
+                else
                   if sub.id.to_s != last_ready.id.to_s
                     sub.bring_remaining
                     logger.info "DELETE #{sub.id.to_s}"; logger.flush
@@ -151,7 +152,7 @@ module NcboCron
 
       def process_queue_submission(logger, submissionId, actions={})
         sub = LinkedData::Models::OntologySubmission.find(RDF::IRI.new(submissionId)).first
-        
+
         sub.bring_remaining; sub.ontology.bring(:acronym)
         log_path = "#{sub.uploadFilePath}_parsing.log"
         logger.info "Logging parsing output to #{log_path}"
@@ -173,13 +174,14 @@ module NcboCron
           sub.process_submission(logger, actions)
           if sub.ready?
             submissions = LinkedData::Models::OntologySubmission
-                            .where(ontology: sub.ontology)
-                            .include(:submissionId)
-                            .include(:submissionStatus)
-                            .all
-
-            submissions.sort_by { |x| x.submissionId }.reverse[0..10]
-            submissions.each do |old_sub|
+              .where(ontology: sub.ontology)
+              .include(:submissionId)
+              .include(:submissionStatus)
+              .all
+            # Get recent submissions, sorted by submissionId (latest first)
+            recent_submissions = submissions.sort { |a,b| b.submissionId <=> a.submissionId }[0..10]
+            # Mark older submissions archived
+            recent_submissions.each do |old_sub|
               next if old_sub.id.to_s == sub.id.to_s
               next if sub.submissionId < old_sub.submissionId
               unless sub.archived?
@@ -188,9 +190,29 @@ module NcboCron
                 old_sub.save
               end
             end
-
           end
+
           process_annotator(logger, sub) if actions[:process_annotator]
+
+          # Update the most recent 5 submissions with ontology diffs
+          submissions = LinkedData::Models::OntologySubmission
+            .where(ontology: sub.ontology)
+            .include(:submissionId)
+            .include(:diffFilePath)
+            .all
+          # Get recent submissions, sorted by submissionId (latest first)
+          recent_submissions = submissions.sort { |a,b| b.submissionId <=> a.submissionId }[0..5]
+          recent_submissions.each_with_index do |this_sub, i|
+            if this_sub.diffFilePath.nil?
+              begin
+                # Get the next submission, should be an older version.
+                that_sub = recent_submissions[i+1]
+                this_sub.diff(logger, that_sub) unless that_sub.nil?
+              rescue
+                next
+              end
+            end
+          end
         end
       end
 

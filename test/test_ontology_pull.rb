@@ -4,11 +4,11 @@ require 'rack'
 class TestOntologyPull < TestCase
 
   def self.before_suite
-    bro_path = File.expand_path("../data/ontology_files/repo/BROTEST-0/1/BRO_v3.2.owl", __FILE__)
-    file = File.new(bro_path)
+    # This file may not exist until after the init_ontologies method has been called to create 2 submissions.
+    ont_path = File.expand_path("../data/ontology_files/repo/TEST-ONT-0/2/BRO_v3.2.owl", __FILE__)
+    file = File.new(ont_path)
     port = 4567
     @@url = "http://localhost:#{port}/"
-
     @@thread = Thread.new do
       Rack::Server.start(
           app: lambda do |e|
@@ -39,11 +39,12 @@ class TestOntologyPull < TestCase
   end
 
   def test_remote_ontology_pull()
-    pull = NcboCron::Models::OntologyPull.new
     ontologies = init_ontologies(1)
     ont = LinkedData::Models::Ontology.find(ontologies[0].id).first
     ont.bring(:submissions) if ont.bring?(:submissions)
     assert_equal 1, ont.submissions.length
+
+    pull = NcboCron::Models::OntologyPull.new
     pull.do_remote_ontology_pull()
 
     # check that the pull creates a new submission when the file has changed
@@ -77,13 +78,11 @@ class TestOntologyPull < TestCase
   def init_ontologies(submission_count)
     ont_count, acronyms, ontologies = LinkedData::SampleData::Ontology.create_ontologies_and_submissions(ont_count: 1, submission_count: submission_count, process_submission: false)
     ontologies[0].bring(:submissions) if ontologies[0].bring?(:submissions)
-
     ontologies[0].submissions.each do |sub|
       sub.bring_remaining()
       sub.pullLocation = RDF::IRI.new(@@url)
       sub.save()
     end
-
     return ontologies
   end
 

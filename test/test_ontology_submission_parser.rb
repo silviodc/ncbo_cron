@@ -107,6 +107,17 @@ class TestOntologySubmission < TestCase
           end
         end
       end
+      # Check ontology diffs
+      subs4ont1 = o1.submissions
+      subs4ont1.each { |o| o.bring(:submissionId, :diffFilePath) }
+      recent_submissions = subs4ont1.sort { |a,b| b.submissionId <=> a.submissionId }[0..5]
+      recent_submissions.each_with_index do |s|
+        if s.submissionId == 1
+          assert(s.diffFilePath == nil, 'Should not create submission diff for oldest submission')
+        else
+          assert(s.diffFilePath != nil, 'Failed to create submission diff for a recent submission')
+        end
+      end
     end
 
     logger = Logger.new(STDOUT)

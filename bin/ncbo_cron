@@ -64,6 +64,9 @@ runner.with_options do |opts|
   opts.on("-f","--flush-old-graphs FSCHED", String, "Delete class graphs of archive submissions") do |c|
     options[:cron_flush] = c
   end
+  opts.on("-w","--warm-long-queries WSCHED", String, "Warmup long time running queries") do |c|
+    options[:cron_warmq] = c
+  end
   
   
   # Logging
@@ -79,6 +82,7 @@ runner.with_options do |opts|
   options[:redis_port]    ||= 6379
   options[:cron_schedule] ||= "30 */4 * * *"
   options[:cron_flush]    ||= "00 23 * * 1-5"
+  options[:cron_warmq]    ||= "00 */4 * * *"
   options[:log_level]     ||= :info
   options.delete(:host)
   options.delete(:port)
@@ -211,6 +215,30 @@ runner.execute do |opts|
     if flush_thread
       flush_thread.kill
       flush_thread.join
+    end
+  end
+
+  unless options[:disable_warmq]
+    warmq_thread = Thread.new do
+      warmq_options = options.dup
+      logger.debug "Setting up warm up queries #{warmq_options[:cron_warmq]}"; logger.flush
+      warmq_options.delete(:minutes_between)
+      warmq_options.delete(:seconds_between)
+      warmq_options[:job_name] = "warmq_thread"
+      warmq_options[:scheduler_type] = :cron
+      warmq_options[:cron_schedule] = warmq_options[:cron_warmq]
+      NcboCron::Scheduler.scheduled_locking_job(warmq_options) do
+        logger.info "Starting ncbo warmq"; logger.flush
+        filename = File.basename(options[:log_path]).sub(/\.\w{1,4}$/, "")
+        warmq_log_path = options[:log_path].split("/")[0..-2].push("#{filename}-warmq.log").join("/")
+        warmq_logger = Logger.new(warmq_log_path, "a")
+        logger.info "Logging warmq details to #{warmq_log_path}"; logger.flush
+        t0 = Time.now
+        parser = NcboCron::Models::OntologySubmissionParser.new
+        QueryWarmer(logger).new.run
+        logger.info "Warm queries job run in #{Time.now - t0} sec."; logger.flush
+        logger.info "Finished warmq"; logger.flush
+      end
     end
   end
 

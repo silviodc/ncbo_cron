@@ -242,7 +242,15 @@ runner.execute do |opts|
     end
   end
 
+  at_exit do
+    if warmq_thread
+      warmq_thread.kill
+      warmq_thread.join
+    end
+  end
+
   parsing_thread.join if parsing_thread
   pull_thread.join if pull_thread
   flush_thread.join if flush_thread
+  warmq_thread.join if warmq_thread
 end

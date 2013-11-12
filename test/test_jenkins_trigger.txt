@@ -1,6 +1,0 @@
-
-Testing a jenkins build trigger from github service hook.
-
-Trying again.
-
-

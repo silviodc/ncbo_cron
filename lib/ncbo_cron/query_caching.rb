@@ -33,21 +33,21 @@ module NcboCron
       end
 
       def run
-        logger.info("running counts per ontology")
+        @logger.info("running counts per ontology")
         LinkedData::Mappings.mapping_counts_per_ontology
-        logger.info("done")
+        @logger.info("done")
         iterations = 0
         LinkedData::Models::Ontology.where.include(:acronym).all.each do |ont|
-          logger.info("running counts ontology #{ont.id.to_s}")
+          @logger.info("running counts ontology #{ont.id.to_s}")
           LinkedData::Mappings.mapping_counts_for_ontology(ont)
-          logger.info("done")
+          @logger.info("done")
           iterations += 1
         end
-        logger.info("running first page of each ontology")
-        latest_submissions.each do |acr,sub|
-          logger.info("running first page for ontology #{sub.id.to_s}")
+        @logger.info("running first page of each ontology")
+        retrieve_latest_submissions.each do |acr,sub|
+          @logger.info("running first page for ontology #{sub.id.to_s}")
           clss = LinkedData::Models::Class.where.in(sub).page(1,100).all
-          logger.info("done #{clss.length}")
+          @logger.info("done #{clss.length}")
           iterations += 1
         end
         return iterations

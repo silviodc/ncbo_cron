@@ -135,6 +135,10 @@ class TestOntologySubmission < TestCase
       assert LinkedData::Models::Class.where.in(s).all.count > 50
     end
 
+    ont_submission_iter = NcboCron::Models::QueryWarmer.new(logger).run 
+    assert ont_submission_iter >= 4
+
+
     o1 = @@ontologies[0]
     o1.delete
     zombies = parser.zombie_classes_graphs

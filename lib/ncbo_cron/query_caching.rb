@@ -12,16 +12,16 @@ module NcboCron
         status = "RDF" if status.eql?("READY")
         any = true if status.eql?("ANY")
         include_views = options[:include_views] || false
-        includes = OntologySubmission.goo_attrs_to_load(includes_param)
-        includes << :submissionStatus unless includes.include?(:submissionStatus)
         if any
-          submissions_query = OntologySubmission.where
+          submissions_query = LinkedData::Models::OntologySubmission.where
         else
-          submissions_query = OntologySubmission.where(submissionStatus: [ code: status])
+          submissions_query = LinkedData::Models::OntologySubmission
+                                .where(submissionStatus: [ code: status])
         end
 
         submissions_query = submissions_query.filter(Goo::Filter.new(ontology: [:viewOf]).unbound) unless include_views
-        submissions = submissions_query.include(includes).to_a
+        submissions = submissions_query.
+            include(:submissionStatus,:submissionId, ontology: [:acronym]).to_a
 
         latest_submissions = {}
         submissions.each do |sub|

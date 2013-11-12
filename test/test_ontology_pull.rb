@@ -4,8 +4,7 @@ require 'rack'
 class TestOntologyPull < TestCase
 
   def self.before_suite
-    # This file may not exist until after the init_ontologies method has been called to create 2 submissions.
-    ont_path = File.expand_path("../data/ontology_files/repo/TEST-ONT-0/2/BRO_v3.2.owl", __FILE__)
+    ont_path = File.expand_path("../data/ontology_files/BRO_v3.2.owl", __FILE__)
     file = File.new(ont_path)
     port = 4567
     @@url = "http://localhost:#{port}/"

@@ -235,7 +235,7 @@ runner.execute do |opts|
         logger.info "Logging warmq details to #{warmq_log_path}"; logger.flush
         t0 = Time.now
         parser = NcboCron::Models::OntologySubmissionParser.new
-        NcboCron::Models::QueryWarmer.new(logger).new.run
+        NcboCron::Models::QueryWarmer.new(logger).run
         logger.info "Warm queries job run in #{Time.now - t0} sec."; logger.flush
         logger.info "Finished warmq"; logger.flush
       end

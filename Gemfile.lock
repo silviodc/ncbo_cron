@@ -13,7 +13,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ncbo_annotator.git
-  revision: ff84bc59d579d9241561fcdec723a69405970f01
+  revision: 9b57b58a30017e4990935e794015265e0bb66e5f
   branch: staging
   specs:
     ncbo_annotator (0.0.1)
@@ -23,7 +23,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ontologies_linked_data.git
-  revision: 78fab6653b4b8536e2ff8915508dbc68025ae3f4
+  revision: 1495c32c8c5b5419b4befddd06ab54fd1ee4de9f
   branch: staging
   specs:
     ontologies_linked_data (0.0.1)
@@ -66,7 +66,7 @@ PATH
 GEM
   remote: https://rubygems.org/
   specs:
-    activesupport (3.2.15)
+    activesupport (3.2.16)
       i18n (~> 0.6, >= 0.6.4)
       multi_json (~> 1.0)
     addressable (2.3.5)
@@ -76,7 +76,7 @@ GEM
     coderay (1.1.0)
     cube-ruby (0.0.3)
     dante (0.1.5)
-    i18n (0.6.5)
+    i18n (0.6.9)
     json (1.8.1)
     json_pure (1.8.1)
     libxml-ruby (2.7.0)

@@ -3,13 +3,13 @@ require 'json'
 require 'multi_json'
 require 'redis'
 
-class TestOntologySubmission < TestCase
+class TestOntologySubmissionParser < TestCase
 
   def self.before_suite
     @@redis = Redis.new(:host => $QUEUE_REDIS_HOST, :port => $QUEUE_REDIS_PORT)
     db_size = @@redis.dbsize
 
-    if db_size > 2000
+    if db_size > 5000
       puts "This test cannot be run. You are probably pointing to the wrong redis backend. "
       return
     end
@@ -135,7 +135,7 @@ class TestOntologySubmission < TestCase
       assert LinkedData::Models::Class.where.in(s).all.count > 50
     end
 
-    ont_submission_iter = NcboCron::Models::QueryWarmer.new(logger).run 
+    ont_submission_iter = NcboCron::Models::QueryWarmer.new(logger).run
     assert ont_submission_iter >= 4
 
 

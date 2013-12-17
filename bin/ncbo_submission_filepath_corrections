@@ -19,10 +19,12 @@ ontologies.each do |ont|
     sub.bring(:uploadFilePath) if sub.bring?(:uploadFilePath)
     sub.bring(:submissionId) if sub.bring?(:submissionId)
     if sub.uploadFilePath.nil?
-      puts "#{ont.acronym}:\t\t#{sub.uploadFilePath}/#{sub.submissionId}"
+      puts "#{ont.acronym}:\t\tuploadFilePath is nil; submission: #{sub.submissionId}"
+      next
     end
-    next if sub.uploadFilePath.include? "#{ont.acronym}/#{sub.submissionId}"
-    puts "#{ont.acronym}:\t\t#{sub.uploadFilePath}/#{sub.submissionId}"
+    unless sub.uploadFilePath.include? "#{ont.acronym}/#{sub.submissionId}"
+      puts "#{ont.acronym}:\t\tuploadFilePath: #{sub.uploadFilePath}; submission: #{sub.submissionId}"
+    end
   end
 end
 

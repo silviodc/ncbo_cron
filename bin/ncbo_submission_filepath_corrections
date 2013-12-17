@@ -38,11 +38,9 @@ ontologies.each do |ont|
       printf("%-15s\t\tsubmission: %3d; uploadFilePath: nil\n", "#{ont.acronym}:", sub.submissionId)
       next
     end
-    if sub.uploadFilePath.include? "#{ont.acronym}/#{sub.submissionId}"
+    if sub.uploadFilePath.start_with? "#{LinkedData.settings.repository_folder}/#{ont.acronym}/#{sub.submissionId}"
       # This could be OK
-      unless sub.uploadFilePath.include? LinkedData.settings.repository_folder
-        printf("%-15s\t\tsubmission: %3d; uploadFilePath: %s (wrong platform)\n", "#{ont.acronym}:", sub.submissionId, sub.uploadFilePath)
-      end
+      next
     else
       # This is likely an error
       printf("%-15s\t\tsubmission: %3d; uploadFilePath: %s\n", "#{ont.acronym}:", sub.submissionId, sub.uploadFilePath)

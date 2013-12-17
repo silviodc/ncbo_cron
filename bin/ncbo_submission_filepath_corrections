@@ -18,8 +18,11 @@ ontologies.each do |ont|
   ont.submissions.each do |sub|
     sub.bring(:uploadFilePath) if sub.bring?(:uploadFilePath)
     sub.bring(:submissionId) if sub.bring?(:submissionId)
+    if sub.uploadFilePath.nil?
+      puts "#{ont.acronym}:\t\t#{sub.uploadFilePath}/#{sub.submissionId}"
+    end
     next if sub.uploadFilePath.include? "#{ont.acronym}/#{sub.submissionId}"
-    puts "#{ont.acronym}:\t\t#{sub.uploadFilePath}"
+    puts "#{ont.acronym}:\t\t#{sub.uploadFilePath}/#{sub.submissionId}"
   end
 end
 

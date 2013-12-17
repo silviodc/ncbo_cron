@@ -13,9 +13,10 @@ abort("Please create a config/config.rb file using the config/config.rb.sample a
 require_relative '../config/config'
 
 
-ontologies = LinkedData::Models::Ontology.where.include(:acronym,:submissions).all
+ontologies = LinkedData::Models::Ontology.where.include(:acronym,:submissions,:summaryOnly).all
 ontologies.sort! {|a,b| a.acronym.downcase <=> b.acronym.downcase }
 ontologies.each do |ont|
+  next if ont.summaryOnly
   ont.submissions.each do |sub|
     sub.bring(:uploadFilePath) if sub.bring?(:uploadFilePath)
     sub.bring(:pullLocation) if sub.bring?(:pullLocation)

@@ -42,7 +42,7 @@ class TestScheduler < MiniTest::Unit::TestCase
     begin
       options = {
         job_name: "test_scheduled_job_locking",
-        seconds_between: 5
+        seconds_between: 5,
         redis_host: $QUEUE_REDIS_HOST,
         redis_port: $QUEUE_REDIS_PORT
       }

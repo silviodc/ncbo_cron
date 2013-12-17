@@ -24,11 +24,11 @@ ontologies.each do |ont|
   submissions = ont.submissions.sort {|a,b| a.submissionId <=> b.submissionId }
   submissions.each do |sub|
     if sub.uploadFilePath.nil?
-      puts "#{ont.acronym}:\t\t\tsubmission: #{sub.submissionId};\t\tuploadFilePath is nil"
+      printf("%25s\t\tsubmission: %3d; uploadFilePath is nil", "#{ont.acronym}:", sub.submissionId)
       next
     end
     unless sub.uploadFilePath.include? "#{ont.acronym}/#{sub.submissionId}"
-      puts "#{ont.acronym}:\t\t\tsubmission: #{sub.submissionId};\t\tuploadFilePath: #{sub.uploadFilePath}"
+      printf("%25s\t\tsubmission: %3d; uploadFilePath: %s", "#{ont.acronym}:", sub.submissionId, sub.uploadFilePath)
     end
   end
 end

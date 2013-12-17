@@ -39,6 +39,7 @@ ontologies.each do |ont|
       unless sub.valid?
         # This should not be a nil uploadFilePath, just report it, nothing can be done about it here.
         printf("%-15s\t\tsubmission: %4d; uploadFilePath: nil\n", "#{ont.acronym}:", sub.submissionId)
+        # TODO: should we delete invalid submissions?
       end
       next
     end
@@ -66,6 +67,7 @@ ontologies.each do |ont|
         puts "*********************************************************************************************************"
         puts e.message
       end
+      # TODO: should we delete invalid submissions at this stage?
 
     end
   end

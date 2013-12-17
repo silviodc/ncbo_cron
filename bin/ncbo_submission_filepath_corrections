@@ -35,17 +35,17 @@ ontologies.each do |ont|
   submissions.each do |sub|
     if sub.uploadFilePath.nil?
       # Why is this nil?
-      printf("%-25s\t\tsubmission: %3d; uploadFilePath: nil\n", "#{ont.acronym}:", sub.submissionId)
+      printf("%-15s\t\tsubmission: %3d; uploadFilePath: nil\n", "#{ont.acronym}:", sub.submissionId)
       next
     end
     if sub.uploadFilePath.include? "#{ont.acronym}/#{sub.submissionId}"
       # This could be OK
       unless sub.uploadFilePath.include? platform
-        printf("%-25s\t\tsubmission: %3d; uploadFilePath: %s (wrong platform)\n", "#{ont.acronym}:", sub.submissionId, sub.uploadFilePath)
+        printf("%-15s\t\tsubmission: %3d; uploadFilePath: %s (wrong platform)\n", "#{ont.acronym}:", sub.submissionId, sub.uploadFilePath)
       end
     else
       # This is likely an error
-      printf("%-25s\t\tsubmission: %3d; uploadFilePath: %s\n", "#{ont.acronym}:", sub.submissionId, sub.uploadFilePath)
+      printf("%-15s\t\tsubmission: %3d; uploadFilePath: %s\n", "#{ont.acronym}:", sub.submissionId, sub.uploadFilePath)
     end
   end
 end

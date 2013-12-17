@@ -18,16 +18,17 @@ ontologies.sort! {|a,b| a.acronym.downcase <=> b.acronym.downcase }
 ontologies.each do |ont|
   ont.submissions.each do |sub|
     sub.bring(:uploadFilePath) if sub.bring?(:uploadFilePath)
+    sub.bring(:pullLocation) if sub.bring?(:pullLocation)
     sub.bring(:submissionId) if sub.bring?(:submissionId)
   end
   submissions = ont.submissions.sort {|a,b| a.submissionId <=> b.submissionId }
   submissions.each do |sub|
     if sub.uploadFilePath.nil?
-      puts "#{ont.acronym}:\t\tsubmission: #{sub.submissionId};\t\tuploadFilePath is nil"
+      puts "#{ont.acronym}:\t\t\tsubmission: #{sub.submissionId};\t\tuploadFilePath is nil"
       next
     end
     unless sub.uploadFilePath.include? "#{ont.acronym}/#{sub.submissionId}"
-      puts "#{ont.acronym}:\t\tsubmission: #{sub.submissionId};\t\tuploadFilePath: #{sub.uploadFilePath}"
+      puts "#{ont.acronym}:\t\t\tsubmission: #{sub.submissionId};\t\tuploadFilePath: #{sub.uploadFilePath}"
     end
   end
 end

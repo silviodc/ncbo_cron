@@ -35,6 +35,7 @@ ontologies.each do |ont|
   submissions.each do |sub|
     if sub.uploadFilePath.nil?
       # Some submissions can have a nil uploadFilePath
+      sub.bring_remaining
       unless sub.valid?
         # This should not be a nil uploadFilePath
         printf("%-15s\t\tsubmission: %4d; uploadFilePath: nil\n", "#{ont.acronym}:", sub.submissionId)

@@ -13,6 +13,15 @@ abort("Please create a config/config.rb file using the config/config.rb.sample a
 require_relative '../config/config'
 
 
+
+platform = "local"
+if LinkedData.settings.goo_host.include? "stage"
+  platform = "stage"
+elsif LinkedData.settings.goo_host.include? "prod"
+  platform = "prod"
+end
+puts "Running on #{platform} platform; repository = #{LinkedData.settings.repository_folder}"
+
 ontologies = LinkedData::Models::Ontology.where.include(:acronym,:submissions,:summaryOnly).all
 ontologies.sort! {|a,b| a.acronym.downcase <=> b.acronym.downcase }
 ontologies.each do |ont|
@@ -25,10 +34,17 @@ ontologies.each do |ont|
   submissions = ont.submissions.sort {|a,b| a.submissionId <=> b.submissionId }
   submissions.each do |sub|
     if sub.uploadFilePath.nil?
+      # Why is this nil?
       printf("%-25s\t\tsubmission: %3d; uploadFilePath: nil\n", "#{ont.acronym}:", sub.submissionId)
       next
     end
-    unless sub.uploadFilePath.include? "#{ont.acronym}/#{sub.submissionId}"
+    if sub.uploadFilePath.include? "#{ont.acronym}/#{sub.submissionId}"
+      # This could be OK
+      unless sub.uploadFilePath.include? platform
+        printf("%-25s\t\tsubmission: %3d; uploadFilePath: %s (wrong platform)\n", "#{ont.acronym}:", sub.submissionId, sub.uploadFilePath)
+      end
+    else
+      # This is likely an error
       printf("%-25s\t\tsubmission: %3d; uploadFilePath: %s\n", "#{ont.acronym}:", sub.submissionId, sub.uploadFilePath)
     end
   end

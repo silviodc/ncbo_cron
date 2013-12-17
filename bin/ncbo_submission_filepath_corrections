@@ -55,6 +55,7 @@ ontologies.each do |ont|
         FileUtils.mkdir_p uploadFilePath
         FileUtils.copy(sub.uploadFilePath, uploadFile, {:preserve => true, :verbose => true} )
         sub.uploadFilePath = uploadFile
+        sub.bring_remaining
         if sub.valid?
           sub.save
         end
@@ -63,6 +64,7 @@ ontologies.each do |ont|
         puts "Failed to relocate the uploadFilePath for:"
         printf("%-15s\t\tsubmission: %4d; uploadFilePath: %s\n", "#{ont.acronym}:", sub.submissionId, sub.uploadFilePath)
         puts "*********************************************************************************************************"
+        puts e.message
       end
 
     end

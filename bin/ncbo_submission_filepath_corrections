@@ -37,7 +37,7 @@ ontologies.each do |ont|
       # Some submissions can have a nil uploadFilePath
       sub.bring_remaining
       unless sub.valid?
-        # This should not be a nil uploadFilePath
+        # This should not be a nil uploadFilePath, just report it, nothing can be done about it here.
         printf("%-15s\t\tsubmission: %4d; uploadFilePath: nil\n", "#{ont.acronym}:", sub.submissionId)
       end
       next
@@ -46,8 +46,25 @@ ontologies.each do |ont|
       # This could be OK
       next
     else
-      # This is likely an error
+      # This is an error
       printf("%-15s\t\tsubmission: %4d; uploadFilePath: %s\n", "#{ont.acronym}:", sub.submissionId, sub.uploadFilePath)
+      begin
+        uploadFilePath = "#{LinkedData.settings.repository_folder}/#{ont.acronym}/#{sub.submissionId}"
+        uploadFileName = File.basename(sub.uploadFilePath)
+        uploadFile = "#{uploadFilePath}/#{uploadFileName}"
+        FileUtils.mkdir_p uploadFilePath
+        FileUtils.copy(sub.uploadFilePath, uploadFile, {:preserve => true, :verbose => true} )
+        sub.uploadFilePath = uploadFile
+        if sub.valid?
+          sub.save
+        end
+      rescue Exception => e
+        puts "*********************************************************************************************************"
+        puts "Failed to relocate the uploadFilePath for:"
+        printf("%-15s\t\tsubmission: %4d; uploadFilePath: %s\n", "#{ont.acronym}:", sub.submissionId, sub.uploadFilePath)
+        puts "*********************************************************************************************************"
+      end
+
     end
   end
 end

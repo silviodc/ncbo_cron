@@ -1,0 +1,25 @@
+#!/usr/bin/env ruby
+
+# Exit cleanly from an early interrupt
+Signal.trap("INT") { exit 1 }
+
+# Setup the bundled gems in our environment
+require 'bundler/setup'
+
+# Used for getting jobs from the queue and processing them
+require_relative '../lib/ncbo_cron'
+config_exists = File.exist?(File.expand_path('../../config/config.rb', __FILE__))
+abort("Please create a config/config.rb file using the config/config.rb.sample as a template") unless config_exists
+require_relative '../config/config'
+
+
+ontologies = LinkedData::Models::Ontology.where.include(:acronym,:submissions).all
+ontologies.each do |ont|
+  ont.submissions.each do |sub|
+    sub.bring(:uploadFilePath) if sub.bring?(:uploadFilePath)
+    sub.bring(:submissionId) if sub.bring?(:submissionId)
+    next if sub.uploadFilePath.include? "#{ont.acronym}/#{sub.submissionId}"
+    puts "#{ont.acronym}:\t\t#{sub.uploadFilePath}"
+  end
+end
+

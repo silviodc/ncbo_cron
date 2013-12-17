@@ -40,7 +40,7 @@ ontologies.each do |ont|
     end
     if sub.uploadFilePath.include? "#{ont.acronym}/#{sub.submissionId}"
       # This could be OK
-      unless sub.uploadFilePath.include? platform
+      unless sub.uploadFilePath.include? LinkedData.settings.repository_folder
         printf("%-15s\t\tsubmission: %3d; uploadFilePath: %s (wrong platform)\n", "#{ont.acronym}:", sub.submissionId, sub.uploadFilePath)
       end
     else

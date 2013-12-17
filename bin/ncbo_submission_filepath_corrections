@@ -34,8 +34,11 @@ ontologies.each do |ont|
   submissions = ont.submissions.sort {|a,b| a.submissionId <=> b.submissionId }
   submissions.each do |sub|
     if sub.uploadFilePath.nil?
-      # Why is this nil?
-      printf("%-15s\t\tsubmission: %3d; uploadFilePath: nil\n", "#{ont.acronym}:", sub.submissionId)
+      # Some submissions can have a nil uploadFilePath
+      unless sub.valid?
+        # This should not be a nil uploadFilePath
+        printf("%-15s\t\tsubmission: %4d; uploadFilePath: nil\n", "#{ont.acronym}:", sub.submissionId)
+      end
       next
     end
     if sub.uploadFilePath.start_with? "#{LinkedData.settings.repository_folder}/#{ont.acronym}/#{sub.submissionId}"
@@ -43,7 +46,7 @@ ontologies.each do |ont|
       next
     else
       # This is likely an error
-      printf("%-15s\t\tsubmission: %3d; uploadFilePath: %s\n", "#{ont.acronym}:", sub.submissionId, sub.uploadFilePath)
+      printf("%-15s\t\tsubmission: %4d; uploadFilePath: %s\n", "#{ont.acronym}:", sub.submissionId, sub.uploadFilePath)
     end
   end
 end

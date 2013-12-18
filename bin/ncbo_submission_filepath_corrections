@@ -60,6 +60,11 @@ ontologies.each do |ont|
         if sub.valid?
           sub.save
         end
+        #
+        # TODO: The old upload file is 'orphaned' after the sub.save; this script could
+        #       remove them after a successful sub.save.  The files are logged and could be
+        #       removed by another process.
+        #
       rescue Exception => e
         puts "*********************************************************************************************************"
         puts "Failed to relocate the uploadFilePath for:"

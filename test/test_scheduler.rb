@@ -8,7 +8,9 @@ class TestScheduler < MiniTest::Unit::TestCase
     begin
       options = {
         job_name: "test_scheduled_job",
-        seconds_between: 1
+        seconds_between: 1,
+        redis_host: $QUEUE_REDIS_HOST,
+        redis_port: $QUEUE_REDIS_PORT
       }
     
       # Spawn a thread with a job that takes a while to finish
@@ -40,7 +42,9 @@ class TestScheduler < MiniTest::Unit::TestCase
     begin
       options = {
         job_name: "test_scheduled_job_locking",
-        seconds_between: 5
+        seconds_between: 5,
+        redis_host: $QUEUE_REDIS_HOST,
+        redis_port: $QUEUE_REDIS_PORT
       }
       job1 = false
       job2 = false

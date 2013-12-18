@@ -13,7 +13,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ncbo_annotator.git
-  revision: 80db484c138697c84ccfb4bb5e84abc3ef5d0d30
+  revision: cacc1377dc521ec19a14e4f06e264b9698c5a0b2
   branch: master
   specs:
     ncbo_annotator (0.0.1)
@@ -23,7 +23,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ontologies_linked_data.git
-  revision: b5118b55fb79ce0118e1f6d9922c547e8dd28ae9
+  revision: c8dad45d56aea872ba7616c9a4f5c2866368184f
   branch: master
   specs:
     ontologies_linked_data (0.0.1)
@@ -93,7 +93,7 @@ GEM
       redis
     multi_json (1.8.2)
     net-http-persistent (2.9)
-    oj (2.4.1)
+    oj (2.4.3)
     polyglot (0.3.3)
     pony (1.6.2)
       mail (>= 2.0)

@@ -21,6 +21,20 @@ elsif LinkedData.settings.goo_host.include? "prod"
   platform = "prod"
 end
 puts "Running on #{platform} platform; repository = #{LinkedData.settings.repository_folder}"
+unless File.exists? LinkedData.settings.repository_folder
+  puts "ERROR: respository path does not exist: #{LinkedData.settings.repository_folder}"
+  exit!
+end
+
+require 'optparse'
+OptionParser.new do |o|
+  o.on('-n', '--dryrun', 'Only log upload file problems, do not change any data or files.') { $dry_run = true }
+  o.on('-h', '--help', 'Display the help screen') { puts o; exit }
+  o.parse!
+end
+if $dry_run
+  puts 'This is a dry-run, to log upload file problems.'
+end
 
 ontologies = LinkedData::Models::Ontology.where.include(:acronym,:submissions,:summaryOnly).all
 ontologies.sort! {|a,b| a.acronym.downcase <=> b.acronym.downcase }
@@ -49,12 +63,22 @@ ontologies.each do |ont|
     else
       # This is an error
       printf("%-15s\t\tsubmission: %4d; uploadFilePath: %s\n", "#{ont.acronym}:", sub.submissionId, sub.uploadFilePath)
+      next if $dry_run
       begin
         uploadFilePath = "#{LinkedData.settings.repository_folder}/#{ont.acronym}/#{sub.submissionId}"
         uploadFileName = File.basename(sub.uploadFilePath)
         uploadFile = "#{uploadFilePath}/#{uploadFileName}"
-        FileUtils.mkdir_p uploadFilePath
-        FileUtils.copy(sub.uploadFilePath, uploadFile, {:preserve => true, :verbose => true} )
+        begin
+          FileUtils.mkdir_p uploadFilePath
+          FileUtils.copy(sub.uploadFilePath, uploadFile, {:preserve => true, :verbose => true} )
+        rescue Exception => e
+          if e.message.start_with? 'same file:'
+            # If it's the same file, it's probably a symlink and we can update the sub.uploadFilePath anyway.
+          else
+            # It's some other exception, skip any change to sub.uploadFilePath, just report the failure below.
+            raise e
+          end
+        end
         sub.uploadFilePath = uploadFile
         sub.bring_remaining
         if sub.valid?
@@ -67,13 +91,11 @@ ontologies.each do |ont|
         #
       rescue Exception => e
         puts "*********************************************************************************************************"
-        puts "Failed to relocate the uploadFilePath for:"
-        printf("%-15s\t\tsubmission: %4d; uploadFilePath: %s\n", "#{ont.acronym}:", sub.submissionId, sub.uploadFilePath)
-        puts "*********************************************************************************************************"
+        puts "Failed to relocate the uploadFilePath"
         puts e.message
+        puts "*********************************************************************************************************"
       end
       # TODO: should we delete invalid submissions at this stage?
-
     end
   end
 end

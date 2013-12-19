@@ -28,6 +28,7 @@ end
 
 require 'optparse'
 OptionParser.new do |o|
+  o.on('-a', '--logall', 'Log all upload file paths, annoted as correct or erroneous.') { $log_all = true }
   o.on('-n', '--dryrun', 'Only log upload file problems, do not change any data or files.') { $dry_run = true }
   o.on('-h', '--help', 'Display the help screen') { puts o; exit }
   o.parse!
@@ -52,17 +53,20 @@ ontologies.each do |ont|
       sub.bring_remaining
       unless sub.valid?
         # This should not be a nil uploadFilePath, just report it, nothing can be done about it here.
-        printf("%-15s\t\tsubmission: %4d; uploadFilePath: nil\n", "#{ont.acronym}:", sub.submissionId)
+        printf("ERROR:\t%-15s\tsubmission: %4d; uploadFilePath: nil\n", "#{ont.acronym}:", sub.submissionId)
         # TODO: should we delete invalid submissions?
       end
       next
     end
     if sub.uploadFilePath.start_with? "#{LinkedData.settings.repository_folder}/#{ont.acronym}/#{sub.submissionId}"
       # This could be OK
+      if $log_all
+        printf("VALID:\t%-15s\tsubmission: %4d; uploadFilePath: %s\n", "#{ont.acronym}:", sub.submissionId, sub.uploadFilePath)
+      end
       next
     else
       # This is an error
-      printf("%-15s\t\tsubmission: %4d; uploadFilePath: %s\n", "#{ont.acronym}:", sub.submissionId, sub.uploadFilePath)
+      printf("ERROR:\t%-15s\tsubmission: %4d; uploadFilePath: %s\n", "#{ont.acronym}:", sub.submissionId, sub.uploadFilePath)
       next if $dry_run
       begin
         uploadFilePath = "#{LinkedData.settings.repository_folder}/#{ont.acronym}/#{sub.submissionId}"

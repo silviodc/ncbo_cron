@@ -13,7 +13,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ncbo_annotator.git
-  revision: c56c351e1533380a35c497614029e4dc93c90469
+  revision: af0cbf213b50bdb16e539d26946b80251cc6a06d
   branch: staging
   specs:
     ncbo_annotator (0.0.1)
@@ -104,7 +104,7 @@ GEM
     rack (1.5.2)
     rack-test (0.6.2)
       rack (>= 1.0)
-    rake (10.1.0)
+    rake (10.1.1)
     rdf (1.0.8)
       addressable (>= 2.2)
     redis (3.0.6)

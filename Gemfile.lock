@@ -13,7 +13,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ncbo_annotator.git
-  revision: 3ef3b7dfbfc437f618ed29cc9ae5f12dce48da05
+  revision: 2b0c84da155b77d6020f973bde39bb24eb5dc5c5
   branch: staging
   specs:
     ncbo_annotator (0.0.1)
@@ -93,7 +93,7 @@ GEM
       redis
     multi_json (1.8.2)
     net-http-persistent (2.9)
-    oj (2.5.2)
+    oj (2.5.3)
     polyglot (0.3.3)
     pony (1.6.2)
       mail (>= 2.0)

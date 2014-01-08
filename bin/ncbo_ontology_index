@@ -39,10 +39,10 @@ opt_parser = OptionParser.new do |opts|
   opts.on( '-l', '--logfile FILE', "Write log to FILE (default is 'indexing.log')" ) do |filename|
     options[:logfile] = filename
   end
-  options[:verbose] = false
-  opts.on( '-v', '--verbose', 'Output more information' ) do
-    options[:verbose] = true
-  end
+  #options[:verbose] = false
+  #opts.on( '-v', '--verbose', 'Output more information' ) do
+  #  options[:verbose] = true
+  #end
   # Display the help screen, all programs are assumed to have this option.
   opts.on( '-h', '--help', 'Display this screen' ) do
     puts opts
@@ -75,7 +75,6 @@ begin
     puts msg
     exit(1)
   end
-  sub.bring_remaining
 
   # NOTE: process_submission controls all aspects of re-indexing, including
   # removal of the old index and committing a new index.  There is no 'dry-run' option.
@@ -85,9 +84,12 @@ begin
   #ont.unindex
   #logger.info("Completed remove old index on ontology: #{options[:ontology]}.")
   #logger.info("Began indexing ontology: #{options[:ontology]}...")
+
+  sub.bring_remaining
   sub.process_submission(logger,
                        process_rdf: false, index_search: true,
                        run_metrics: false, reasoning: false)
+
   #logger.info("Completed indexing ontology: #{options[:ontology]}.")
   #unless options[:dry_run]
   #  logger.info("Began index commit...")

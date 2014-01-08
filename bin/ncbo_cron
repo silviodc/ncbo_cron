@@ -22,9 +22,10 @@ runner = Dante::Runner.new('ncbo_cron')
 runner.description = "This will run a scheduled job for NCBO-related processing"
 
 runner.with_options do |opts|
-  opts.on("-P", "--pid FILE", String, "save PID in FILE when using -d option", "(default: ./bin/ncbo_cron.pid)") do |v|
-    options[:pid_path] = File.expand_path(v)
-  end
+  ########################################################
+  # WARNING: Before adding options, run `ncbo_cron --help` to see which flags
+  # are already defined
+  ########################################################
   opts.on("-h", "--redis-host HOST", String, "redis host (for shared locking)", "(default: localhost)") do |host|
     options[:redis_host] = host
   end
@@ -52,7 +53,7 @@ runner.with_options do |opts|
   opts.on("--disable-flush", "disable flush archive class graphs") do |v|
     options[:disable_flush] = v
   end
-  opts.on("-q", "--view-queue", "view queued jobs") do |v|
+  opts.on("-v", "--view-queue", "view queued jobs") do |v|
     options[:view_queue] = v
   end
   opts.on("-a", "--add-submission ID", String, "submission id to add to the queue") do |v|
@@ -67,33 +68,37 @@ runner.with_options do |opts|
   opts.on("-w","--warm-long-queries WSCHED", String, "Warmup long time running queries") do |c|
     options[:cron_warmq] = c
   end
-  
-  
-  # Logging
-  require 'logger'
-  log_dir = File.expand_path("../../logs", __FILE__)
-  FileUtils.mkdir_p(log_dir)
-  options[:log_path] ||= "#{log_dir}/scheduler.log"
-  
-  options[:pid_path] = File.expand_path("../ncbo_cron.pid", __FILE__)
-  
-  # Defaults
-  options[:redis_host]    ||= "localhost"
-  options[:redis_port]    ||= 6379
-  options[:cron_schedule] ||= "30 */4 * * *"
-  options[:cron_flush]    ||= "00 23 * * 1-5"
-  options[:cron_warmq]    ||= "00 */4 * * *"
-  options[:log_level]     ||= :info
+
   options.delete(:host)
   options.delete(:port)
+  options.delete(:log_path)
 end
 
 runner.execute do |opts|
+  # Defaults
+  opts[:redis_host]    ||= "localhost"
+  opts[:redis_port]    ||= 6379
+  opts[:skip_cron_jobs] = opts[:view_queue] || opts[:queue_submission] || opts[:console]
+
+  unless opts[:skip_cron_jobs]
+    opts[:cron_schedule] ||= "30 */4 * * *"
+    opts[:cron_flush]    ||= "00 23 * * 1-5"
+    opts[:cron_warmq]    ||= "00 */4 * * *"
+    opts[:log_level]     ||= :info
+
+    # Setup log and pid locations
+    require 'logger'
+    log_dir = File.expand_path("../../logs", __FILE__)
+    FileUtils.mkdir_p(log_dir)
+    options[:log_path] ||= "#{log_dir}/scheduler.log"
+    options[:pid_path] = File.expand_path("../ncbo_cron.pid", __FILE__)
+  end
+
   redis = Redis.new(host: opts[:redis_host], port: opts[:redis_port])
-  
+
   puts "Running ncbo_cron with options:"
   pp opts
-  
+
   # If we're viewing queued entries, show them and quit
   if opts[:view_queue]
     parser = NcboCron::Models::OntologySubmissionParser.new
@@ -112,12 +117,12 @@ runner.execute do |opts|
     parser.queue_submission(sub)
     exit
   end
-  
+
   if opts[:console]
     require 'pry'; binding.pry(quiet: true)
     exit
   end
-  
+
   # Redirect stdout, stderr
   log_file = File.new(opts[:log_path], "a")
   logger = Logger.new(log_file, shift_age = 'daily')
@@ -135,7 +140,7 @@ runner.execute do |opts|
   options = {
     logger: logger
   }.merge(opts)
-  
+
   unless options[:disable_processing]
     parsing_thread = Thread.new do
       logger.debug "Setting up process queue check job"; logger.flush

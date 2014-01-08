@@ -1,7 +1,12 @@
 GIT
   remote: git://github.com/ncbo/goo.git
+<<<<<<< HEAD
   revision: ff6f242b4a2443dae07f0735ca8b18cb073a5953
   branch: staging
+=======
+  revision: 6bdc0cf882179a5c882500dbdb00c2facc59a1e7
+  branch: master
+>>>>>>> dante_upgrade
   specs:
     goo (0.0.2)
       rdf (= 1.0.8)
@@ -23,8 +28,13 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ontologies_linked_data.git
+<<<<<<< HEAD
   revision: 218f06e500009f80de364f19855144cd95c4b0f2
   branch: staging
+=======
+  revision: 6d2ce78b45932c3ad8d856532d1babf3b6673eac
+  branch: master
+>>>>>>> dante_upgrade
   specs:
     ontologies_linked_data (0.0.1)
       activesupport

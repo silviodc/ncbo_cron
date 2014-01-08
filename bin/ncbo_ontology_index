@@ -24,17 +24,17 @@ require 'optparse'
 options = {}
 opt_parser = OptionParser.new do |opts|
   # Set a banner, displayed at the top of the help screen.
-  #opts.banner = "Usage: optparse1.rb [options] file1 file2 ..."
+  #opts.banner = "Usage: ncbo_ontology_index [options]"
   options[:ontology] = false
   opts.on('-o', '--ontology ONTOLOGY_ACRONYM', 'Ontology acronym to index (required).') do |acronym|
     puts "Processing index for ontology: #{acronym}"
     options[:ontology] = acronym
   end
-  options[:dry_run] = false
-  opts.on('-n', '--dryrun', 'Ontology index is not committed to SOLR.') do
-    puts 'This is a dry-run, the index will not be committed to SOLR.'
-    options[:dry_run] = true
-  end
+  #options[:dry_run] = false
+  #opts.on('-n', '--dryrun', 'Ontology index is not committed to SOLR.') do
+  #  puts 'This is a dry-run, the index will not be committed to SOLR.'
+  #  options[:dry_run] = true
+  #end
   options[:logfile] = "indexing.log"
   opts.on( '-l', '--logfile FILE', "Write log to FILE (default is 'indexing.log')" ) do |filename|
     options[:logfile] = filename
@@ -66,7 +66,7 @@ begin
     puts msg
     exit(1)
   end
-  logger.info("Retrieved ontology: #{options[:ontology]}...")
+  #logger.info("Retrieved ontology: #{options[:ontology]}.")
   sub = ont.latest_submission(status: :rdf)
   if sub.nil?
     msg = "Quitting, cannot find latest submission with 'rdf' parsed status."
@@ -75,28 +75,32 @@ begin
     exit(1)
   end
   sub.bring_remaining
-  logger.info("Retrieved submission: #{sub.submissionId}...")
-  logger.info("Began remove old index on ontology: #{options[:ontology]}...")
-  ont.unindex
-  logger.info("Completed remove old index on ontology: #{options[:ontology]}.")
-  logger.info("Began indexing ontology: #{options[:ontology]}...")
+
+  # NOTE: process_submission controls all aspects of re-indexing, including
+  # removal of the old index and committing a new index.  There is no 'dry-run' option.
+
+  #logger.info("Retrieved submission: #{sub.submissionId}.")
+  #logger.info("Began remove old index on ontology: #{options[:ontology]}...")
+  #ont.unindex
+  #logger.info("Completed remove old index on ontology: #{options[:ontology]}.")
+  #logger.info("Began indexing ontology: #{options[:ontology]}...")
   sub.process_submission(logger,
                        process_rdf: false, index_search: true,
                        run_metrics: false, reasoning: false)
-  logger.info("Completed indexing ontology: #{options[:ontology]}.")
-  unless options[:dry_run]
-    logger.info("Began index commit...")
-    # TODO: Ask Misha about whether to commit index on ontology or class model.
-    #ont.indexCommit
-    LinkedData::Models::Class.indexCommit()
-    logger.info("Completed index commit.")
-    logger.info("Began optimizing index...")
-    # TODO: Ask Misha about whether this is required for a single ontology update.
-    LinkedData::Models::Class.indexOptimize()
-    logger.info("Completed optimizing index.")
-  end
+  #logger.info("Completed indexing ontology: #{options[:ontology]}.")
+  #unless options[:dry_run]
+  #  logger.info("Began index commit...")
+  #  # TODO: Ask Misha about whether to commit index on ontology or class model.
+  #  #ont.indexCommit
+  #  LinkedData::Models::Class.indexCommit()
+  #  logger.info("Completed index commit.")
+  #  logger.info("Began optimizing index...")
+  #  # TODO: Ask Misha about whether this is required for a single ontology update.
+  #  LinkedData::Models::Class.indexOptimize()
+  #  logger.info("Completed optimizing index.")
+  #end
 rescue Exception => e
-  msg = "Failed, unknown exception: #{e.to_json}."
+  msg = "Failed, exception: #{e.to_json}."
   logger.error(msg)
   puts msg
   exit(1)

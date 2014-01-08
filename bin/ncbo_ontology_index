@@ -59,6 +59,7 @@ end
 
 begin
   logger = Logger.new(options[:logfile])
+  puts "Processing details are logged to #{options[:logfile]}"
   ont = LinkedData::Models::Ontology.find(options[:ontology]).first
   if ont.nil?
     msg = "Quitting, ontology not found: #{options[:ontology]}"

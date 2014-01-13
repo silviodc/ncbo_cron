@@ -79,7 +79,7 @@ runner.with_options do |opts|
   options[:redis_port]    ||= 6379
 
   # Setup options for when we are daemonized
-  if options[:damonize]
+  if options[:daemonize]
     options[:cron_schedule] ||= "30 */4 * * *"
     options[:cron_flush]    ||= "00 23 * * 1-5"
     options[:cron_warmq]    ||= "00 */4 * * *"

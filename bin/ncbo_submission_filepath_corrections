@@ -22,7 +22,7 @@ elsif LinkedData.settings.goo_host.include? "prod"
 end
 puts "Running on #{platform} platform; repository = #{LinkedData.settings.repository_folder}"
 unless File.exists? LinkedData.settings.repository_folder
-  puts "ERROR: respository path does not exist: #{LinkedData.settings.repository_folder}"
+  puts "ERROR: repository path does not exist: #{LinkedData.settings.repository_folder}"
   exit!
 end
 
@@ -37,70 +37,92 @@ if $dry_run
   puts 'This is a dry-run, to log upload file problems.'
 end
 
-ontologies = LinkedData::Models::Ontology.where.include(:acronym,:submissions,:summaryOnly).all
-ontologies.sort! {|a,b| a.acronym.downcase <=> b.acronym.downcase }
-ontologies.each do |ont|
-  next if ont.summaryOnly
-  ont.submissions.each do |sub|
-    sub.bring(:uploadFilePath) if sub.bring?(:uploadFilePath)
-    sub.bring(:pullLocation) if sub.bring?(:pullLocation)
-    sub.bring(:submissionId) if sub.bring?(:submissionId)
-  end
-  submissions = ont.submissions.sort {|a,b| a.submissionId <=> b.submissionId }
-  submissions.each do |sub|
-    if sub.uploadFilePath.nil?
-      # Some submissions can have a nil uploadFilePath
-      sub.bring_remaining
-      unless sub.valid?
-        # This should not be a nil uploadFilePath, just report it, nothing can be done about it here.
-        printf("ERROR:\t%-15s\tsubmission: %4d; uploadFilePath: nil\n", "#{ont.acronym}:", sub.submissionId)
-        # TODO: should we delete invalid submissions?
-      end
-      next
+def process_submission_upload(sub, ont)
+  if sub.uploadFilePath.nil?
+    # Some submissions can have a nil uploadFilePath
+    sub.bring_remaining
+    unless sub.valid?
+      # This should not be a nil uploadFilePath, just report it, nothing can be done about it here.
+      printf("ERROR:\t%-15s\tsubmission: %4d; uploadFilePath: nil\n", "#{ont.acronym}:", sub.submissionId)
+      # TODO: should we delete invalid submissions?
     end
-    if sub.uploadFilePath.start_with? "#{LinkedData.settings.repository_folder}/#{ont.acronym}/#{sub.submissionId}"
-      # This could be OK
-      if $log_all
-        printf("VALID:\t%-15s\tsubmission: %4d; uploadFilePath: %s\n", "#{ont.acronym}:", sub.submissionId, sub.uploadFilePath)
-      end
-      next
-    else
-      # This is an error
-      printf("ERROR:\t%-15s\tsubmission: %4d; uploadFilePath: %s\n", "#{ont.acronym}:", sub.submissionId, sub.uploadFilePath)
-      next if $dry_run
+  elsif sub.uploadFilePath.start_with? "#{LinkedData.settings.repository_folder}/#{ont.acronym}/#{sub.submissionId}"
+    # This could be OK
+    if $log_all
+      printf("VALID:\t%-15s\tsubmission: %4d; uploadFilePath: %s\n", "#{ont.acronym}:", sub.submissionId, sub.uploadFilePath)
+    end
+  else
+    # This is an error
+    printf("ERROR:\t%-15s\tsubmission: %4d; uploadFilePath: %s\n", "#{ont.acronym}:", sub.submissionId, sub.uploadFilePath)
+    unless $dry_run
       begin
-        uploadFilePath = "#{LinkedData.settings.repository_folder}/#{ont.acronym}/#{sub.submissionId}"
-        uploadFileName = File.basename(sub.uploadFilePath)
-        uploadFile = "#{uploadFilePath}/#{uploadFileName}"
+        # Create the new repository location, if it doesn't exist already.
+        upload_file_path = "#{LinkedData.settings.repository_folder}/#{ont.acronym}/#{sub.submissionId}"
+        FileUtils.mkdir_p upload_file_path
+        # Copy over the ontology upload file.
+        upload_file_name = File.basename(sub.uploadFilePath)
+        upload_file = "#{upload_file_path}/#{upload_file_name}"
         begin
-          FileUtils.mkdir_p uploadFilePath
-          FileUtils.copy(sub.uploadFilePath, uploadFile, {:preserve => true, :verbose => true} )
+          FileUtils.copy(sub.uploadFilePath, upload_file, {:preserve => true, :verbose => true} )
+          sub.uploadFilePath = upload_file
         rescue Exception => e
           if e.message.start_with? 'same file:'
             # If it's the same file, it's probably a symlink and we can update the sub.uploadFilePath anyway.
+            sub.uploadFilePath = upload_file
           else
             # It's some other exception, skip any change to sub.uploadFilePath, just report the failure below.
             raise e
           end
         end
-        sub.uploadFilePath = uploadFile
+        # Copy over the ontology diff file, if it exists.
+        unless sub.diffFilePath.nil?
+          diff_file_name = File.basename(sub.diffFilePath)
+          diff_file = "#{upload_file_path}/#{diff_file_name}"
+          begin
+            FileUtils.copy(sub.diffFilePath, diff_file, {:preserve => true, :verbose => true} )
+            sub.diffFilePath = diff_file
+          rescue Exception => e
+            if e.message.start_with? 'same file:'
+              # If it's the same file, it's probably a symlink and we can update the sub.diffFilePath anyway.
+              sub.diffFilePath = diff_file
+            else
+              # It's some other exception, skip any change to sub.diffFilePath, just report the failure below.
+              raise e
+            end
+          end
+        end
         sub.bring_remaining
         if sub.valid?
           sub.save
+          # Note: The old upload file is 'orphaned' after the sub.save; this script could remove them
+          # after a successful sub.save.  Instead, the files are logged so they can be removed by another process.
         end
-        #
-        # TODO: The old upload file is 'orphaned' after the sub.save; this script could
-        #       remove them after a successful sub.save.  The files are logged and could be
-        #       removed by another process.
-        #
       rescue Exception => e
         puts "*********************************************************************************************************"
         puts "Failed to relocate the uploadFilePath"
         puts e.message
         puts "*********************************************************************************************************"
       end
-      # TODO: should we delete invalid submissions at this stage?
     end
+  end
+end
+
+#
+# MAIN
+#
+ontologies = LinkedData::Models::Ontology.where.include(:acronym,:submissions,:summaryOnly).all
+ontologies.sort! {|a,b| a.acronym.downcase <=> b.acronym.downcase }
+ontologies.each do |ont|
+  next if ont.summaryOnly
+  ont.submissions.each do |sub|
+    sub.bring(:uploadFilePath) if sub.bring?(:uploadFilePath)
+    sub.bring(:diffFilePath) if sub.bring?(:diffFilePath)
+    sub.bring(:pullLocation) if sub.bring?(:pullLocation)
+    sub.bring(:submissionId) if sub.bring?(:submissionId)
+  end
+  submissions = ont.submissions.sort {|a,b| a.submissionId <=> b.submissionId }
+  submissions.each do |sub|
+    process_submission_upload(sub, ont)
   end
 end
 

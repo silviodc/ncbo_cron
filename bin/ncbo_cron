@@ -77,21 +77,25 @@ runner.with_options do |opts|
   # Defaults
   options[:redis_host]    ||= "localhost"
   options[:redis_port]    ||= 6379
+end
 
+# Veryify and set defaults
+runner.verify_options_hook = lambda { |opts|
   # Setup options for when we are daemonized
-  if options[:daemonize]
-    options[:cron_schedule] ||= "30 */4 * * *"
-    options[:cron_flush]    ||= "00 23 * * 1-5"
-    options[:cron_warmq]    ||= "00 */4 * * *"
-    options[:log_level]     ||= :info
+  opts[:skip_cron_jobs] = opts[:view_queue] || opts[:queue_submission] || opts[:console]
+  unless opts[:skip_cron_jobs]
+    opts[:cron_schedule] ||= "30 */4 * * *"
+    opts[:cron_flush]    ||= "00 23 * * 1-5"
+    opts[:cron_warmq]    ||= "00 */4 * * *"
+    opts[:log_level]     ||= :info
 
     require 'logger'
     log_dir = File.expand_path("../../logs", __FILE__)
     FileUtils.mkdir_p(log_dir)
-    options[:log_path] ||= "#{log_dir}/scheduler.log"
-    options[:pid_path] ||= File.expand_path("../ncbo_cron.pid", __FILE__)
+    opts[:log_path] ||= "#{log_dir}/scheduler.log"
+    opts[:pid_path] ||= File.expand_path("../ncbo_cron.pid", __FILE__)
   end
-end
+}
 
 runner.execute do |opts|
   redis = Redis.new(host: opts[:redis_host], port: opts[:redis_port])

@@ -90,8 +90,8 @@ runner.execute do |opts|
     require 'logger'
     log_dir = File.expand_path("../../logs", __FILE__)
     FileUtils.mkdir_p(log_dir)
-    options[:log_path] ||= "#{log_dir}/scheduler.log"
-    options[:pid_path] = File.expand_path("../ncbo_cron.pid", __FILE__)
+    opts[:log_path] ||= "#{log_dir}/scheduler.log"
+    opts[:pid_path] ||= File.expand_path("../ncbo_cron.pid", __FILE__)
   end
 
   redis = Redis.new(host: opts[:redis_host], port: opts[:redis_port])

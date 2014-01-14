@@ -65,10 +65,7 @@ def process_submission_upload(sub, ont)
       upload_file_path = "#{LinkedData.settings.repository_folder}/#{ont.acronym}/#{sub.submissionId}"
       FileUtils.mkdir_p upload_file_path
     rescue Exception => e
-      puts "*********************************************************************************************************"
-      puts "Failed to create submission repository directory."
-      puts e.message
-      puts "*********************************************************************************************************"
+      puts "ERROR: failed to create submission repository directory."
       raise e
     end
     begin
@@ -93,10 +90,7 @@ def process_submission_upload(sub, ont)
         # after a successful sub.save.  Instead, the files are logged so they can be removed by another process.
       end
     rescue Exception => e
-      puts "*********************************************************************************************************"
-      puts "Failed to relocate the upload file"
-      puts e.message
-      puts "*********************************************************************************************************"
+      puts "ERROR: failed to relocate the upload file"
       raise e
     end
     begin
@@ -123,10 +117,7 @@ def process_submission_upload(sub, ont)
         # after a successful sub.save.  Instead, the files are logged so they can be removed by another process.
       end
     rescue Exception => e
-      puts "*********************************************************************************************************"
-      puts "Failed to relocate the diff file"
-      puts e.message
-      puts "*********************************************************************************************************"
+      puts "ERROR: failed to relocate the diff file"
       raise e
     end
   end
@@ -147,7 +138,11 @@ ontologies.each do |ont|
   end
   submissions = ont.submissions.sort {|a,b| a.submissionId <=> b.submissionId }
   submissions.each do |sub|
-    process_submission_upload(sub, ont) rescue next
+    begin
+      process_submission_upload(sub, ont)
+    rescue Exception => e
+      puts e.message
+    end
   end
 end
 

@@ -1,0 +1,77 @@
+#!/usr/bin/env ruby
+
+# Exit cleanly from an early interrupt
+Signal.trap("INT") { exit 1 }
+
+# Setup the bundled gems in our environment
+require 'bundler/setup'
+require "rest-client"
+
+# Used for getting jobs from the queue and processing them
+require_relative '../lib/ncbo_cron'
+config_exists = File.exist?(File.expand_path('../../config/config.rb', __FILE__))
+abort("Please create a config/config.rb file using the config/config.rb.sample as a template") unless config_exists
+require_relative '../config/config'
+
+platform = "local"
+if LinkedData.settings.goo_host.include? "stage"
+  platform = "stage"
+elsif LinkedData.settings.goo_host.include? "prod"
+  platform = "prod"
+end
+puts "Running on #{platform} platform; repository = #{LinkedData.settings.repository_folder}"
+
+require 'optparse'
+OptionParser.new do |o|
+  o.on('-a', '--logall', 'Log all pull locations, annoted as correct or erroneous.') { $log_all = true }
+  o.on('-e', '--email', 'Email ontology contact about invalid pull locations.') { $email = true }
+  o.on('-r', '--email_reply ADDRESS', 'Email reply-to contact for replies.') do |address|
+    $email_reply = address
+  end
+  o.on('-h', '--help', 'Display the help screen') { puts o; exit }
+  o.parse!
+end
+
+def pull_location_exists?(uri_string)
+  begin
+    exists = RestClient.head(uri_string).code == 200
+  rescue RestClient::Exception => error
+    exists = (error.http_code != 404)
+  end
+  return exists
+end
+
+#
+# MAIN
+#
+ontologies = LinkedData::Models::Ontology.where.include(:acronym).all
+ontologies.sort! {|a,b| a.acronym.downcase <=> b.acronym.downcase }
+ontologies.each do |ont|
+  next if ont.summaryOnly
+  sub = ont.latest_submission
+  if sub.nil?
+    puts "ERROR: #{ont.acronym} has no latest submission."
+    next
+  end
+  sub.bring(:submissionId) if sub.bring?(:submissionId)
+  sub.bring(:pullLocation) if sub.bring?(:pullLocation)
+  if sub.pullLocation.nil?
+    # Some submissions can have a nil value
+    sub.bring_remaining
+    unless sub.valid?
+      # This should not be nil, just report it, nothing can be done about it here.
+      printf("ERROR:\t%-15s\tsubmission: %4d; pullLocation: nil\n", "#{ont.acronym}:", sub.submissionId)
+    end
+    next
+  end
+  pull_location_exists = pull_location_exists?(sub.pullLocation)
+  if pull_location_exists and $log_all
+    printf("VALID:\t%-15s\tsubmission: %4d; pullLocation: %s\n", "#{ont.acronym}:", sub.submissionId, sub.pullLocation)
+    next
+  end
+  # The pull location does not exist
+  printf("ERROR:\t%-15s\tsubmission: %4d; pullLocation: %s\n", "#{ont.acronym}:", sub.submissionId, sub.pullLocation)
+
+  # TODO: enable email notifications for invalid pull locations.
+end
+

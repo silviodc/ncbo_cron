@@ -37,6 +37,9 @@ def pull_location_exists?(uri_string)
     exists = RestClient.head(uri_string).code == 200
   rescue RestClient::Exception => error
     exists = (error.http_code != 404)
+  rescue Exception => e
+    puts e.message
+    exists = false
   end
   return exists
 end
@@ -47,10 +50,11 @@ end
 ontologies = LinkedData::Models::Ontology.where.include(:acronym).all
 ontologies.sort! {|a,b| a.acronym.downcase <=> b.acronym.downcase }
 ontologies.each do |ont|
+  ont.bring(:summaryOnly) if sub.bring?(:summaryOnly)
   next if ont.summaryOnly
   sub = ont.latest_submission
   if sub.nil?
-    puts "ERROR: #{ont.acronym} has no latest submission."
+    printf("ERROR:\t%-15s\tsubmission:  nil\n", ont.acronym)
     next
   end
   sub.bring(:submissionId) if sub.bring?(:submissionId)
@@ -64,9 +68,10 @@ ontologies.each do |ont|
     end
     next
   end
-  pull_location_exists = pull_location_exists?(sub.pullLocation)
-  if pull_location_exists and $log_all
-    printf("VALID:\t%-15s\tsubmission: %4d; pullLocation: %s\n", "#{ont.acronym}:", sub.submissionId, sub.pullLocation)
+  if pull_location_exists?(sub.pullLocation)
+    if $log_all
+      printf("VALID:\t%-15s\tsubmission: %4d; pullLocation: %s\n", "#{ont.acronym}:", sub.submissionId, sub.pullLocation)
+    end
     next
   end
   # The pull location does not exist

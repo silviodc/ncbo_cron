@@ -88,6 +88,8 @@ def process_submission_upload(sub, ont)
         sub.save
         # Note: The old upload file is 'orphaned' after the sub.save; this script could remove them
         # after a successful sub.save.  Instead, the files are logged so they can be removed by another process.
+      else
+        raise sub.errors
       end
     rescue Exception => e
       puts "ERROR: failed to relocate the upload file"
@@ -115,6 +117,8 @@ def process_submission_upload(sub, ont)
         sub.save
         # Note: The old diff file is 'orphaned' after the sub.save; this script could remove them
         # after a successful sub.save.  Instead, the files are logged so they can be removed by another process.
+      else
+        raise sub.errors
       end
     rescue Exception => e
       puts "ERROR: failed to relocate the diff file"

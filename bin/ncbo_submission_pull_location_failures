@@ -52,7 +52,7 @@ ontologies.sort! {|a,b| a.acronym.downcase <=> b.acronym.downcase }
 ontologies.each do |ont|
   ont.bring(:summaryOnly) if ont.bring?(:summaryOnly)
   next if ont.summaryOnly
-  sub = ont.latest_submission
+  sub = ont.latest_submission(status: :any)
   if sub.nil?
     printf("ERROR:\t%-15s\tsubmission:  nil\n", ont.acronym)
     next

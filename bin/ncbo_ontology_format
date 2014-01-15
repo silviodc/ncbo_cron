@@ -44,20 +44,20 @@ end
 
 options[:ontologies].each do |acronym|
   begin
-    ont = LinkedData::Models::Ontology.find(acronym).first
+    ont = LinkedData::Models::Ontology.find(acronym).include(:summaryOnly).first
     if ont.nil?
       puts "#{acronym}, ontology not found."
     end
-    ont.bring_remaining
-    if ont.summaryOnly?
+    if ont.summaryOnly
       puts "#{acronym}, summary only."
     end
     sub = ont.latest_submission
     if sub.nil?
       puts "#{acronym}, no latest submission."
     end
-    sub.bring_remaining
-    puts "#{acronym} has format: #{sub.hasOntologyLanguage.id.to_s}."
+    sub.bring(:hasOntologyLanguage)
+    sub_format = sub.hasOntologyLanguage.id.to_s.split('/').last
+    puts "#{acronym} has format: #{sub_format}."
   rescue Exception => e
     puts "Failed, exception: #{e.to_json}."
   end

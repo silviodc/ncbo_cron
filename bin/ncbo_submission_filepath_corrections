@@ -111,14 +111,14 @@ def process_submission_upload(sub, ont)
             raise e
           end
         end
-      end
-      if sub.valid?
-        sub.save
-        # Note: The old diff file is 'orphaned' after the sub.save; this script could remove them
-        # after a successful sub.save.  Instead, the files are logged so they can be removed by another process.
-      else
-        puts "ERROR: failed to update the triple store"
-        puts sub.errors.to_json
+        if sub.valid?
+          sub.save
+          # Note: The old diff file is 'orphaned' after the sub.save; this script could remove them
+          # after a successful sub.save.  Instead, the files are logged so they can be removed by another process.
+        else
+          puts "ERROR: failed to update the triple store"
+          puts sub.errors.to_json
+        end
       end
     rescue Exception => e
       puts "ERROR: failed to relocate the diff file"

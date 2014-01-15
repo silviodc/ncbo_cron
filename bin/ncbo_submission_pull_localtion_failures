@@ -50,7 +50,7 @@ end
 ontologies = LinkedData::Models::Ontology.where.include(:acronym).all
 ontologies.sort! {|a,b| a.acronym.downcase <=> b.acronym.downcase }
 ontologies.each do |ont|
-  ont.bring(:summaryOnly) if sub.bring?(:summaryOnly)
+  ont.bring(:summaryOnly) if ont.bring?(:summaryOnly)
   next if ont.summaryOnly
   sub = ont.latest_submission
   if sub.nil?

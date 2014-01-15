@@ -57,8 +57,8 @@ def process_submission_upload(sub, ont)
   else
     # This is an error
     printf("ERROR:\t%-15s\tsubmission: %4d; uploadFilePath: %s\n", "#{ont.acronym}:", sub.submissionId, sub.uploadFilePath)
-    sub.bring_remaining
     return if $dry_run
+    sub.bring_remaining
     # Create the new repository location, if it doesn't exist already.
     begin
       upload_file_path = "#{LinkedData.settings.repository_folder}/#{ont.acronym}/#{sub.submissionId}"

@@ -41,6 +41,9 @@ runner.with_options do |opts|
   opts.on("-c", "--pull-cron SCHED", String, "cron schedule for ontology pull") do |c|
     options[:cron_schedule] = c
   end
+  opts.on("-d", "--annotator-dictionary-cron SCHED", String, "cron schedule for annotator cache and dictionary rebuild") do |c|
+    options[:annotator_dictionary_rebuild_schedule] = c
+  end
   opts.on("-l", "--log-level LEVEL", String, "set the log level (debug, info, error)", "(default: info)") do |c|
     options[:log_level] = c.to_sym
   end
@@ -52,6 +55,9 @@ runner.with_options do |opts|
   end
   opts.on("--disable-flush", "disable flush archive class graphs") do |v|
     options[:disable_flush] = v
+  end
+  opts.on("--disable-annotator-dictionary", "disable annotator cache and dictionary rebuild") do |v|
+    options[:disable_annotator_dictionary_rebuild] = v
   end
   opts.on("-v", "--view-queue", "view queued jobs") do |v|
     options[:view_queue] = v
@@ -85,6 +91,7 @@ runner.verify_options_hook = lambda { |opts|
   opts[:skip_cron_jobs] = opts[:view_queue] || opts[:queue_submission] || opts[:console]
   unless opts[:skip_cron_jobs]
     opts[:cron_schedule] ||= "30 */4 * * *"
+    opts[:annotator_dictionary_rebuild_schedule] ||= "0 0 */3 * *" #every 3 days
     opts[:cron_flush]    ||= "00 23 * * 1-5"
     opts[:cron_warmq]    ||= "00 */4 * * *"
     opts[:log_level]     ||= :info
@@ -121,6 +128,12 @@ runner.execute do |opts|
     parser.queue_submission(sub)
     exit
   end
+
+
+
+
+
+
 
   if opts[:console]
     require 'pry'; binding.pry(quiet: true)
@@ -175,6 +188,7 @@ runner.execute do |opts|
       pull_options.delete(:seconds_between)
       pull_options[:job_name] = "pull_thread"
       pull_options[:scheduler_type] = :cron
+
       NcboCron::Scheduler.scheduled_locking_job(pull_options) do
         filename = File.basename(options[:log_path]).sub(/\.\w{1,4}$/, "")
         pull_log_path = options[:log_path].split("/")[0..-2].push("#{filename}-pull.log").join("/")
@@ -196,6 +210,31 @@ runner.execute do |opts|
     end
   end
 
+  unless options[:disable_annotator_dictionary_rebuild]
+    annotator_dictionary_rebuild_thread = Thread.new do
+      logger.debug "Setting up annotator cache and dictionary rebuild cron job"; logger.flush
+      annotator_dictionary_rebuild_options = options.dup
+      annotator_dictionary_rebuild_options[:job_name] = "annotator_dictionary_rebuild_thread"
+      annotator_dictionary_rebuild_options[:scheduler_type] = :cron
+      annotator_dictionary_rebuild_options[:cron_schedule] = annotator_dictionary_rebuild_options[:annotator_dictionary_rebuild_schedule]
+
+      NcboCron::Scheduler.scheduled_locking_job(annotator_dictionary_rebuild_options) do
+        logger.info "Starting annotator cache and dictionary rebuild"; logger.flush
+        annotator = Annotator::Models::NcboAnnotator.new
+        annotator.create_term_cache(ontologies_filter=nil, delete_cache=true)
+        annotator.generate_dictionary_file()
+        logger.info "Finished annotator cache and dictionary rebuild"; logger.flush
+      end
+    end
+  end
+
+  at_exit do
+    if annotator_dictionary_rebuild_thread
+      annotator_dictionary_rebuild_thread.kill
+      annotator_dictionary_rebuild_thread.join
+    end
+  end
+
   unless options[:disable_flush]
     flush_thread = Thread.new do
       flush_options = options.dup
@@ -205,6 +244,7 @@ runner.execute do |opts|
       flush_options[:job_name] = "flush_thread"
       flush_options[:scheduler_type] = :cron
       flush_options[:cron_schedule] = flush_options[:cron_flush]
+
       NcboCron::Scheduler.scheduled_locking_job(flush_options) do
         logger.info "Starting ncbo flush"; logger.flush
         filename = File.basename(options[:log_path]).sub(/\.\w{1,4}$/, "")
@@ -236,6 +276,7 @@ runner.execute do |opts|
       warmq_options[:job_name] = "warmq_thread"
       warmq_options[:scheduler_type] = :cron
       warmq_options[:cron_schedule] = warmq_options[:cron_warmq]
+
       NcboCron::Scheduler.scheduled_locking_job(warmq_options) do
         logger.info "Starting ncbo warmq"; logger.flush
         filename = File.basename(options[:log_path]).sub(/\.\w{1,4}$/, "")

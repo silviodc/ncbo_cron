@@ -160,20 +160,19 @@ ontologies.each do |ont|
     recipients = 'darren.weber@stanford.edu'
     subject = "[BioPortal] ontology download fails for #{ont.acronym}"
     body = <<-EOS
-
-Forward this to: #{contacts.join(',')}
-
-RE: http://bioportal.bioontology.org/ontologies/#{ont.acronym}
-
-To whom it may concern,  ## TODO: Use contact first name?
-
-There is a problem with the download location for the #{ont.acronym} ontology, i.e.
-
-    #{sub.pullLocation}
-
-Can you help to fix this?
-
-Thanks,
+Forward this to: #{contacts.join(',')}<br/>
+<br/>
+RE: http://bioportal.bioontology.org/ontologies/#{ont.acronym}<br/>
+<br/>
+To whom it may concern,<br/>
+<br/>
+There is a problem with the download location for the #{ont.acronym} ontology, i.e.<br/>
+<br/>
+    #{sub.pullLocation}<br/>
+<br/>
+Can you help to fix this?<br/>
+<br/>
+Thanks,<br/>
 BioPortal Team
 EOS
     notify(recipients, subject, body)

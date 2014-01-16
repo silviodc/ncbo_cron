@@ -23,11 +23,12 @@ end
 puts "Running on #{platform} platform; repository = #{LinkedData.settings.repository_folder}"
 
 require 'optparse'
+$email_from = ['support@bioportal.org']
 OptionParser.new do |o|
   o.on('-a', '--logall', 'Log all pull locations, annoted as correct or erroneous.') { $log_all = true }
   o.on('-e', '--email', 'Email ontology admins about invalid pull locations.') { $email = true }
-  o.on('-r', '--email_sender ADDRESS', 'Email sender (default = support@bioportal.org).') do |address|
-    $email_sender = address
+  o.on('-f', '--email_from ADDRESS[,ADDRESS,...]', 'Email senders (plus support@bioportal.org).') do |addresses|
+    $email_from.push(addresses.split(',')).flatten
   end
   o.on('-h', '--help', 'Display the help screen') { puts o; exit }
   o.parse!
@@ -84,7 +85,7 @@ end
 
 def notify(recipients, subject, body)
   return unless $email
-  sender     = $email_sender || 'support@bioontology.org'
+  sender     = $email_from.join(',')
   headers    = { 'Content-Type' => 'text/html' }
   mail_options = {
       address: LinkedData.settings.smtp_host,
@@ -157,10 +158,9 @@ ontologies.each do |ont|
       user.bring(:email) if user.bring?(:email)
       contacts.push(user.email)
     end
-    recipients = 'darren.weber@stanford.edu'
+    recipients = contacts.join(',')
     subject = "[BioPortal] ontology download fails for #{ont.acronym}"
     body = <<-EOS
-Forward this to: #{contacts.join(',')}<br/>
 <br/>
 RE: http://bioportal.bioontology.org/ontologies/#{ont.acronym}<br/>
 <br/>

@@ -127,5 +127,16 @@ ontologies.each do |ont|
 
 
   # TODO: enable email notifications for invalid pull locations.
+
+  #RE: http://bioportal.bioontology.org/ontologies/ENVO
+  #
+  #To whom it may concern,  ## TODO: Use contact first name?
+  #
+  #There is a problem with the download location for the #{ont.acronym} ontology
+  #
+  #  #{sub.pullLocation}
+  #
+  #Can you help to fix this?
+
 end
 

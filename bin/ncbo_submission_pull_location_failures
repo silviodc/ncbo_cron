@@ -5,7 +5,8 @@ Signal.trap("INT") { exit 1 }
 
 # Setup the bundled gems in our environment
 require 'bundler/setup'
-require "rest-client"
+#require 'rest-client'
+require 'net/http'
 
 # Used for getting jobs from the queue and processing them
 require_relative '../lib/ncbo_cron'
@@ -32,18 +33,57 @@ OptionParser.new do |o|
   o.parse!
 end
 
-def pull_location_exists?(uri_string)
-  begin
-    exists = RestClient.head(uri_string).code == 200
-  rescue RestClient::Exception => error
-    puts error.http_code
-    exists = (error.http_code != 404)
-  rescue Exception => e
-    puts e.to_json
-    exists = false
+#def pull_location_exists?(uri_string)
+#  begin
+#    exists = RestClient.head(uri_string).code == 200
+#  rescue RestClient::Exception => error
+#    puts error.http_code
+#    exists = (error.http_code != 404)
+#  rescue Exception => e
+#    puts e.to_json
+#    exists = false
+#  end
+#  return exists
+#end
+
+#def pull_location_head(uri_string)
+#  url_base = uri_string.split('/')[2]
+#  url_path = '/'+uri_string.split('/')[3..-1].join('/')
+#  Net::HTTP.start(url_base) do |http|
+#    resp = http.request_head(URI.escape(url_path))
+#    puts resp.to_json
+#  end
+#end
+
+def check_http_file(uri)
+  session = Net::HTTP.new(uri.host, uri.port)
+  session.use_ssl = true if uri.port == 443
+  session.start do |http|
+    response = http.head(uri.request_uri)
+    return response.code
   end
-  return exists
 end
+
+def check_ftp_file(uri)
+  ftp = Net::FTP.new(uri.host, uri.user, uri.password)
+  ftp.login
+  begin
+    return ftp.size(uri.path) > 0
+  rescue Exception => e
+    # Check using another method
+    path = uri.path.split("/")
+    filename = path.pop
+    path = path.join("/")
+    ftp.chdir(path)
+    files = ftp.dir
+    # Dumb check, just see if the filename is somewhere in the list
+    files.each { |file| return true if file.include?(filename) }
+  end
+  return false
+end
+
+
+
 
 #
 # MAIN
@@ -69,14 +109,22 @@ ontologies.each do |ont|
     end
     next
   end
-  if pull_location_exists?(sub.pullLocation)
+  if sub.remote_file_exists?
     if $log_all
       printf("VALID:\t%-15s\tsubmission: %4d; pullLocation: %s\n", "#{ont.acronym}:", sub.submissionId, sub.pullLocation)
     end
     next
   end
-  # The pull location does not exist
-  printf("ERROR:\t%-15s\tsubmission: %4d; pullLocation: %s\n", "#{ont.acronym}:", sub.submissionId, sub.pullLocation)
+  # If it gets this far, there is a problem with the pull location;
+  # try to find out what the problem is with the pullLocation.
+  uri = URI.parse(sub.pullLocation)
+  if uri.kind_of?(URI::FTP)
+    response = check_ftp_file(uri)
+  else
+    response = check_http_file(uri)
+  end
+  printf("ERROR:\t%-15s\tsubmission: %4d; pullLocation: %s; status: %s\n", "#{ont.acronym}:", sub.submissionId, sub.pullLocation, response)
+
 
   # TODO: enable email notifications for invalid pull locations.
 end

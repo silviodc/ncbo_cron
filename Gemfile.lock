@@ -138,6 +138,7 @@ DEPENDENCIES
   ncbo_annotator!
   ncbo_cron!
   ontologies_linked_data!
+  pony
   pry
   rake
   redis

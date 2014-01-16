@@ -25,9 +25,9 @@ puts "Running on #{platform} platform; repository = #{LinkedData.settings.reposi
 require 'optparse'
 OptionParser.new do |o|
   o.on('-a', '--logall', 'Log all pull locations, annoted as correct or erroneous.') { $log_all = true }
-  o.on('-e', '--email', 'Email ontology contact about invalid pull locations.') { $email = true }
-  o.on('-r', '--email_reply ADDRESS', 'Email reply-to contact for replies.') do |address|
-    $email_reply = address
+  o.on('-e', '--email', 'Email ontology admins about invalid pull locations.') { $email = true }
+  o.on('-r', '--email_sender ADDRESS', 'Email sender (default = support@bioportal.org).') do |address|
+    $email_sender = address
   end
   o.on('-h', '--help', 'Display the help screen') { puts o; exit }
   o.parse!
@@ -82,8 +82,32 @@ def check_ftp_file(uri)
   return false
 end
 
-
-
+def notify(recipients, subject, body)
+  return unless $email
+  sender     = 'support@bioontology.org'
+  headers    = { 'Content-Type' => 'text/html' }
+  mail_options = {
+      address: LinkedData.settings.smtp_host,
+      port:    LinkedData.settings.smtp_port,
+      domain:  LinkedData.settings.smtp_domain # the HELO domain provided by the client to the server
+  }
+  if LinkedData.settings.smtp_auth_type && LinkedData.settings.smtp_auth_type != :none
+    mail_options.merge({
+                           user_name:      LinkedData.settings.smtp_user,
+                           password:       LinkedData.settings.smtp_password,
+                           authentication: LinkedData.settings.smtp_auth_type
+                       })
+  end
+  Pony.mail({
+                to: recipients,
+                from: sender,
+                subject: subject,
+                body: body,
+                headers: headers,
+                via: :smtp,
+                via_options: mail_options
+            })
+end
 
 #
 # MAIN
@@ -126,17 +150,38 @@ ontologies.each do |ont|
   printf("ERROR:\t%-15s\tsubmission: %4d; pullLocation: %s; status: %s\n", "#{ont.acronym}:", sub.submissionId, sub.pullLocation, response)
 
 
-  # TODO: enable email notifications for invalid pull locations.
+  # Create email notification
+  if $email
+    contacts = []
+    ont.administeredBy.map do |user_id|
+      user = LinkedData::Models::User.find(user_id).first
+      next if user.nil?
+      user.bring_remaining
+      contacts.push(user.email)
+    end
 
-  #RE: http://bioportal.bioontology.org/ontologies/ENVO
-  #
-  #To whom it may concern,  ## TODO: Use contact first name?
-  #
-  #There is a problem with the download location for the #{ont.acronym} ontology
-  #
-  #  #{sub.pullLocation}
-  #
-  #Can you help to fix this?
+    recipients = 'darren.weber@stanford.edu'
+    subject = "[BioPortal] ontology download fails for #{ont.acronym}"
+    body = <<-EOS
+
+Forward this to: #{contacts.join(',')}
+
+RE: http://bioportal.bioontology.org/ontologies/#{ont.acronym}
+
+To whom it may concern,  ## TODO: Use contact first name?
+
+There is a problem with the download location for the #{ont.acronym} ontology, i.e.
+
+    #{sub.pullLocation}
+
+Can you help to fix this?
+
+Thanks,
+BioPortal Team
+EOS
+
+    notify(recipients, subject, body)
+  end
 
 end
 

@@ -7,6 +7,7 @@ gem 'pry'
 gem 'multi_json'
 gem 'redis'
 gem 'minitest', '< 5.0'
+gem 'pony'
 
 # Monitoring
 gem 'cube-ruby', require: 'cube'

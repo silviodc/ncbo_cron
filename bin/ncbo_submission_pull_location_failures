@@ -89,7 +89,10 @@ end
 
 def notify(recipients, subject, body)
   return unless $email
-  recipients = $email_to.join(',') unless $email_to.empty?  # option to override ontology admin emails
+  unless $email_to.empty?  # option to override ontology admin emails
+    body += "<br/><p>P.S. ontology admins: #{recipients}</p>"
+    recipients = $email_to.join(',')
+  end
   sender     = $email_from.join(',')
   headers    = { 'Content-Type' => 'text/html' }
   mail_options = {

@@ -109,7 +109,7 @@ ontologies.each do |ont|
     end
     next
   end
-  if sub.remote_file_exists?
+  if sub.remote_file_exists?(sub.pullLocation)
     if $log_all
       printf("VALID:\t%-15s\tsubmission: %4d; pullLocation: %s\n", "#{ont.acronym}:", sub.submissionId, sub.pullLocation)
     end

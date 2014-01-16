@@ -149,18 +149,14 @@ ontologies.each do |ont|
   end
   printf("ERROR:\t%-15s\tsubmission: %4d; pullLocation: %s; status: %s\n", "#{ont.acronym}:", sub.submissionId, sub.pullLocation, response)
 
-
   # Create email notification
   if $email
     contacts = []
     ont.bring(:administeredBy) if ont.bring?(:administeredBy)
-    ont.administeredBy.map do |user_id|
-      user = LinkedData::Models::User.find(user_id).first
-      next if user.nil?
-      user.bring_remaining
+    ont.administeredBy.map do |user|
+      user.bring(:email) if user.bring?(:email)
       contacts.push(user.email)
     end
-
     recipients = 'darren.weber@stanford.edu'
     subject = "[BioPortal] ontology download fails for #{ont.acronym}"
     body = <<-EOS
@@ -180,7 +176,6 @@ Can you help to fix this?
 Thanks,
 BioPortal Team
 EOS
-
     notify(recipients, subject, body)
   end
 

@@ -84,7 +84,7 @@ end
 
 def notify(recipients, subject, body)
   return unless $email
-  sender     = 'support@bioontology.org'
+  sender     = $email_sender || 'support@bioontology.org'
   headers    = { 'Content-Type' => 'text/html' }
   mail_options = {
       address: LinkedData.settings.smtp_host,

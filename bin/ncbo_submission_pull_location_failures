@@ -112,7 +112,7 @@ end
 #
 # MAIN
 #
-ontologies = LinkedData::Models::Ontology.where.include(:acronym).all
+ontologies = LinkedData::Models::Ontology.where.include(:acronym,:summaryOnly,:administeredBy).all
 ontologies.sort! {|a,b| a.acronym.downcase <=> b.acronym.downcase }
 ontologies.each do |ont|
   ont.bring(:summaryOnly) if ont.bring?(:summaryOnly)
@@ -153,6 +153,7 @@ ontologies.each do |ont|
   # Create email notification
   if $email
     contacts = []
+    ont.bring(:administeredBy) if ont.bring?(:administeredBy)
     ont.administeredBy.map do |user_id|
       user = LinkedData::Models::User.find(user_id).first
       next if user.nil?

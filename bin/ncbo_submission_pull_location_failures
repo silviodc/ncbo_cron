@@ -23,12 +23,16 @@ end
 puts "Running on #{platform} platform; repository = #{LinkedData.settings.repository_folder}"
 
 require 'optparse'
+$email_to = []
 $email_from = ['support@bioportal.org']
 OptionParser.new do |o|
   o.on('-a', '--logall', 'Log all pull locations, annoted as correct or erroneous.') { $log_all = true }
   o.on('-e', '--email', 'Email ontology admins about invalid pull locations.') { $email = true }
   o.on('-f', '--email_from ADDRESS[,ADDRESS,...]', 'Email senders (plus support@bioportal.org).') do |addresses|
     $email_from.push(addresses.split(',')).flatten
+  end
+  o.on('-t', '--email_to ADDRESS[,ADDRESS,...]', 'Email to recipients (override notification to ontology admins).') do |addresses|
+    $email_to.push(addresses.split(',')).flatten
   end
   o.on('-h', '--help', 'Display the help screen') { puts o; exit }
   o.parse!
@@ -85,6 +89,7 @@ end
 
 def notify(recipients, subject, body)
   return unless $email
+  recipients = $email_to.join(',') unless $email_to.empty?  # option to override ontology admin emails
   sender     = $email_from.join(',')
   headers    = { 'Content-Type' => 'text/html' }
   mail_options = {
@@ -108,6 +113,7 @@ def notify(recipients, subject, body)
                 via: :smtp,
                 via_options: mail_options
             })
+  puts "Email notification sent to: #{recipients}."
 end
 
 #

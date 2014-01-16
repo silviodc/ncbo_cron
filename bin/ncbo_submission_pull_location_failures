@@ -23,11 +23,16 @@ end
 puts "Running on #{platform} platform; repository = #{LinkedData.settings.repository_folder}"
 
 require 'optparse'
+$email_to = []
+$email_from = ['support@bioportal.org']
 OptionParser.new do |o|
   o.on('-a', '--logall', 'Log all pull locations, annoted as correct or erroneous.') { $log_all = true }
-  o.on('-e', '--email', 'Email ontology contact about invalid pull locations.') { $email = true }
-  o.on('-r', '--email_reply ADDRESS', 'Email reply-to contact for replies.') do |address|
-    $email_reply = address
+  o.on('-e', '--email', 'Email ontology admins about invalid pull locations.') { $email = true }
+  o.on('-f', '--email_from ADDRESS[,ADDRESS,...]', 'Email senders (plus support@bioportal.org).') do |addresses|
+    $email_from.push(addresses.split(',')).flatten
+  end
+  o.on('-t', '--email_to ADDRESS[,ADDRESS,...]', 'Email to recipients (override notification to ontology admins).') do |addresses|
+    $email_to.push(addresses.split(',')).flatten
   end
   o.on('-h', '--help', 'Display the help screen') { puts o; exit }
   o.parse!
@@ -82,13 +87,42 @@ def check_ftp_file(uri)
   return false
 end
 
-
-
+def notify(recipients, subject, body)
+  return unless $email
+  unless $email_to.empty?  # option to override ontology admin emails
+    body += "<br/><p>P.S. ontology admins: #{recipients}</p>"
+    recipients = $email_to.join(',')
+  end
+  sender     = $email_from.join(',')
+  headers    = { 'Content-Type' => 'text/html' }
+  mail_options = {
+      address: LinkedData.settings.smtp_host,
+      port:    LinkedData.settings.smtp_port,
+      domain:  LinkedData.settings.smtp_domain # the HELO domain provided by the client to the server
+  }
+  if LinkedData.settings.smtp_auth_type && LinkedData.settings.smtp_auth_type != :none
+    mail_options.merge({
+                           user_name:      LinkedData.settings.smtp_user,
+                           password:       LinkedData.settings.smtp_password,
+                           authentication: LinkedData.settings.smtp_auth_type
+                       })
+  end
+  Pony.mail({
+                to: recipients,
+                from: sender,
+                subject: subject,
+                body: body,
+                headers: headers,
+                via: :smtp,
+                via_options: mail_options
+            })
+  puts "Email notification sent to: #{recipients}."
+end
 
 #
 # MAIN
 #
-ontologies = LinkedData::Models::Ontology.where.include(:acronym).all
+ontologies = LinkedData::Models::Ontology.where.include(:acronym,:summaryOnly,:administeredBy).all
 ontologies.sort! {|a,b| a.acronym.downcase <=> b.acronym.downcase }
 ontologies.each do |ont|
   ont.bring(:summaryOnly) if ont.bring?(:summaryOnly)
@@ -125,7 +159,33 @@ ontologies.each do |ont|
   end
   printf("ERROR:\t%-15s\tsubmission: %4d; pullLocation: %s; status: %s\n", "#{ont.acronym}:", sub.submissionId, sub.pullLocation, response)
 
+  # Create email notification
+  if $email
+    contacts = []
+    ont.bring(:administeredBy) if ont.bring?(:administeredBy)
+    ont.administeredBy.map do |user|
+      user.bring(:email) if user.bring?(:email)
+      contacts.push(user.email)
+    end
+    recipients = contacts.join(',')
+    subject = "[BioPortal] ontology download fails for #{ont.acronym}"
+    body = <<-EOS
+<br/>
+RE: http://bioportal.bioontology.org/ontologies/#{ont.acronym}<br/>
+<br/>
+To whom it may concern,<br/>
+<br/>
+There is a problem with the download location for the #{ont.acronym} ontology, i.e.<br/>
+<br/>
+    #{sub.pullLocation}<br/>
+<br/>
+Can you help to fix this?<br/>
+<br/>
+Thanks,<br/>
+BioPortal Team
+EOS
+    notify(recipients, subject, body)
+  end
 
-  # TODO: enable email notifications for invalid pull locations.
 end
 

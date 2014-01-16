@@ -36,9 +36,10 @@ def pull_location_exists?(uri_string)
   begin
     exists = RestClient.head(uri_string).code == 200
   rescue RestClient::Exception => error
+    puts error.http_code
     exists = (error.http_code != 404)
   rescue Exception => e
-    puts e.message
+    puts e.to_json
     exists = false
   end
   return exists

@@ -1,0 +1,87 @@
+#!/usr/bin/env ruby
+
+# Exit cleanly from an early interrupt
+Signal.trap("INT") { exit 1 }
+
+# Setup the bundled gems in our environment
+require 'bundler/setup'
+
+# Configure the process for the current cron configuration.
+require_relative '../lib/ncbo_cron'
+config_exists = File.exist?(File.expand_path('../../config/config.rb', __FILE__))
+abort("Please create a config/config.rb file using the config/config.rb.sample as a template") unless config_exists
+require_relative '../config/config';
+
+#platform = "local"
+#if LinkedData.settings.goo_host.include? "stage"
+#  platform = "stage"
+#elsif LinkedData.settings.goo_host.include? "prod"
+#  platform = "prod"
+#end
+
+require 'optparse'
+options = {}
+opt_parser = OptionParser.new do |opts|
+  # Set a banner, displayed at the top of the help screen.
+  #opts.banner = "Usage: ncbo_ontology_index [options]"
+  opts.on('-o', '--ontologies ACRONYM[,ACRONYM,...]', 'Ontology acronym to inspect (default: all ontologies).') do |acronym|
+    options[:ontologies] = acronym.split(',')
+  end
+  opts.on('-s', '--status', 'Ontology status') { options[:status] = true }
+  # Display the help screen, all programs are assumed to have this option.
+  opts.on( '-h', '--help', 'Display this screen' ) do
+    puts opts
+    exit
+  end
+end
+# Parse the command-line. The 'parse' method simply parses ARGV, while the 'parse!' method parses ARGV and removes
+# any options found there, as well as any parameters for the options.
+opt_parser.parse!
+unless options[:ontologies]
+  onts = LinkedData::Models::Ontology.all
+  options[:ontologies] = onts.map {|o| o.bring(:acronym) && o.acronym }
+end
+
+
+def ont_status(ont)
+  # Summarise the ontology status
+end
+
+
+#
+# MAIN
+#
+options[:ontologies].each do |acronym|
+  begin
+    ont = LinkedData::Models::Ontology.find(acronym).first
+    if ont.nil?
+      puts "#{acronym}, ontology not found."
+    end
+    ont.bring_remaining
+
+    if ont.summaryOnly
+      puts "#{acronym}, summary only."
+
+      ont_status(ont) if options[:status]
+      exit!
+
+
+      # Can only access metadata for this ontology
+      next
+    end
+
+    # Proceed to get properties from the latest submission
+    sub = ont.latest_submission(status: :any)
+    if sub.nil?
+      puts "#{acronym}, no latest submission."
+      next
+    end
+    sub.bring_remaining
+    sub_format = sub.hasOntologyLanguage.id.to_s.split('/').last
+    puts "#{acronym} has format: #{sub_format}."
+
+  rescue Exception => e
+    puts "Failed, exception: #{e.to_json}."
+  end
+end
+

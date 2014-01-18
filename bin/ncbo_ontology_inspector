@@ -27,7 +27,9 @@ opt_parser = OptionParser.new do |opts|
   opts.on('-o', '--ontologies ACRONYM[,ACRONYM,...]', 'Ontology acronym to inspect (default: all ontologies).') do |acronym|
     options[:ontologies] = acronym.split(',')
   end
-  opts.on('-s', '--status', 'Ontology status') { options[:status] = true }
+  opts.on('-p', '--properties PROPERTY[,PROPERTY,...]', 'Ontology properties to inspect (REST API properties)') do |properties|
+    properties.split(',').each {|property| options[property.to_sym] = true }
+  end
   # Display the help screen, all programs are assumed to have this option.
   opts.on( '-h', '--help', 'Display this screen' ) do
     puts opts
@@ -43,8 +45,8 @@ unless options[:ontologies]
 end
 
 
-def ont_status(ont)
-  # Summarise the ontology status
+def ont_status(sub, sep)
+  # Summarise the submission status
 end
 
 
@@ -55,30 +57,62 @@ options[:ontologies].each do |acronym|
   begin
     ont = LinkedData::Models::Ontology.find(acronym).first
     if ont.nil?
-      puts "#{acronym}, ontology not found."
+      # TODO: might have to add padding for 'cuttable' output.
+      puts "#{acronym}; ontology not found"
     end
     ont.bring_remaining
+    # Create one-line output - compatible with unix string processing tools.
+    sep = ';; '
 
-    if ont.summaryOnly
-      puts "#{acronym}, summary only."
+    # This section can inspect common properties of ontologies, including summaryOnly ontologies.
+    puts "#{ont.acronym}#{sep}"
+    puts "id = #{ont.id}#{sep}" if options[:id]
+    puts "acronym = #{ont.acronym}#{sep}" if options[:acronym]
+    puts "name = #{ont.name}#{sep}" if options[:name]
+    puts "viewingRestriction = #{ont.viewingRestriction}#{sep}" if options[:viewingRestriction]
 
-      ont_status(ont) if options[:status]
-      exit!
+    #@acl=[],
+    binding.pry if options[:acl]
+
+    binding.pry if options[:administeredBy]
+    #@administeredBy=
+    #    [#<LinkedData::Models::User:0x007f319a24c7a0
+    #        @aggregates=nil,
+    #        @id=
+    #            #<RDF::URI:0x3f98cd3f168c(http://data.bioontology.org/users/maskot1977)>,
+    #            @loaded_attributes=#<Set: {}>,
+    #                @modified_attributes=#<Set: {}>,
+    #                    @persistent=true,
+    #        @previous_values=nil,
+    #        @unmapped=nil>],
+
+    puts "doNotUpdate = #{ont.doNotUpdate}#{sep}" if options[:doNotUpdate]
+    puts "flat = #{ont.flat}#{sep}" if options[:flat]
+    puts "group = #{ont.group.to_json}#{sep}" if options[:group]
+    puts "hasDomain = #{ont.hasDomain}#{sep}" if options[:hasDomain]
+    puts "viewOf = #{ont.viewOf}#{sep}" if options[:viewOf]
+    puts "summaryOnly = #{ont.summaryOnly}#{sep}" if options[:summaryOnly]
+    #@aggregates=nil,  # don't know what to do with this.
+    # summaryOnly ontologies cannot be inspected any further.
+    next if ont.summaryOnly
 
 
-      # Can only access metadata for this ontology
-      next
-    end
+    binding.pry
 
-    # Proceed to get properties from the latest submission
+    # Proceed to get additional properties from the latest submission
     sub = ont.latest_submission(status: :any)
     if sub.nil?
       puts "#{acronym}, no latest submission."
       next
     end
     sub.bring_remaining
-    sub_format = sub.hasOntologyLanguage.id.to_s.split('/').last
-    puts "#{acronym} has format: #{sub_format}."
+
+
+    ont_status(sub, sep) if options[:status]
+
+
+    hasOntologyLanguage = sub.hasOntologyLanguage.id.to_s.split('/').last
+    puts "hasOntologyLanguage = #{hasOntologyLanguage}#{sep}" if options[:hasOntologyLanguage]
 
   rescue Exception => e
     puts "Failed, exception: #{e.to_json}."

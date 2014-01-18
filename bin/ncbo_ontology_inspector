@@ -109,35 +109,73 @@ options[:ontologies].each do |acronym|
 
     binding.pry if properties[:administeredBy]
     #@administeredBy=
-    #    [#<LinkedData::Models::User:0x007f319a24c7a0
+    #    [#<LinkedData::Models::User:0x007f1bfeafbf60
     #        @aggregates=nil,
-    #        @id=
-    #            #<RDF::URI:0x3f98cd3f168c(http://data.bioontology.org/users/maskot1977)>,
+    #        @id=#<RDF::URI:0x3f8dff54d2d4(http://data.bioontology.org/users/rubin)>,
+    #            @loaded_attributes=#<Set: {}>,
+    #                @modified_attributes=#<Set: {}>,
+    #                    @persistent=true,
+    #        @previous_values=nil,
+    #        @unmapped=nil>,
+    #        #<LinkedData::Models::User:0x007f1bfeb1e2e0
+    #        @aggregates=nil,
+    #        @id=#<RDF::URI:0x3f8dff557428(http://data.bioontology.org/users/paul)>,
     #            @loaded_attributes=#<Set: {}>,
     #                @modified_attributes=#<Set: {}>,
     #                    @persistent=true,
     #        @previous_values=nil,
     #        @unmapped=nil>],
 
-    print_element('flat', ont.flat) if properties[:flat]
-
     # TODO: check that group output is OK, use group.to_json?
     print_element('group', ont.group) if properties[:group]
+    #@group=
+    #    [#<LinkedData::Models::Group:0x007f1bfeafb010
+    #        @aggregates=nil,
+    #        @id=#<RDF::URI:0x3f8dff54d158(http://data.bioontology.org/groups/CTSA)>,
+    #            @loaded_attributes=#<Set: {}>,
+    #                @modified_attributes=#<Set: {}>,
+    #                    @persistent=true,
+    #        @previous_values=nil,
+    #        @unmapped=nil>],
+
     print_element('hasDomain', ont.hasDomain) if properties[:hasDomain]
-    # TODO: check that viewOf output is OK, use group.to_json?
+    #@hasDomain=
+    #    [#<LinkedData::Models::Category:0x007f1bfeaf9288
+    #        @aggregates=nil,
+    #        @id=
+    #            #<RDF::URI:0x3f8dff551528(http://data.bioontology.org/categories/Biomedical_Resources)>,
+    #            @loaded_attributes=#<Set: {}>,
+    #                @modified_attributes=#<Set: {}>,
+    #                    @persistent=true,
+    #        @previous_values=nil,
+    #        @unmapped=nil>,
+    #        #<LinkedData::Models::Category:0x007f1bfeb105c8
+    #        @aggregates=nil,
+    #        @id=
+    #            #<RDF::URI:0x3f8dff557c34(http://data.bioontology.org/categories/Other)>,
+    #            @loaded_attributes=#<Set: {}>,
+    #                @modified_attributes=#<Set: {}>,
+    #                    @persistent=true,
+    #        @previous_values=nil,
+    #        @unmapped=nil>],
+
+    # TODO: check that viewOf output is OK
     print_element('viewOf', ont.viewOf) if properties[:viewOf]
+    print_element('flat', ont.flat) if properties[:flat]
     print_element('doNotUpdate', ont.doNotUpdate) if properties[:doNotUpdate]
     print_element('summaryOnly', ont.summaryOnly) if properties[:summaryOnly]
-    #@aggregates=nil,  # don't know what to do with this one.
+
+    # don't want to inspect these goo properties
+    #@aggregates=nil,
+    #@persistent=true,
+    #@previous_values=nil,
+    #@unmapped=nil,
+
     # summaryOnly ontologies cannot be inspected any further.
     if ont.summaryOnly
       print_element('submission', 'NONE, summaryOnly')
       next
     end
-
-    # TODO: check that all ontology properties are already accessed for non-summaryOnly ontologies.
-    binding.pry
-    exit!
 
     # Proceed to get additional properties from the latest submission
     sub = ont.latest_submission(status: :any)

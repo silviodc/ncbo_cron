@@ -77,19 +77,23 @@ end
 #
 exit(1) if options[:properties].empty?  # nothing to be done
 
+# NOTE: weird syntax, but this construct below will print "\n" (returns nil) AND then it does next;
+#       it does nothing at all for a false if clause (not even the print "\n").
+# print "\n" or next if properties.empty?
+
 options[:ontologies].each do |acronym|
   properties = options[:properties].clone  # clone, so properties can be modified
   begin
     # Create one-line output - compatible with unix string processing tools.
     print_element('acronym', acronym)  # always output the acronym
     properties.delete(:acronym)
-    next if properties.empty?  # try to be efficient
+    print "\n" or next if properties.empty?
 
     # Inspect additional ontology properties
     ont = LinkedData::Models::Ontology.find(acronym).first
     if ont.nil?
       print_element('ontology', 'ERROR')
-      next
+      print "\n" or next
     else
       print_element('ontology', 'found')
     end
@@ -108,17 +112,17 @@ options[:ontologies].each do |acronym|
     if properties[:id]
       print_element('id', ont.id.to_s)
       properties.delete(:id)
-      next if properties.empty?  # try to be efficient
+      print "\n" or next if properties.empty?
     end
     if properties[:name]
       print_element('name', ont.name)
       properties.delete(:name)
-      next if properties.empty?  # try to be efficient
+      print "\n" or next if properties.empty?
     end
     if properties[:viewingRestriction]
       print_element('viewingRestriction', ont.viewingRestriction)
       properties.delete(:viewingRestriction)
-      next if properties.empty?  # try to be efficient
+      print "\n" or next if properties.empty?
     end
 
     if properties[:acl]
@@ -127,7 +131,7 @@ options[:ontologies].each do |acronym|
 
       print_element('acl', ont.acl)
       properties.delete(:acl)
-      next if properties.empty?  # try to be efficient
+      print "\n" or next if properties.empty?
     end
 
     if properties[:administeredBy]
@@ -136,7 +140,7 @@ options[:ontologies].each do |acronym|
 
       print_element('administeredBy', ont.administeredBy)
       properties.delete(:administeredBy)
-      next if properties.empty?  # try to be efficient
+      print "\n" or next if properties.empty?
     end
     #@administeredBy=
     #    [#<LinkedData::Models::User:0x007f1bfeafbf60
@@ -162,7 +166,7 @@ options[:ontologies].each do |acronym|
 
       print_element('group', ont.group)
       properties.delete(:group)
-      next if properties.empty?  # try to be efficient
+      print "\n" or next if properties.empty?
     end
     #@group=
     #    [#<LinkedData::Models::Group:0x007f1bfeafb010
@@ -201,22 +205,22 @@ options[:ontologies].each do |acronym|
 
       print_element('viewOf', ont.viewOf)
       properties.delete(:viewOf)
-      next if properties.empty?  # try to be efficient
+      print "\n" or next if properties.empty?
     end
     if properties[:flat]
       print_element('flat', ont.flat)
       properties.delete(:flat)
-      next if properties.empty?  # try to be efficient
+      print "\n" or next if properties.empty?
     end
     if properties[:doNotUpdate]
       print_element('doNotUpdate', ont.doNotUpdate)
       properties.delete(:doNotUpdate)
-      next if properties.empty?  # try to be efficient
+      print "\n" or next if properties.empty?
     end
     if properties[:summaryOnly]
       print_element('summaryOnly', ont.summaryOnly)
       properties.delete(:summaryOnly)
-      next if properties.empty?  # try to be efficient
+      print "\n" or next if properties.empty?
     end
     #
     # don't want to inspect these goo properties
@@ -228,13 +232,13 @@ options[:ontologies].each do |acronym|
     # summaryOnly ontologies cannot be inspected any further.
     if ont.summaryOnly
       print_element('submission', 'NONE, summaryOnly')
-      next
+      print "\n" or next
     end
     # Proceed to get additional properties from the latest submission
     sub = ont.latest_submission(status: :any)
     if sub.nil?
       print_element('submission', 'ERROR')
-      next
+      print "\n" or next
     else
       print_element('submission', 'found')
     end
@@ -243,12 +247,12 @@ options[:ontologies].each do |acronym|
     if properties[:status]
       print_element('status', submission_status(sub))
       properties.delete(:status)
-      next if properties.empty?  # try to be efficient
+      print "\n" or next if properties.empty?
     end
     if properties[:hasOntologyLanguage]
       print_element('hasOntologyLanguage', submission_hasOntologyLanguage(sub))
       properties.delete(:hasOntologyLanguage)
-      next if properties.empty?  # try to be efficient
+      print "\n" or next if properties.empty?
     end
 
 
@@ -443,7 +447,7 @@ options[:ontologies].each do |acronym|
 
 
 
-    print "\n"  # EOL
+
     STDOUT.flush
 
     #TODO: remove this exit to loop over ontologies

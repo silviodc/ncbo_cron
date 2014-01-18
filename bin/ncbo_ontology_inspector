@@ -28,7 +28,8 @@ opt_parser = OptionParser.new do |opts|
     options[:ontologies] = acronym.split(',')
   end
   opts.on('-p', '--properties PROPERTY[,PROPERTY,...]', 'Ontology properties to inspect (REST API properties)') do |properties|
-    properties.split(',').each {|property| options[property.to_sym] = true }
+    options[:properties] = {}
+    properties.split(',').each {|property| options[:properties][property.to_sym] = true }
   end
   # Display the help screen, all programs are assumed to have this option.
   opts.on( '-h', '--help', 'Display this screen' ) do
@@ -39,42 +40,74 @@ end
 # Parse the command-line. The 'parse' method simply parses ARGV, while the 'parse!' method parses ARGV and removes
 # any options found there, as well as any parameters for the options.
 opt_parser.parse!
+unless options[:properties]
+  # Don't assume anything, ask for properties explicitly.
+  puts opt_parser.help
+  exit(1)
+end
 unless options[:ontologies]
   onts = LinkedData::Models::Ontology.all
   options[:ontologies] = onts.map {|o| o.bring(:acronym) && o.acronym }
 end
 
+#
+# functions for complex values
+#
+def submission_status(sub)
+  # TODO: summarise the submission status
+  binding.pry
+end
 
-def ont_status(sub, sep)
-  # Summarise the submission status
+def submission_hasOntologyLanguage(sub)
+  sub.hasOntologyLanguage.id.to_s.split('/').last
+end
+
+
+
+SEPARATOR = ';; '
+def print_element(name, value)
+  # TODO: modify value when it's a complex object, like Array, Hash, etc.
+  print "#{name} = #{value}#{SEPARATOR}"
+  STDOUT.flush
 end
 
 
 #
 # MAIN
 #
+properties = options[:properties]  # cannot be empty
+exit(1) if properties.empty?
+
 options[:ontologies].each do |acronym|
   begin
+    # Create one-line output - compatible with unix string processing tools.
+    print_element('acronym', acronym)  # always output the acronym
     ont = LinkedData::Models::Ontology.find(acronym).first
     if ont.nil?
-      # TODO: might have to add padding for 'cuttable' output.
-      puts "#{acronym}; ontology not found"
+      print_element('ontology', 'ERROR')
+      next
     end
     ont.bring_remaining
-    # Create one-line output - compatible with unix string processing tools.
-    sep = ';; '
+
+    # A generic solution is possible, but I want more control over things ;-)
+    #properties.keys.sort.each do |property|
+    #  if ont.respond_to? property
+    #    value = ont.method(property).call
+    #    print_element(property, value)
+    #  end
+    #end
+    #
 
     # This section can inspect common properties of ontologies, including summaryOnly ontologies.
-    puts "#{ont.acronym}#{sep}"
-    puts "id = #{ont.id}#{sep}" if options[:id]
-    puts "acronym = #{ont.acronym}#{sep}" if options[:acronym]
-    puts "name = #{ont.name}#{sep}" if options[:name]
-    puts "viewingRestriction = #{ont.viewingRestriction}#{sep}" if options[:viewingRestriction]
+    #puts "acronym = #{ont.acronym}#{sep}" if options[:acronym]
+    print_element('id', ont.id.to_s) if properties[:id]
+    print_element('name', ont.name) if properties[:name]
+    print_element('viewingRestriction', ont.viewingRestriction) if properties[:viewingRestriction]
 
     #@acl=[],
-    binding.pry if options[:acl]
+    binding.pry if properties[:acl]
 
-    binding.pry if options[:administeredBy]
+    binding.pry if properties[:administeredBy]
     #@administeredBy=
     #    [#<LinkedData::Models::User:0x007f319a24c7a0
     #        @aggregates=nil,
@@ -86,33 +119,41 @@ options[:ontologies].each do |acronym|
     #        @previous_values=nil,
     #        @unmapped=nil>],
 
-    puts "doNotUpdate = #{ont.doNotUpdate}#{sep}" if options[:doNotUpdate]
-    puts "flat = #{ont.flat}#{sep}" if options[:flat]
-    puts "group = #{ont.group.to_json}#{sep}" if options[:group]
-    puts "hasDomain = #{ont.hasDomain}#{sep}" if options[:hasDomain]
-    puts "viewOf = #{ont.viewOf}#{sep}" if options[:viewOf]
-    puts "summaryOnly = #{ont.summaryOnly}#{sep}" if options[:summaryOnly]
-    #@aggregates=nil,  # don't know what to do with this.
+    print_element('flat', ont.flat) if properties[:flat]
+
+    # TODO: check that group output is OK, use group.to_json?
+    print_element('group', ont.group) if properties[:group]
+    print_element('hasDomain', ont.hasDomain) if properties[:hasDomain]
+    # TODO: check that viewOf output is OK, use group.to_json?
+    print_element('viewOf', ont.viewOf) if properties[:viewOf]
+    print_element('doNotUpdate', ont.doNotUpdate) if properties[:doNotUpdate]
+    print_element('summaryOnly', ont.summaryOnly) if properties[:summaryOnly]
+    #@aggregates=nil,  # don't know what to do with this one.
     # summaryOnly ontologies cannot be inspected any further.
-    next if ont.summaryOnly
+    if ont.summaryOnly
+      print_element('submission', 'NONE, summaryOnly')
+      next
+    end
 
-
+    # TODO: check that all ontology properties are already accessed for non-summaryOnly ontologies.
     binding.pry
+    exit!
 
     # Proceed to get additional properties from the latest submission
     sub = ont.latest_submission(status: :any)
     if sub.nil?
-      puts "#{acronym}, no latest submission."
+      print_element('submission', 'ERROR')
       next
     end
     sub.bring_remaining
 
+    print_element('status', submission_status(sub)) if properties[:status]
+    print_element('hasOntologyLanguage', submission_hasOntologyLanguage(sub)) if properties[:hasOntologyLanguage]
 
-    ont_status(sub, sep) if options[:status]
+    # TODO: list all the submission properties to be inspected
+    binding.pry
+    exit!
 
-
-    hasOntologyLanguage = sub.hasOntologyLanguage.id.to_s.split('/').last
-    puts "hasOntologyLanguage = #{hasOntologyLanguage}#{sep}" if options[:hasOntologyLanguage]
 
   rescue Exception => e
     puts "Failed, exception: #{e.to_json}."

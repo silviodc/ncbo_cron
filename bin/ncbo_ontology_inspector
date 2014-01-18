@@ -443,9 +443,10 @@ options[:ontologies].each do |acronym|
 
 
 
+    puts ''  # EOL
 
-      #TODO: remove this exit to loop over ontologies
-      exit!
+    #TODO: remove this exit to loop over ontologies
+    exit!
 
 
 

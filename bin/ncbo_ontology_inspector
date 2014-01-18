@@ -82,7 +82,8 @@ options[:ontologies].each do |acronym|
   begin
     # Create one-line output - compatible with unix string processing tools.
     print_element('acronym', acronym)  # always output the acronym
-    properties.delete(:acronym) && next if properties.empty?  # try to be efficient
+    properties.delete(:acronym)
+    next if properties.empty?  # try to be efficient
 
     # Inspect additional ontology properties
     ont = LinkedData::Models::Ontology.find(acronym).first
@@ -106,15 +107,18 @@ options[:ontologies].each do |acronym|
     # This section can inspect common properties of ontologies, including summaryOnly ontologies.
     if properties[:id]
       print_element('id', ont.id.to_s)
-      properties.delete(:id) && next if properties.empty?  # try to be efficient
+      properties.delete(:id)
+      next if properties.empty?  # try to be efficient
     end
     if properties[:name]
       print_element('name', ont.name)
-      properties.delete(:name) && next if properties.empty?  # try to be efficient
+      properties.delete(:name)
+      next if properties.empty?  # try to be efficient
     end
     if properties[:viewingRestriction]
       print_element('viewingRestriction', ont.viewingRestriction)
-      properties.delete(:viewingRestriction) && next if properties.empty?  # try to be efficient
+      properties.delete(:viewingRestriction)
+      next if properties.empty?  # try to be efficient
     end
 
     if properties[:acl]
@@ -122,7 +126,8 @@ options[:ontologies].each do |acronym|
       binding.pry
 
       print_element('acl', ont.acl)
-      properties.delete(:acl) && next if properties.empty?  # try to be efficient
+      properties.delete(:acl)
+      next if properties.empty?  # try to be efficient
     end
 
     if properties[:administeredBy]
@@ -130,7 +135,8 @@ options[:ontologies].each do |acronym|
       binding.pry
 
       print_element('administeredBy', ont.administeredBy)
-      properties.delete(:administeredBy) && next if properties.empty?  # try to be efficient
+      properties.delete(:administeredBy)
+      next if properties.empty?  # try to be efficient
     end
     #@administeredBy=
     #    [#<LinkedData::Models::User:0x007f1bfeafbf60
@@ -155,7 +161,8 @@ options[:ontologies].each do |acronym|
       binding.pry
 
       print_element('group', ont.group)
-      properties.delete(:group) && next if properties.empty?  # try to be efficient
+      properties.delete(:group)
+      next if properties.empty?  # try to be efficient
     end
     #@group=
     #    [#<LinkedData::Models::Group:0x007f1bfeafb010
@@ -193,11 +200,13 @@ options[:ontologies].each do |acronym|
       binding.pry
 
       print_element('viewOf', ont.viewOf)
-      properties.delete(:viewOf) && next if properties.empty?  # try to be efficient
+      properties.delete(:viewOf)
+      next if properties.empty?  # try to be efficient
     end
     if properties[:flat]
       print_element('flat', ont.flat)
-      properties.delete(:flat) && next if properties.empty?  # try to be efficient
+      properties.delete(:flat)
+      next if properties.empty?  # try to be efficient
     end
     if properties[:doNotUpdate]
       print_element('doNotUpdate', ont.doNotUpdate)
@@ -206,7 +215,8 @@ options[:ontologies].each do |acronym|
     end
     if properties[:summaryOnly]
       print_element('summaryOnly', ont.summaryOnly)
-      properties.delete(:summaryOnly) && next if properties.empty?  # try to be efficient
+      properties.delete(:summaryOnly)
+      next if properties.empty?  # try to be efficient
     end
     #
     # don't want to inspect these goo properties
@@ -230,18 +240,226 @@ options[:ontologies].each do |acronym|
     end
     sub.bring_remaining
 
-    # TODO: list all the submission properties to be inspected
-    binding.pry
-    exit!
-
     if properties[:status]
       print_element('status', submission_status(sub))
-      properties.delete(:status) && next if properties.empty?  # try to be efficient
+      properties.delete(:status)
+      next if properties.empty?  # try to be efficient
     end
     if properties[:hasOntologyLanguage]
       print_element('hasOntologyLanguage', submission_hasOntologyLanguage(sub))
-      properties.delete(:hasOntologyLanguage) && next if properties.empty?  # try to be efficient
+      properties.delete(:hasOntologyLanguage)
+      next if properties.empty?  # try to be efficient
     end
+
+
+
+
+    #  @aggregates=nil,
+    #  @authorProperty=nil,
+    #  @classType=nil,
+    #  @contact=
+    #      [#<LinkedData::Models::Contact:0x007f7c678de088
+    #          @aggregates=nil,
+    #          @id=
+    #              #<RDF::URI:0x3fbe33c6cccc(http://data.bioontology.org/contacts/8e2c3e30-3477-0131-b008-3d23c5e0f0ea)>,
+    #              @loaded_attributes=#<Set: {}>,
+    #                  @modified_attributes=#<Set: {}>,
+    #                      @persistent=true,
+    #          @previous_values=nil,
+    #          @unmapped=nil>],
+    #  @creationDate=
+    #      #<DateTime: 2013-12-12T12:01:19-08:00 ((2456639j,72079s,0n),-28800s,2299161j)>,
+    #      @definitionProperty=
+    #          #<RDF::URI:0x3fbe33c6d58c(http://bioontology.org/ontologies/biositemap.owl#definition)>,
+    #          @description=
+    #              "A controlled terminology of resources, which is used to improve the sensitivity and specificity of web searches.",
+    #  @diffFilePath=nil,
+    #  @documentation="http://www.ncbcs.org/biositemaps/",
+    #  @hasOntologyLanguage=
+    #      #<LinkedData::Models::OntologyFormat:0x007f7c678df3e8
+    #      @aggregates=nil,
+    #  @id=
+    #      #<RDF::URI:0x3fbe33c6d334(http://data.bioontology.org/ontology_formats/OWL)>,
+    #      @loaded_attributes=#<Set: {}>,
+    #          @modified_attributes=#<Set: {}>,
+    #              @persistent=true,
+    #  @previous_values=nil,
+    #  @unmapped=nil>,
+    #  @hierarchyProperty=nil,
+    #  @homepage="http://www.ncbcs.org/biositemaps/",
+    #  @id=
+    ##<RDF::URI:0x3fbe33663a9c(http://data.bioontology.org/ontologies/BRO/submissions/22)>,
+    #      @loaded_attributes=
+    #          #<Set: {:submissionId,
+    #          :submissionStatus,
+    #  :prefLabelProperty,
+    #  :definitionProperty,
+    #  :synonymProperty,
+    #  :authorProperty,
+    #  :classType,
+    #  :hierarchyProperty,
+    #  :obsoleteProperty,
+    #  :obsoleteParent,
+    #  :hasOntologyLanguage,
+    #  :homepage,
+    #  :publication,
+    #  :uri,
+    #  :naturalLanguage,
+    #  :documentation,
+    #  :version,
+    #  :creationDate,
+    #  :description,
+    #  :status,
+    #  :contact,
+    #  :released,
+    #  :uploadFilePath,
+    #  :diffFilePath,
+    #  :masterFileName,
+    #  :missingImports,
+    #  :pullLocation,
+    #  :ontology,
+    #  :metrics}>,
+    #  @masterFileName=nil,
+    #      @metrics=
+    #          #<LinkedData::Models::Metric:0x007f7c678dcd50
+    #          @aggregates=nil,
+    #      @id=
+    #          #<RDF::URI:0x3fbe33c6c600(http://data.bioontology.org/ontologies/BRO/submissions/22/metrics)>,
+    #          @loaded_attributes=#<Set: {}>,
+    #              @modified_attributes=#<Set: {}>,
+    #                  @persistent=true,
+    #      @previous_values=nil,
+    #      @unmapped=nil>,
+    #      @missingImports=[],
+    #      @modified_attributes=#<Set: {}>,
+    #          @naturalLanguage=nil,
+    #      @obsoleteParent=nil,
+    #      @obsoleteProperty=nil,
+    #      @ontology=
+    #          #<LinkedData::Models::Ontology:0x007f7c678dd0c0
+    #          @aggregates=nil,
+    #      @id=#<RDF::URI:0x3fbe33c6c6f0(http://data.bioontology.org/ontologies/BRO)>,
+    #          @loaded_attributes=#<Set: {}>,
+    #              @modified_attributes=#<Set: {}>,
+    #                  @persistent=true,
+    #      @previous_values=nil,
+    #      @unmapped=nil>,
+    #      @persistent=true,
+    #      @prefLabelProperty=
+    #          #<RDF::URI:0x3fbe33c6d5dc(http://www.w3.org/2004/02/skos/core#prefLabel)>,
+    #          @previous_values=nil,
+    #      @publication=nil,
+    #      @pullLocation=nil,
+    #      @released=
+    #          #<DateTime: 2013-11-19T00:00:00+00:00 ((2456616j,0s,0n),+0s,2299161j)>,
+    #          @status="alpha",
+    #      @submissionId=22,
+    #      @submissionStatus=
+    #          [#<LinkedData::Models::SubmissionStatus:0x007f7c677aced0
+    #              @aggregates=nil,
+    #              @id=
+    #                  #<RDF::URI:0x3fbe33bc82a8(http://data.bioontology.org/submission_statuses/RDF)>,
+    #                  @loaded_attributes=#<Set: {}>,
+    #                      @modified_attributes=#<Set: {}>,
+    #                          @persistent=true,
+    #              @previous_values=nil,
+    #              @unmapped=nil>,
+    #              #<LinkedData::Models::SubmissionStatus:0x007f7c677b3b18
+    #              @aggregates=nil,
+    #              @id=
+    #                  #<RDF::URI:0x3fbe33bcc074(http://data.bioontology.org/submission_statuses/OBSOLETE)>,
+    #                  @loaded_attributes=#<Set: {}>,
+    #                      @modified_attributes=#<Set: {}>,
+    #                          @persistent=true,
+    #              @previous_values=nil,
+    #              @unmapped=nil>,
+    #              #<LinkedData::Models::SubmissionStatus:0x007f7c677b31b8
+    #              @aggregates=nil,
+    #              @id=
+    #                  #<RDF::URI:0x3fbe33bcddfc(http://data.bioontology.org/submission_statuses/METRICS)>,
+    #                  @loaded_attributes=#<Set: {}>,
+    #                      @modified_attributes=#<Set: {}>,
+    #                          @persistent=true,
+    #              @previous_values=nil,
+    #              @unmapped=nil>,
+    #              #<LinkedData::Models::SubmissionStatus:0x007f7c677b2858
+    #              @aggregates=nil,
+    #              @id=
+    #                  #<RDF::URI:0x3fbe33bcd654(http://data.bioontology.org/submission_statuses/RDF_LABELS)>,
+    #                  @loaded_attributes=#<Set: {}>,
+    #                      @modified_attributes=#<Set: {}>,
+    #                          @persistent=true,
+    #              @previous_values=nil,
+    #              @unmapped=nil>,
+    #              #<LinkedData::Models::SubmissionStatus:0x007f7c677b1f20
+    #              @aggregates=nil,
+    #              @id=
+    #                  #<RDF::URI:0x3fbe33bcc8e4(http://data.bioontology.org/submission_statuses/UPLOADED)>,
+    #                  @loaded_attributes=#<Set: {}>,
+    #                      @modified_attributes=#<Set: {}>,
+    #                          @persistent=true,
+    #              @previous_values=nil,
+    #              @unmapped=nil>,
+    #              #<LinkedData::Models::SubmissionStatus:0x007f7c677b12c8
+    #              @aggregates=nil,
+    #              @id=
+    #                  #<RDF::URI:0x3fbe33bcc4fc(http://data.bioontology.org/submission_statuses/ANNOTATOR)>,
+    #                  @loaded_attributes=#<Set: {}>,
+    #                      @modified_attributes=#<Set: {}>,
+    #                          @persistent=true,
+    #              @previous_values=nil,
+    #              @unmapped=nil>,
+    #              #<LinkedData::Models::SubmissionStatus:0x007f7c677b0030
+    #              @aggregates=nil,
+    #              @id=
+    #                  #<RDF::URI:0x3fbe33bcc290(http://data.bioontology.org/submission_statuses/INDEXED)>,
+    #                  @loaded_attributes=#<Set: {}>,
+    #                      @modified_attributes=#<Set: {}>,
+    #                          @persistent=true,
+    #              @previous_values=nil,
+    #              @unmapped=nil>],
+    #      @synonymProperty=
+    #          #<RDF::URI:0x3fbe33c6d514(http://www.w3.org/2004/02/skos/core#altLabel)>,
+    #          @unmapped=nil,
+    #      @uploadFilePath="/srv/ncbo/repository/BRO/22/BRO.owl",
+    #      @uri=nil,
+    #      @version="3.2.1">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      #TODO: remove this exit to loop over ontologies
+      exit!
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
   rescue Exception => e

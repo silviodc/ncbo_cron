@@ -443,7 +443,7 @@ options[:ontologies].each do |acronym|
 
 
 
-    print '\n'  # EOL
+    print "\n"  # EOL
     STDOUT.flush
 
     #TODO: remove this exit to loop over ontologies

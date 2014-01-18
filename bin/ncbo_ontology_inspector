@@ -75,17 +75,22 @@ end
 #
 # MAIN
 #
-properties = options[:properties]  # cannot be empty
-exit(1) if properties.empty?
+exit(1) if options[:properties].empty?  # nothing to be done
 
 options[:ontologies].each do |acronym|
+  properties = options[:properties].clone  # clone, so properties can be modified
   begin
     # Create one-line output - compatible with unix string processing tools.
     print_element('acronym', acronym)  # always output the acronym
+    properties.delete(:acronym) && next if properties.empty?  # try to be efficient
+
+    # Inspect additional ontology properties
     ont = LinkedData::Models::Ontology.find(acronym).first
     if ont.nil?
       print_element('ontology', 'ERROR')
       next
+    else
+      print_element('ontology', 'found')
     end
     ont.bring_remaining
 
@@ -99,15 +104,34 @@ options[:ontologies].each do |acronym|
     #
 
     # This section can inspect common properties of ontologies, including summaryOnly ontologies.
-    #puts "acronym = #{ont.acronym}#{sep}" if options[:acronym]
-    print_element('id', ont.id.to_s) if properties[:id]
-    print_element('name', ont.name) if properties[:name]
-    print_element('viewingRestriction', ont.viewingRestriction) if properties[:viewingRestriction]
+    if properties[:id]
+      print_element('id', ont.id.to_s)
+      properties.delete(:id) && next if properties.empty?  # try to be efficient
+    end
+    if properties[:name]
+      print_element('name', ont.name)
+      properties.delete(:name) && next if properties.empty?  # try to be efficient
+    end
+    if properties[:viewingRestriction]
+      print_element('viewingRestriction', ont.viewingRestriction)
+      properties.delete(:viewingRestriction) && next if properties.empty?  # try to be efficient
+    end
 
-    #@acl=[],
-    binding.pry if properties[:acl]
+    if properties[:acl]
+      # TODO: check how to display acl
+      binding.pry
 
-    binding.pry if properties[:administeredBy]
+      print_element('acl', ont.acl)
+      properties.delete(:acl) && next if properties.empty?  # try to be efficient
+    end
+
+    if properties[:administeredBy]
+      # TODO: check how to display administeredBy
+      binding.pry
+
+      print_element('administeredBy', ont.administeredBy)
+      properties.delete(:administeredBy) && next if properties.empty?  # try to be efficient
+    end
     #@administeredBy=
     #    [#<LinkedData::Models::User:0x007f1bfeafbf60
     #        @aggregates=nil,
@@ -126,8 +150,13 @@ options[:ontologies].each do |acronym|
     #        @previous_values=nil,
     #        @unmapped=nil>],
 
-    # TODO: check that group output is OK, use group.to_json?
-    print_element('group', ont.group) if properties[:group]
+    if properties[:group]
+      # TODO: check how to display group
+      binding.pry
+
+      print_element('group', ont.group)
+      properties.delete(:group) && next if properties.empty?  # try to be efficient
+    end
     #@group=
     #    [#<LinkedData::Models::Group:0x007f1bfeafb010
     #        @aggregates=nil,
@@ -159,38 +188,60 @@ options[:ontologies].each do |acronym|
     #        @previous_values=nil,
     #        @unmapped=nil>],
 
-    # TODO: check that viewOf output is OK
-    print_element('viewOf', ont.viewOf) if properties[:viewOf]
-    print_element('flat', ont.flat) if properties[:flat]
-    print_element('doNotUpdate', ont.doNotUpdate) if properties[:doNotUpdate]
-    print_element('summaryOnly', ont.summaryOnly) if properties[:summaryOnly]
+    if properties[:viewOf]
+      # TODO: check that viewOf output is OK
+      binding.pry
 
+      print_element('viewOf', ont.viewOf)
+      properties.delete(:viewOf) && next if properties.empty?  # try to be efficient
+    end
+    if properties[:flat]
+      print_element('flat', ont.flat)
+      properties.delete(:flat) && next if properties.empty?  # try to be efficient
+    end
+    if properties[:doNotUpdate]
+      print_element('doNotUpdate', ont.doNotUpdate)
+      properties.delete(:doNotUpdate)
+      next if properties.empty?  # try to be efficient
+    end
+    if properties[:summaryOnly]
+      print_element('summaryOnly', ont.summaryOnly)
+      properties.delete(:summaryOnly) && next if properties.empty?  # try to be efficient
+    end
+    #
     # don't want to inspect these goo properties
     #@aggregates=nil,
     #@persistent=true,
     #@previous_values=nil,
     #@unmapped=nil,
-
+    #
     # summaryOnly ontologies cannot be inspected any further.
     if ont.summaryOnly
       print_element('submission', 'NONE, summaryOnly')
       next
     end
-
     # Proceed to get additional properties from the latest submission
     sub = ont.latest_submission(status: :any)
     if sub.nil?
       print_element('submission', 'ERROR')
       next
+    else
+      print_element('submission', 'found')
     end
     sub.bring_remaining
-
-    print_element('status', submission_status(sub)) if properties[:status]
-    print_element('hasOntologyLanguage', submission_hasOntologyLanguage(sub)) if properties[:hasOntologyLanguage]
 
     # TODO: list all the submission properties to be inspected
     binding.pry
     exit!
+
+    if properties[:status]
+      print_element('status', submission_status(sub))
+      properties.delete(:status) && next if properties.empty?  # try to be efficient
+    end
+    if properties[:hasOntologyLanguage]
+      print_element('hasOntologyLanguage', submission_hasOntologyLanguage(sub))
+      properties.delete(:hasOntologyLanguage) && next if properties.empty?  # try to be efficient
+    end
 
 
   rescue Exception => e

@@ -244,14 +244,19 @@ options[:ontologies].each do |acronym|
     end
     sub.bring_remaining
 
-    if properties[:status]
-      print_element('status', submission_status(sub))
-      properties.delete(:status)
-      print "\n" or next if properties.empty?
-    end
     if properties[:hasOntologyLanguage]
       print_element('hasOntologyLanguage', submission_hasOntologyLanguage(sub))
       properties.delete(:hasOntologyLanguage)
+      print "\n" or next if properties.empty?
+    end
+    if properties[:status]
+      print_element('status', sub.status)
+      properties.delete(:status)
+      print "\n" or next if properties.empty?
+    end
+    if properties[:submissionStatus]
+      print_element('submissionStatus', submission_status(sub))
+      properties.delete(:submissionStatus)
       print "\n" or next if properties.empty?
     end
 
@@ -448,22 +453,6 @@ options[:ontologies].each do |acronym|
 
 
 
-    STDOUT.flush
-
-    #TODO: remove this exit to loop over ontologies
-    exit!
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -473,3 +462,4 @@ options[:ontologies].each do |acronym|
   end
 end
 
+STDOUT.flush

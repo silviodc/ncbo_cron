@@ -53,9 +53,14 @@ end
 #
 # functions for complex values
 #
-def submission_status(sub)
-  # TODO: summarise the submission status
+def submission_metrics(sub)
   binding.pry
+  #submission_metrics = sub.submissionStatus.map {|s| s.id.to_s.split('/').last }
+  return false
+end
+def submission_status(sub)
+  submission_status = sub.submissionStatus.map {|s| s.id.to_s.split('/').last }
+  return submission_status.join(',')
 end
 
 def submission_hasOntologyLanguage(sub)
@@ -259,8 +264,14 @@ options[:ontologies].each do |acronym|
       properties.delete(:submissionStatus)
       print "\n" or next if properties.empty?
     end
+    if properties[:metrics]
+      print_element('metrics', submission_metrics(sub))
+      properties.delete(:metrics)
+      print "\n" or next if properties.empty?
+    end
 
-
+      #      @metrics=
+      #          #<LinkedData::Models::Metric:0x007f7c678dcd50
 
 
     #  @aggregates=nil,
@@ -329,8 +340,6 @@ options[:ontologies].each do |acronym|
     #  :ontology,
     #  :metrics}>,
     #  @masterFileName=nil,
-    #      @metrics=
-    #          #<LinkedData::Models::Metric:0x007f7c678dcd50
     #          @aggregates=nil,
     #      @id=
     #          #<RDF::URI:0x3fbe33c6c600(http://data.bioontology.org/ontologies/BRO/submissions/22/metrics)>,
@@ -363,70 +372,6 @@ options[:ontologies].each do |acronym|
     #          #<DateTime: 2013-11-19T00:00:00+00:00 ((2456616j,0s,0n),+0s,2299161j)>,
     #          @status="alpha",
     #      @submissionId=22,
-    #      @submissionStatus=
-    #          [#<LinkedData::Models::SubmissionStatus:0x007f7c677aced0
-    #              @aggregates=nil,
-    #              @id=
-    #                  #<RDF::URI:0x3fbe33bc82a8(http://data.bioontology.org/submission_statuses/RDF)>,
-    #                  @loaded_attributes=#<Set: {}>,
-    #                      @modified_attributes=#<Set: {}>,
-    #                          @persistent=true,
-    #              @previous_values=nil,
-    #              @unmapped=nil>,
-    #              #<LinkedData::Models::SubmissionStatus:0x007f7c677b3b18
-    #              @aggregates=nil,
-    #              @id=
-    #                  #<RDF::URI:0x3fbe33bcc074(http://data.bioontology.org/submission_statuses/OBSOLETE)>,
-    #                  @loaded_attributes=#<Set: {}>,
-    #                      @modified_attributes=#<Set: {}>,
-    #                          @persistent=true,
-    #              @previous_values=nil,
-    #              @unmapped=nil>,
-    #              #<LinkedData::Models::SubmissionStatus:0x007f7c677b31b8
-    #              @aggregates=nil,
-    #              @id=
-    #                  #<RDF::URI:0x3fbe33bcddfc(http://data.bioontology.org/submission_statuses/METRICS)>,
-    #                  @loaded_attributes=#<Set: {}>,
-    #                      @modified_attributes=#<Set: {}>,
-    #                          @persistent=true,
-    #              @previous_values=nil,
-    #              @unmapped=nil>,
-    #              #<LinkedData::Models::SubmissionStatus:0x007f7c677b2858
-    #              @aggregates=nil,
-    #              @id=
-    #                  #<RDF::URI:0x3fbe33bcd654(http://data.bioontology.org/submission_statuses/RDF_LABELS)>,
-    #                  @loaded_attributes=#<Set: {}>,
-    #                      @modified_attributes=#<Set: {}>,
-    #                          @persistent=true,
-    #              @previous_values=nil,
-    #              @unmapped=nil>,
-    #              #<LinkedData::Models::SubmissionStatus:0x007f7c677b1f20
-    #              @aggregates=nil,
-    #              @id=
-    #                  #<RDF::URI:0x3fbe33bcc8e4(http://data.bioontology.org/submission_statuses/UPLOADED)>,
-    #                  @loaded_attributes=#<Set: {}>,
-    #                      @modified_attributes=#<Set: {}>,
-    #                          @persistent=true,
-    #              @previous_values=nil,
-    #              @unmapped=nil>,
-    #              #<LinkedData::Models::SubmissionStatus:0x007f7c677b12c8
-    #              @aggregates=nil,
-    #              @id=
-    #                  #<RDF::URI:0x3fbe33bcc4fc(http://data.bioontology.org/submission_statuses/ANNOTATOR)>,
-    #                  @loaded_attributes=#<Set: {}>,
-    #                      @modified_attributes=#<Set: {}>,
-    #                          @persistent=true,
-    #              @previous_values=nil,
-    #              @unmapped=nil>,
-    #              #<LinkedData::Models::SubmissionStatus:0x007f7c677b0030
-    #              @aggregates=nil,
-    #              @id=
-    #                  #<RDF::URI:0x3fbe33bcc290(http://data.bioontology.org/submission_statuses/INDEXED)>,
-    #                  @loaded_attributes=#<Set: {}>,
-    #                      @modified_attributes=#<Set: {}>,
-    #                          @persistent=true,
-    #              @previous_values=nil,
-    #              @unmapped=nil>],
     #      @synonymProperty=
     #          #<RDF::URI:0x3fbe33c6d514(http://www.w3.org/2004/02/skos/core#altLabel)>,
     #          @unmapped=nil,

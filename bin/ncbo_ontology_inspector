@@ -54,7 +54,6 @@ end
 # functions for complex values
 #
 def submission_metrics(sub)
-  binding.pry
   metrics = sub.metrics
   metrics.bring_remaining
   return "averageChildCount:#{metrics.averageChildCount}," +
@@ -280,11 +279,7 @@ options[:ontologies].each do |acronym|
       print "\n" or next if properties.empty?
     end
 
-      #      @metrics=
-      #          #<LinkedData::Models::Metric:0x007f7c678dcd50
 
-
-    #  @aggregates=nil,
     #  @authorProperty=nil,
     #  @classType=nil,
     #  @contact=
@@ -313,69 +308,19 @@ options[:ontologies].each do |acronym|
     #      @loaded_attributes=#<Set: {}>,
     #          @modified_attributes=#<Set: {}>,
     #              @persistent=true,
-    #  @previous_values=nil,
-    #  @unmapped=nil>,
     #  @hierarchyProperty=nil,
     #  @homepage="http://www.ncbcs.org/biositemaps/",
     #  @id=
     ##<RDF::URI:0x3fbe33663a9c(http://data.bioontology.org/ontologies/BRO/submissions/22)>,
-    #      @loaded_attributes=
-    #          #<Set: {:submissionId,
-    #          :submissionStatus,
-    #  :prefLabelProperty,
-    #  :definitionProperty,
-    #  :synonymProperty,
-    #  :authorProperty,
-    #  :classType,
-    #  :hierarchyProperty,
-    #  :obsoleteProperty,
-    #  :obsoleteParent,
-    #  :hasOntologyLanguage,
-    #  :homepage,
-    #  :publication,
-    #  :uri,
-    #  :naturalLanguage,
-    #  :documentation,
-    #  :version,
-    #  :creationDate,
-    #  :description,
-    #  :status,
-    #  :contact,
-    #  :released,
-    #  :uploadFilePath,
-    #  :diffFilePath,
-    #  :masterFileName,
-    #  :missingImports,
-    #  :pullLocation,
-    #  :ontology,
-    #  :metrics}>,
     #  @masterFileName=nil,
-    #          @aggregates=nil,
     #      @id=
     #          #<RDF::URI:0x3fbe33c6c600(http://data.bioontology.org/ontologies/BRO/submissions/22/metrics)>,
-    #          @loaded_attributes=#<Set: {}>,
-    #              @modified_attributes=#<Set: {}>,
-    #                  @persistent=true,
-    #      @previous_values=nil,
-    #      @unmapped=nil>,
     #      @missingImports=[],
-    #      @modified_attributes=#<Set: {}>,
     #          @naturalLanguage=nil,
     #      @obsoleteParent=nil,
     #      @obsoleteProperty=nil,
-    #      @ontology=
-    #          #<LinkedData::Models::Ontology:0x007f7c678dd0c0
-    #          @aggregates=nil,
-    #      @id=#<RDF::URI:0x3fbe33c6c6f0(http://data.bioontology.org/ontologies/BRO)>,
-    #          @loaded_attributes=#<Set: {}>,
-    #              @modified_attributes=#<Set: {}>,
-    #                  @persistent=true,
-    #      @previous_values=nil,
-    #      @unmapped=nil>,
-    #      @persistent=true,
     #      @prefLabelProperty=
     #          #<RDF::URI:0x3fbe33c6d5dc(http://www.w3.org/2004/02/skos/core#prefLabel)>,
-    #          @previous_values=nil,
     #      @publication=nil,
     #      @pullLocation=nil,
     #      @released=
@@ -384,7 +329,6 @@ options[:ontologies].each do |acronym|
     #      @submissionId=22,
     #      @synonymProperty=
     #          #<RDF::URI:0x3fbe33c6d514(http://www.w3.org/2004/02/skos/core#altLabel)>,
-    #          @unmapped=nil,
     #      @uploadFilePath="/srv/ncbo/repository/BRO/22/BRO.owl",
     #      @uri=nil,
     #      @version="3.2.1">

@@ -253,10 +253,9 @@ options[:ontologies].each do |acronym|
     if sub.nil?
       print_element('submission', 'ERROR')
       print "\n" or next
-    else
-      print_element('submission', 'found')
     end
     sub.bring_remaining
+    print_element('submission', 'found #{sub.submissionId}')
 
     if properties[:hasOntologyLanguage]
       print_element('hasOntologyLanguage', submission_hasOntologyLanguage(sub))

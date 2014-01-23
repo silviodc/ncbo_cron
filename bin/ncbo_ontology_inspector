@@ -55,9 +55,19 @@ end
 #
 def submission_metrics(sub)
   binding.pry
-  #submission_metrics = sub.submissionStatus.map {|s| s.id.to_s.split('/').last }
-  return false
+  metrics = sub.metrics
+  metrics.bring_remaining
+  return "averageChildCount:#{metrics.averageChildCount}," +
+      "classes:#{metrics.classes}," +
+      "classesWithMoreThan25Children:#{metrics.classesWithMoreThan25Children}," +
+      "classesWithNoDefinition:#{metrics.classesWithNoDefinition}," +
+      "classesWithOneChild:#{metrics.classesWithOneChild}," +
+      "individuals:#{metrics.individuals}," +
+      "maxChildCount:#{metrics.maxChildCount}," +
+      "maxDepth:#{metrics.maxDepth}," +
+      "properties:#{metrics.properties}"
 end
+
 def submission_status(sub)
   submission_status = sub.submissionStatus.map {|s| s.id.to_s.split('/').last }
   return submission_status.join(',')

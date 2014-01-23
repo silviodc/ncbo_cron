@@ -255,7 +255,7 @@ options[:ontologies].each do |acronym|
       print "\n" or next
     end
     sub.bring_remaining
-    print_element('submission', 'found #{sub.submissionId}')
+    print_element('submission', "found #{sub.submissionId}")
 
     if properties[:hasOntologyLanguage]
       print_element('hasOntologyLanguage', submission_hasOntologyLanguage(sub))

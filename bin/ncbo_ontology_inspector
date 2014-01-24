@@ -108,9 +108,9 @@ end
 
 
 # Generic output method
-SEPARATOR = ';; '
+SEPARATOR = ';;'
 def print_element(name, value)
-  print "#{name} = #{value}#{SEPARATOR}"
+  print "#{name}=#{value}#{SEPARATOR}"
   STDOUT.flush
 end
 

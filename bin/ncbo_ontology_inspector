@@ -6,6 +6,7 @@ Signal.trap("INT") { exit 1 }
 # Setup the bundled gems in our environment
 require 'bundler/setup'
 require 'rest-client'
+require 'json'
 
 # Configure the process for the current cron configuration.
 require_relative '../lib/ncbo_cron'
@@ -80,19 +81,54 @@ end
 
 def submission_status(sub)
   submission_status = sub.submissionStatus.map {|s| s.id.to_s.split('/').last }
-  # Try to add SOLR count
+  submission_status4solr(sub, submission_status) # append a SOLR count
+  submission_status4annotator(sub, submission_status) # append an Annotator status
+  return submission_status.join(',')
+end
+
+def submission_status4annotator(sub, submission_status)
+  begin
+    if get_annotator(sub)
+      submission_status.push("ANNOTATOR")
+    else
+      submission_status.push('ANNOTATOR_MISSING')
+    end
+  rescue Exception => e
+    submission_status.push("ANNOTATOR_ERROR:#{e.message}")
+  end
+end
+
+def get_annotator(sub)
+
+  # TODO: get all classes with a limit of 5 terms, then build a text with the labels for those 5 terms.
+  # TODO: Annotate the text using only the ontology you are looking at. The annotator response should
+  # TODO: contain the initial 5 terms that built the text.
+  binding.pry
+
+  query = ANNOTATOR_URI
+  query += "?text=" + CGI.escape(text_to_annotate)
+  query += "&max_level=" + options[:max_level].to_s
+  query += "&ontologies=" + CGI.escape(options[:ontologies].join(',')) unless options[:ontologies].empty?
+  query += "&semantic_types=" + options[:semantic_types].join(',') unless options[:semantic_types].empty?
+  query += "&mappings=" + options[:mappings].join(',') unless options[:mappings].empty?
+  #query += "&wholeWordOnly=" + options[:wholeWordOnly].to_s unless options[:wholeWordOnly].empty?
+  #query += "&withDefaultStopWords=" + options[:withDefaultStopWords].to_s unless options[:withDefaultStopWords].empty?
+  annotations = parse_json(query) # See application_controller.rb
+  #annotations = LinkedData::Client::HTTP.get(query)
+end
+
+def submission_status4solr(sub, submission_status)
   if submission_status.include? 'INDEXED'
     begin
       acronym = sub.ontology.id.to_s.split('/').last
       count = get_solr_class_count(acronym)
       submission_status.push("INDEXCOUNT:#{count}")
     rescue Exception => e
-      submission_status.push("INDEXCOUNT:ERROR:#{e.message}")
+      submission_status.push("INDEXCOUNT_ERROR:#{e.message}")
     end
   else
-    submission_status.push('INDEXCOUNT:MISSING')
+    submission_status.push('INDEXCOUNT_MISSING')
   end
-  return submission_status.join(',')
 end
 
 def get_solr_class_count(acronym)
@@ -105,6 +141,22 @@ def get_solr_class_count(acronym)
   }}
   response = JSON.load(response)
   return response["grouped"]["submissionAcronym"]["groups"].first["doclist"]["numFound"].to_i
+end
+
+def parse_json(uri)
+  uri = URI.parse(uri)
+  begin
+    response = open(uri, "Authorization" => "apikey token=#{get_apikey}").read
+  rescue Exception => error
+    @retries ||= 0
+    if @retries < 1  # retry once only
+      @retries += 1
+      retry
+    else
+      raise error
+    end
+  end
+  JSON.parse(response)
 end
 
 # Generic output method

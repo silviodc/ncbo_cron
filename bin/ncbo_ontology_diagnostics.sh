@@ -7,7 +7,7 @@
 
 
 echo "Inspecting submissionStatus and metrics for all ontologies."
-ncbo_ontology_inspector -p submissionStatus,metrics > logs/submission_status.log
+./bin/ncbo_ontology_inspector -p submissionStatus,metrics > logs/submission_status.log
 
 # Filter the output log to remove summaryOnly ontologies.
 grep -v 'summaryOnly' logs/submission_status.log > logs/submission_status_notSummaryOnly.log

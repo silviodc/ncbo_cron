@@ -77,7 +77,8 @@ def submission_status(sub)
   # Try to add SOLR count
   if submission_status.include? 'INDEXED'
     begin
-      count = get_solr_class_count(sub.ontology.acronym)
+      acronym = sub.ontology.id.to_s.split('/').last
+      count = get_solr_class_count(acronym)
       submission_status.push("INDEXCOUNT:#{count}")
     rescue Exception => e
       submission_status.push("INDEXCOUNT:ERROR:#{e.message}")

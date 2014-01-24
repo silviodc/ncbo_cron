@@ -55,9 +55,15 @@ unless options[:ontologies]
 end
 
 
+#######################################################################################################################
 #
 # functions for complex values
 #
+
+def submission_hasOntologyLanguage(sub)
+  sub.hasOntologyLanguage.id.to_s.split('/').last
+end
+
 def submission_metrics(sub)
   metrics = sub.metrics
   metrics.bring_remaining
@@ -89,10 +95,6 @@ def submission_status(sub)
   return submission_status.join(',')
 end
 
-def submission_hasOntologyLanguage(sub)
-  sub.hasOntologyLanguage.id.to_s.split('/').last
-end
-
 def get_solr_class_count(acronym)
   call = "#{LinkedData.settings.search_server_url}/collection1/select"
   response = RestClient.get call, {:params => {
@@ -105,8 +107,6 @@ def get_solr_class_count(acronym)
   return response["grouped"]["submissionAcronym"]["groups"].first["doclist"]["numFound"].to_i
 end
 
-
-
 # Generic output method
 SEPARATOR = ';;'
 def print_element(name, value)
@@ -114,6 +114,8 @@ def print_element(name, value)
   STDOUT.flush
 end
 
+
+#######################################################################################################################
 #
 # MAIN
 #
@@ -283,7 +285,7 @@ options[:ontologies].each do |acronym|
         print "\n" or next
       end
 
-    end  # if properties[:all]
+    end # if properties[:all]
 
     #
     # End of ontology metadata; proceed to get additional properties from the latest submission
@@ -470,7 +472,7 @@ options[:ontologies].each do |acronym|
         print "\n" or next if properties.empty?
       end
 
-    end  # if properties[:all]
+    end # if properties[:all]
 
   rescue Exception => e
     puts "FAILED, exception: #{e.to_json}."

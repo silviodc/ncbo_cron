@@ -89,8 +89,9 @@ end
 def submission_status4annotator(sub, submission_status)
   begin
     if get_annotator(sub)
-      submission_status.push("ANNOTATOR")
+      submission_status.push('ANNOTATOR') unless submission_status.include? 'ANNOTATOR'
     else
+      submission_status.delete('ANNOTATOR')
       submission_status.push('ANNOTATOR_MISSING')
     end
   rescue Exception => e
@@ -102,17 +103,18 @@ def get_annotator(sub)
   # Get all classes with a limit of 5 terms, then build a text with the labels for those 5 terms.
   # Annotate the text using only the ontology you are looking at. The annotator response should
   # contain the initial 5 terms that built the text.
-  ont_acronym = sub.ontology.id.to_s.split('/').last
   classes = LinkedData::Models::Class.in(sub).include(:prefLabel).all[0..4]
   text_to_annotate = classes.map {|c| c.prefLabel }.join(' ')
   # annotator.annotate(text, ontologies=?, semantic_types=?, filter_integers=?,
   # expand_hierachy_levels=?, expand_with_mappings=?, min_term_size=?, whole_word_only=?, with_synonyms=?)
   annotator = Annotator::Models::NcboAnnotator.new
-  annotations = annotator.annotate(text_to_annotate, ontologies=[ont_acronym])
-  annotated_classes = annotations.map {|a| a.annotatedClass.id.to_s }  # array of class IDs
-  return false if annotated_classes.nil?
-  # Did it return all of the classes used to generate the text_to_annotate?
-  return classes.map {|c| annotated_classes.include? c.id.to_s }.all?
+  annotations = annotator.annotate(text_to_annotate, [sub.ontology.id.to_s])
+  return false if annotations.nil? || annotations.empty?
+  annotated_onts = annotations.map {|a| a.annotatedClass.submission.ontology.id.to_s }.to_set.sort
+  return annotated_onts.include? sub.ontology.id.to_s
+  #annotated_classes = annotations.map {|a| a.annotatedClass.id.to_s }  # array of class IDs
+  ## Did it return all of the classes used to generate the text_to_annotate?
+  #return classes.map {|c| annotated_classes.include? c.id.to_s }.all?
 end
 
 def submission_status4solr(sub, submission_status)

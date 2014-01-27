@@ -13,7 +13,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ncbo_annotator.git
-  revision: fb3945b1de2626c4b3682b6eed8b716022d89fb7
+  revision: 7746cc6d4e69fdcf8bb9b798417dcd4d3b949fe5
   branch: staging
   specs:
     ncbo_annotator (0.0.1)
@@ -87,7 +87,7 @@ GEM
       mime-types
       treetop (>= 1.4.5)
     method_source (0.8.2)
-    mime-types (2.0)
+    mime-types (2.1)
     minitest (4.7.5)
     mlanett-redis-lock (0.2.5)
       redis

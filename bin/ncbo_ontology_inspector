@@ -66,6 +66,7 @@ def submission_hasOntologyLanguage(sub)
 end
 
 def submission_metrics(sub)
+  return 'METRICS_MISSING' if sub.metrics.nil?
   metrics = sub.metrics
   metrics.bring_remaining
   return "averageChildCount:#{metrics.averageChildCount}," +

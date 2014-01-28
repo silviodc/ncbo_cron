@@ -113,8 +113,8 @@ def get_annotator(sub)
   return false if annotations.nil? || annotations.empty?
   annotated_onts = annotations.map {|a| a.annotatedClass.submission.ontology.id.to_s }.to_set.sort
   return annotated_onts.include? sub.ontology.id.to_s
-  #annotated_classes = annotations.map {|a| a.annotatedClass.id.to_s }  # array of class IDs
   ## Did it return all of the classes used to generate the text_to_annotate?
+  #annotated_classes = annotations.map {|a| a.annotatedClass.id.to_s }  # array of class IDs
   #return classes.map {|c| annotated_classes.include? c.id.to_s }.all?
 end
 
@@ -143,22 +143,6 @@ def get_solr_class_count(acronym)
   response = JSON.load(response)
   return response["grouped"]["submissionAcronym"]["groups"].first["doclist"]["numFound"].to_i
 end
-
-#def parse_json(uri)
-#  uri = URI.parse(uri)
-#  begin
-#    response = open(uri, "Authorization" => "apikey token=#{get_apikey}").read
-#  rescue Exception => error
-#    @retries ||= 0
-#    if @retries < 1  # retry once only
-#      @retries += 1
-#      retry
-#    else
-#      raise error
-#    end
-#  end
-#  JSON.parse(response)
-#end
 
 # Generic output method
 SEPARATOR = ';;'

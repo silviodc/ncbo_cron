@@ -13,6 +13,8 @@ echo "Inspecting submissionStatus and metrics for all ontologies."
 grep -v -F 'summaryOnly' logs/submission_status.log > logs/submission_status_notSummaryOnly.log
 
 echo
+echo '*********************************************************************************************'
+echo
 echo "Ontologies failing to parse, without RDF data:"
 grep -F 'ERROR_RDF' logs/submission_status_notSummaryOnly.log
 
@@ -20,9 +22,16 @@ grep -F 'ERROR_RDF' logs/submission_status_notSummaryOnly.log
 grep -v -F 'ERROR_RDF' logs/submission_status_notSummaryOnly.log > logs/submission_status_withRDF.log
 
 echo
+echo '*********************************************************************************************'
+echo
 echo "Ontologies with RDF data, without METRICS:"
 grep -v -F 'METRICS' logs/submission_status_withRDF.log
+grep -F 'METRICS_MISSING' logs/submission_status_withRDF.log
+grep -F 'classes:0' logs/submission_status_withRDF.log
+grep -F 'maxDepth:0' logs/submission_status_withRDF.log
 
+echo
+echo '*********************************************************************************************'
 echo
 echo "Ontologies with RDF data, without SOLR data:"
 grep -F 'INDEXCOUNT:0' logs/submission_status_withRDF.log
@@ -30,6 +39,9 @@ grep -F 'INDEXCOUNT_MISSING' logs/submission_status_withRDF.log
 grep -F 'INDEXCOUNT_ERROR' logs/submission_status_withRDF.log
 
 echo
+echo '*********************************************************************************************'
+echo
 echo "Ontologies with RDF data, without ANNOTATOR data:"
 grep -F 'ANNOTATOR_MISSING' logs/submission_status_withRDF.log
 grep -F 'ANNOTATOR_ERROR' logs/submission_status_withRDF.log
+

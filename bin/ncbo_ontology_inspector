@@ -82,8 +82,10 @@ end
 
 def submission_status(sub)
   submission_status = sub.submissionStatus.map {|s| s.id.to_s.split('/').last }
-  submission_status4solr(sub, submission_status) # append a SOLR count
-  submission_status4annotator(sub, submission_status) # append an Annotator status
+  unless submission_status.include?('ERROR_RDF')
+    submission_status4solr(sub, submission_status) # append a SOLR count
+    submission_status4annotator(sub, submission_status) # append an Annotator status
+  end
   return submission_status.join(',')
 end
 
@@ -104,15 +106,16 @@ def get_annotator(sub)
   # Get all classes with a limit of 5 terms, then build a text with the labels for those 5 terms.
   # Annotate the text using only the submission ontology. The annotator response should
   # contain classes from the submission ontology.
+  sub_ont = sub.ontology.id.to_s
   classes = LinkedData::Models::Class.in(sub).include(:prefLabel).all[0..4]
   text_to_annotate = classes.map {|c| c.prefLabel }.join(' ')
   # annotator.annotate(text, ontologies=?, semantic_types=?, filter_integers=?,
   # expand_hierachy_levels=?, expand_with_mappings=?, min_term_size=?, whole_word_only=?, with_synonyms=?)
   annotator = Annotator::Models::NcboAnnotator.new
-  annotations = annotator.annotate(text_to_annotate, [sub.ontology.id.to_s])
+  annotations = annotator.annotate(text_to_annotate, [sub_ont])
   return false if annotations.nil? || annotations.empty?
-  annotated_onts = annotations.map {|a| a.annotatedClass.submission.ontology.id.to_s }.to_set.sort
-  return annotated_onts.include? sub.ontology.id.to_s
+  annotated_onts = annotations.map {|a| a.annotatedClass.submission.ontology.id.to_s }.to_set
+  return annotated_onts.include? sub_ont
   ## Did it return all of the classes used to generate the text_to_annotate?
   #annotated_classes = annotations.map {|a| a.annotatedClass.id.to_s }  # array of class IDs
   #return classes.map {|c| annotated_classes.include? c.id.to_s }.all?

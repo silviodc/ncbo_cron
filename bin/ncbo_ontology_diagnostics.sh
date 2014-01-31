@@ -15,9 +15,8 @@ echo "Inspecting submissionStatus and metrics for all ontologies."
 echo
 echo '*********************************************************************************************'
 echo 'System config:'
-CONFIG_PATTERN="\'(.*) >> Using\'"
-grep -E $CONFIG_PATTERN logs/submission_status.log
-grep -v -E $CONFIG_PATTERN logs/submission_status.log > logs/tmp.log
+grep -E '(.*) >> Using' logs/submission_status.log
+grep -v -E '(.*) >> Using' logs/submission_status.log > logs/tmp.log
 mv logs/tmp.log logs/submission_status.log
 
 echo

@@ -41,7 +41,7 @@ runner.with_options do |opts|
   opts.on("-c", "--pull-cron SCHED", String, "cron schedule for ontology pull") do |c|
     options[:cron_schedule] = c
   end
-  opts.on("--annotator-dictionary-cron SCHED", String, "cron schedule for annotator cache and dictionary rebuild") do |c|
+  opts.on("-D", "--annotator-dictionary-cron SCHED", String, "cron schedule for annotator cache and dictionary rebuild") do |c|
     options[:annotator_dictionary_rebuild_schedule] = c
   end
   opts.on("-l", "--log-level LEVEL", String, "set the log level (debug, info, error)", "(default: info)") do |c|

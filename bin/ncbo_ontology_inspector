@@ -1,0 +1,522 @@
+#!/usr/bin/env ruby
+
+# Exit cleanly from an early interrupt
+Signal.trap("INT") { exit 1 }
+
+# Setup the bundled gems in our environment
+require 'bundler/setup'
+require 'rest-client'
+require 'json'
+
+# Configure the process for the current cron configuration.
+require_relative '../lib/ncbo_cron'
+config_exists = File.exist?(File.expand_path('../../config/config.rb', __FILE__))
+abort("Please create a config/config.rb file using the config/config.rb.sample as a template") unless config_exists
+require_relative '../config/config';
+
+#platform = "local"
+#if LinkedData.settings.goo_host.include? "stage"
+#  platform = "stage"
+#elsif LinkedData.settings.goo_host.include? "prod"
+#  platform = "prod"
+#end
+
+require 'optparse'
+options = {}
+opt_parser = OptionParser.new do |opts|
+  # Set a banner, displayed at the top of the help screen.
+  #opts.banner = "Usage: ncbo_ontology_index [options]"
+  opts.on('-o', '--ontologies ACRONYM[,ACRONYM,...]', 'Ontology acronym to inspect (default: all ontologies).') do |acronym|
+    options[:ontologies] = acronym.split(',')
+  end
+  opts.on('-p', '--properties PROPERTY[,PROPERTY,...]', 'Ontology/Submission properties to inspect (REST API properties)') do |properties|
+    options[:properties] = {}
+    properties.split(',').each {|property| options[:properties][property.to_sym] = true }
+  end
+  # Display the help screen, all programs are assumed to have this option.
+  opts.on( '-h', '--help', 'Display this screen' ) do
+    puts opts
+    exit
+  end
+end
+# Parse the command-line. The 'parse' method simply parses ARGV, while the 'parse!' method parses ARGV and removes
+# any options found there, as well as any parameters for the options.
+opt_parser.parse!
+unless options[:properties]
+  # TODO: enable a default to report 'all' properties.
+  #options[:properties] = [:all]
+  # Don't assume anything, ask for properties explicitly.
+  puts opt_parser.help
+  exit(1)
+end
+exit(1) if options[:properties].empty?  # nothing to be done
+unless options[:ontologies]
+  onts = LinkedData::Models::Ontology.where.include(:acronym).all  # this includes views
+  options[:ontologies] = onts.map {|o| o.acronym }
+end
+
+
+#######################################################################################################################
+#
+# functions for complex values
+#
+
+def submission_hasOntologyLanguage(sub)
+  sub.hasOntologyLanguage.id.to_s.split('/').last
+end
+
+def submission_metrics(sub)
+  return 'METRICS_MISSING' if sub.metrics.nil?
+  metrics = sub.metrics
+  metrics.bring_remaining
+  return "averageChildCount:#{metrics.averageChildCount}," +
+      "classes:#{metrics.classes}," +
+      "classesWithMoreThan25Children:#{metrics.classesWithMoreThan25Children}," +
+      "classesWithNoDefinition:#{metrics.classesWithNoDefinition}," +
+      "classesWithOneChild:#{metrics.classesWithOneChild}," +
+      "individuals:#{metrics.individuals}," +
+      "maxChildCount:#{metrics.maxChildCount}," +
+      "maxDepth:#{metrics.maxDepth}," +
+      "properties:#{metrics.properties}"
+end
+
+def submission_status(sub)
+  submission_status = sub.submissionStatus.map {|s| s.id.to_s.split('/').last }
+  unless submission_status.include?('ERROR_RDF')
+    submission_status4solr(sub, submission_status) # append a SOLR count
+    submission_status4annotator(sub, submission_status) # append an Annotator status
+  end
+  return submission_status.join(',')
+end
+
+def submission_status4annotator(sub, submission_status)
+  begin
+    if get_annotator(sub)
+      submission_status.push('ANNOTATOR') unless submission_status.include? 'ANNOTATOR'
+    else
+      #submission_status.delete('ANNOTATOR')
+      submission_status.push('ANNOTATOR_MISSING')
+    end
+  rescue Exception => e
+    submission_status.push("ANNOTATOR_ERROR:#{e.message}")
+  end
+end
+
+def get_annotator(sub)
+  # Get all classes with a limit of 5 terms, then build a text with the labels for those 5 terms.
+  # Annotate the text using only the submission ontology. The annotator response should
+  # contain classes from the submission ontology.
+  sub_ont = sub.ontology.id.to_s
+  classes = LinkedData::Models::Class.in(sub).include(:prefLabel).all[0..4]
+  text_to_annotate = classes.map {|c| c.prefLabel }.join(' ')
+  # annotator.annotate(text, ontologies=?, semantic_types=?, filter_integers=?,
+  # expand_hierachy_levels=?, expand_with_mappings=?, min_term_size=?, whole_word_only=?, with_synonyms=?)
+  annotator = Annotator::Models::NcboAnnotator.new
+  annotations = annotator.annotate(text_to_annotate, [sub_ont])
+  return false if annotations.nil? || annotations.empty?
+  annotated_onts = annotations.map {|a| a.annotatedClass.submission.ontology.id.to_s }.to_set
+  return annotated_onts.include? sub_ont
+  ## Did it return all of the classes used to generate the text_to_annotate?
+  #annotated_classes = annotations.map {|a| a.annotatedClass.id.to_s }  # array of class IDs
+  #return classes.map {|c| annotated_classes.include? c.id.to_s }.all?
+end
+
+def submission_status4solr(sub, submission_status)
+  if submission_status.include? 'INDEXED'
+    begin
+      acronym = sub.ontology.id.to_s.split('/').last
+      count = get_solr_class_count(acronym)
+      submission_status.push("INDEXCOUNT:#{count}")
+    rescue Exception => e
+      submission_status.push("INDEXCOUNT_ERROR:#{e.message}")
+    end
+  else
+    submission_status.push('INDEXCOUNT_MISSING')
+  end
+end
+
+def get_solr_class_count(acronym)
+  call = "#{LinkedData.settings.search_server_url}/collection1/select"
+  response = RestClient.get call, {:params => {
+      :q => "submissionAcronym:#{acronym}",
+      :group => "true",
+      "group.field" => "submissionAcronym",
+      :wt => "json"
+  }}
+  response = JSON.load(response)
+  return response["grouped"]["submissionAcronym"]["groups"].first["doclist"]["numFound"].to_i
+end
+
+# Generic output method
+SEPARATOR = ';;'
+def print_element(name, value)
+  print "#{name}=#{value}#{SEPARATOR}"
+  STDOUT.flush
+end
+
+
+#######################################################################################################################
+#
+# MAIN
+#
+
+# NOTE: weird syntax, but this construct below will print "\n" (returns nil) AND then it does next;
+#       it does nothing at all for a false if clause (not even the print "\n").
+# print "\n" or next if properties.empty?
+
+options[:ontologies].each do |acronym|
+  properties = options[:properties].clone  # clone, so properties can be modified
+  begin
+    # Create one-line output - compatible with unix string processing tools.
+    print_element('acronym', acronym)  # always output the acronym
+    properties.delete(:acronym)
+    print "\n" or next if properties.empty?
+
+    # Inspect additional ontology properties
+    ont = LinkedData::Models::Ontology.find(acronym).first
+    if ont.nil?
+      print_element('ontology', 'ERROR')
+      print "\n" or next
+    else
+      print_element('ontology', 'found')
+    end
+    ont.bring_remaining
+
+    # TODO: A generic solution might be possible.
+    if properties[:all]
+
+      # TODO: inspect the ontology for all its properties.
+      binding.pry
+
+
+      #properties.keys.sort.each do |property|
+      #  if ont.respond_to? property
+      #    value = ont.method(property).call
+      #    print_element(property, value)
+      #  end
+      #end
+      #
+      # don't want to inspect these goo properties:
+      #@aggregates=nil,
+      #@persistent=true,
+      #@previous_values=nil,
+      #@unmapped=nil,
+
+    else
+
+      # This section can inspect common properties of ontologies, including summaryOnly ontologies.
+      if properties[:id]
+        print_element('id', ont.id.to_s)
+        properties.delete(:id)
+        print "\n" or next if properties.empty?
+      end
+      if properties[:name]
+        print_element('name', ont.name)
+        properties.delete(:name)
+        print "\n" or next if properties.empty?
+      end
+
+      if properties[:acl]
+        # TODO: check how to display acl
+        binding.pry
+        print_element('acl', ont.acl)
+        properties.delete(:acl)
+        print "\n" or next if properties.empty?
+      end
+
+      if properties[:administeredBy]
+        # TODO: check how to display administeredBy
+        binding.pry
+        print_element('administeredBy', ont.administeredBy)
+        properties.delete(:administeredBy)
+        print "\n" or next if properties.empty?
+      end
+      #@administeredBy=
+      #    [#<LinkedData::Models::User:0x007f1bfeafbf60
+      #        @aggregates=nil,
+      #        @id=#<RDF::URI:0x3f8dff54d2d4(http://data.bioontology.org/users/rubin)>,
+      #            @loaded_attributes=#<Set: {}>,
+      #                @modified_attributes=#<Set: {}>,
+      #                    @persistent=true,
+      #        @previous_values=nil,
+      #        @unmapped=nil>,
+      #        #<LinkedData::Models::User:0x007f1bfeb1e2e0
+      #        @aggregates=nil,
+      #        @id=#<RDF::URI:0x3f8dff557428(http://data.bioontology.org/users/paul)>,
+      #            @loaded_attributes=#<Set: {}>,
+      #                @modified_attributes=#<Set: {}>,
+      #                    @persistent=true,
+      #        @previous_values=nil,
+      #        @unmapped=nil>],
+
+      if properties[:doNotUpdate]
+        print_element('doNotUpdate', ont.doNotUpdate)
+        properties.delete(:doNotUpdate)
+        print "\n" or next if properties.empty?
+      end
+      if properties[:flat]
+        print_element('flat', ont.flat)
+        properties.delete(:flat)
+        print "\n" or next if properties.empty?
+      end
+
+      if properties[:group]
+        # TODO: check how to display group
+        binding.pry
+        print_element('group', ont.group)
+        properties.delete(:group)
+        print "\n" or next if properties.empty?
+      end
+      #@group=
+      #    [#<LinkedData::Models::Group:0x007f1bfeafb010
+      #        @aggregates=nil,
+      #        @id=#<RDF::URI:0x3f8dff54d158(http://data.bioontology.org/groups/CTSA)>,
+      #            @loaded_attributes=#<Set: {}>,
+      #                @modified_attributes=#<Set: {}>,
+      #                    @persistent=true,
+      #        @previous_values=nil,
+      #        @unmapped=nil>],
+
+      if properties[:hasDomain]
+        # TODO: check how to display hasDomain
+        binding.pry
+        print_element('hasDomain', ont.hasDomain)
+        properties.delete(:hasDomain)
+        print "\n" or next if properties.empty?
+      end
+      #@hasDomain=
+      #    [#<LinkedData::Models::Category:0x007f1bfeaf9288
+      #        @aggregates=nil,
+      #        @id=
+      #            #<RDF::URI:0x3f8dff551528(http://data.bioontology.org/categories/Biomedical_Resources)>,
+      #            @loaded_attributes=#<Set: {}>,
+      #                @modified_attributes=#<Set: {}>,
+      #                    @persistent=true,
+      #        @previous_values=nil,
+      #        @unmapped=nil>,
+      #        #<LinkedData::Models::Category:0x007f1bfeb105c8
+      #        @aggregates=nil,
+      #        @id=
+      #            #<RDF::URI:0x3f8dff557c34(http://data.bioontology.org/categories/Other)>,
+      #            @loaded_attributes=#<Set: {}>,
+      #                @modified_attributes=#<Set: {}>,
+      #                    @persistent=true,
+      #        @previous_values=nil,
+      #        @unmapped=nil>],
+
+      if properties[:summaryOnly]
+        print_element('summaryOnly', ont.summaryOnly)
+        properties.delete(:summaryOnly)
+        print "\n" or next if properties.empty?
+      end
+      if properties[:viewOf]
+        print_element('viewOf', o.viewOf.id.to_s) rescue print_element('viewOf', 'None')
+        properties.delete(:viewOf)
+        print "\n" or next if properties.empty?
+      end
+      if properties[:viewingRestriction]
+        print_element('viewingRestriction', ont.viewingRestriction)
+        properties.delete(:viewingRestriction)
+        print "\n" or next if properties.empty?
+      end
+      # summaryOnly ontologies cannot be inspected any further.
+      if ont.summaryOnly
+        print_element('submissionId', 'NONE, summaryOnly')
+        print "\n" or next
+      end
+
+    end # if properties[:all]
+
+    #
+    # End of ontology metadata; proceed to get additional properties from the latest submission
+    #
+
+    sub = ont.latest_submission(status: :any)
+    if sub.nil?
+      print_element('submissionId', 'ERROR')
+      print "\n" or next
+    end
+    sub.bring_remaining
+    print_element('submissionId', sub.submissionId)
+
+    # TODO: A generic solution might be possible.
+    if properties[:all]
+
+      # TODO: inspect the submission for all its properties.
+      binding.pry
+      #properties.keys.sort.each do |property|
+      #  if ont.respond_to? property
+      #    value = ont.method(property).call
+      #    print_element(property, value)
+      #  end
+      #end
+      #
+      # don't want to inspect these goo properties:
+      #@aggregates=nil,
+      #@persistent=true,
+      #@previous_values=nil,
+      #@unmapped=nil,
+
+    else
+      if properties[:authorProperty]
+        print_element('authorProperty', sub.authorProperty)
+        properties.delete(:authorProperty)
+        print "\n" or next if properties.empty?
+      end
+      if properties[:classType]
+        print_element('classType', sub.classType.to_s)
+        properties.delete(:classType)
+        print "\n" or next if properties.empty?
+      end
+      if properties[:contact]
+        # TODO: check the contact complex value
+        print_element('contact', sub.contact.to_s)
+        properties.delete(:contact)
+        print "\n" or next if properties.empty?
+      end
+      #  @contact=
+      #      [#<LinkedData::Models::Contact:0x007f7c678de088
+      #          @aggregates=nil,
+      #          @id=
+      #              #<RDF::URI:0x3fbe33c6cccc(http://data.bioontology.org/contacts/8e2c3e30-3477-0131-b008-3d23c5e0f0ea)>,
+      #              @loaded_attributes=#<Set: {}>,
+      #                  @modified_attributes=#<Set: {}>,
+      #                      @persistent=true,
+      #          @previous_values=nil,
+      #          @unmapped=nil>],
+
+      if properties[:creationDate]
+        print_element('creationDate', sub.creationDate.to_s)
+        properties.delete(:creationDate)
+        print "\n" or next if properties.empty?
+      end
+      if properties[:definitionProperty]
+        print_element('definitionProperty', sub.definitionProperty)
+        properties.delete(:definitionProperty)
+        print "\n" or next if properties.empty?
+      end
+      if properties[:description]
+        print_element('description', sub.description)
+        properties.delete(:description)
+        print "\n" or next if properties.empty?
+      end
+      if properties[:id]
+        print_element('id', sub.id.to_s)
+        properties.delete(:id)
+        print "\n" or next if properties.empty?
+      end
+      if properties[:missingImports]
+        # TODO: check the contact complex value
+        print_element('missingImports', sub.missingImports.to_s)
+        properties.delete(:missingImports)
+        print "\n" or next if properties.empty?
+      end
+      if properties[:hasOntologyLanguage]
+        print_element('hasOntologyLanguage', submission_hasOntologyLanguage(sub))
+        properties.delete(:hasOntologyLanguage)
+        print "\n" or next if properties.empty?
+      end
+      if properties[:diffFilePath]
+        print_element('diffFilePath', sub.diffFilePath)
+        properties.delete(:diffFilePath)
+        print "\n" or next if properties.empty?
+      end
+      if properties[:documentation]
+        print_element('documentation', sub.documentation)
+        properties.delete(:documentation)
+        print "\n" or next if properties.empty?
+      end
+      if properties[:homepage]
+        print_element('homepage', sub.homepage)
+        properties.delete(:homepage)
+        print "\n" or next if properties.empty?
+      end
+      if properties[:hierarchyProperty]
+        print_element('hierarchyProperty', sub.hierarchyProperty)
+        properties.delete(:hierarchyProperty)
+        print "\n" or next if properties.empty?
+      end
+      if properties[:masterFileName]
+        print_element('masterFileName', sub.masterFileName)
+        properties.delete(:masterFileName)
+        print "\n" or next if properties.empty?
+      end
+      if properties[:metrics]
+        print_element('metrics', submission_metrics(sub))
+        properties.delete(:metrics)
+        print "\n" or next if properties.empty?
+      end
+      if properties[:naturalLanguage]
+        print_element('naturalLanguage', sub.naturalLanguage)
+        properties.delete(:naturalLanguage)
+        print "\n" or next if properties.empty?
+      end
+      if properties[:obsoleteParent]
+        print_element('obsoleteParent', sub.obsoleteParent)
+        properties.delete(:obsoleteParent)
+        print "\n" or next if properties.empty?
+      end
+      if properties[:obsoleteProperty]
+        print_element('obsoleteProperty', sub.obsoleteProperty)
+        properties.delete(:obsoleteProperty)
+        print "\n" or next if properties.empty?
+      end
+      if properties[:prefLabelProperty]
+        print_element('prefLabelProperty', sub.prefLabelProperty)
+        properties.delete(:prefLabelProperty)
+        print "\n" or next if properties.empty?
+      end
+      if properties[:publication]
+        print_element('publication', sub.publication)
+        properties.delete(:publication)
+        print "\n" or next if properties.empty?
+      end
+      if properties[:pullLocation]
+        print_element('pullLocation', sub.pullLocation)
+        properties.delete(:pullLocation)
+        print "\n" or next if properties.empty?
+      end
+      if properties[:released]
+        print_element('released', sub.released.to_s)
+        properties.delete(:released)
+        print "\n" or next if properties.empty?
+      end
+      if properties[:status]
+        print_element('status', sub.status)
+        properties.delete(:status)
+        print "\n" or next if properties.empty?
+      end
+      if properties[:submissionStatus]
+        print_element('submissionStatus', submission_status(sub))
+        properties.delete(:submissionStatus)
+        print "\n" or next if properties.empty?
+      end
+      if properties[:synonymProperty]
+        print_element('synonymProperty', sub.synonymProperty)
+        properties.delete(:synonymProperty)
+        print "\n" or next if properties.empty?
+      end
+      if properties[:uploadFilePath]
+        print_element('uploadFilePath', sub.uploadFilePath)
+        properties.delete(:uploadFilePath)
+        print "\n" or next if properties.empty?
+      end
+      if properties[:uri]
+        print_element('uri', sub.uri.to_s)
+        properties.delete(:uri)
+        print "\n" or next if properties.empty?
+      end
+      if properties[:version]
+        print_element('version', sub.version)
+        properties.delete(:version)
+        print "\n" or next if properties.empty?
+      end
+
+    end # if properties[:all]
+
+  rescue Exception => e
+    puts "FAILED, exception: #{e.to_json}."
+  end
+end
+
+STDOUT.flush

@@ -66,6 +66,10 @@ def check_http_file(uri)
     session.use_ssl = true if uri.port == 443
     session.start do |http|
       response = http.head(uri.request_uri)
+      return response.code if response.code >= 400
+      # Just getting the header is not sufficient to detect some 500 errors on downloads, so
+      # we must try to get the file, although it takes longer.
+      response = http.get(uri.request_uri)
       return response.code
     end
   rescue Exception => e

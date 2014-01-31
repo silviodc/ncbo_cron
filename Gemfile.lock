@@ -1,9 +1,10 @@
 GIT
   remote: git://github.com/ncbo/goo.git
-  revision: 6bdc0cf882179a5c882500dbdb00c2facc59a1e7
-  branch: master
+  revision: a5a3aabe06419ce31dc0cf10039d3bcad847a4ec
+  branch: staging
   specs:
     goo (0.0.2)
+      pry
       rdf (= 1.0.8)
       redis
       rest-client
@@ -13,8 +14,8 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ncbo_annotator.git
-  revision: c67717ceef0e4e7b41529b69119858f97e96c235
-  branch: master
+  revision: 785bfdfb1fa6124034edd7bfb3538a5b3bfaae46
+  branch: staging
   specs:
     ncbo_annotator (0.0.1)
       goo
@@ -23,8 +24,8 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ontologies_linked_data.git
-  revision: 6d2ce78b45932c3ad8d856532d1babf3b6673eac
-  branch: master
+  revision: 07e89355eb21f81ffe8e99c4ea2738811704a6df
+  branch: staging
   specs:
     ontologies_linked_data (0.0.1)
       activesupport
@@ -42,8 +43,8 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/sparql-client.git
-  revision: 245ca3abdb4c1c72bff1b150e7fe6f0d4922356f
-  branch: master
+  revision: e1dfb143a3097066f81bfe13393ed93ec01c37ad
+  branch: staging
   specs:
     sparql-client (1.0.4.1)
       json_pure (>= 1.4)
@@ -87,17 +88,17 @@ GEM
       mime-types
       treetop (>= 1.4.5)
     method_source (0.8.2)
-    mime-types (2.0)
+    mime-types (2.1)
     minitest (4.7.5)
     mlanett-redis-lock (0.2.5)
       redis
     multi_json (1.8.4)
-    net-http-persistent (2.9)
+    net-http-persistent (2.9.1)
     oj (2.5.4)
     polyglot (0.3.3)
     pony (1.6.2)
       mail (>= 2.0)
-    pry (0.9.12.4)
+    pry (0.9.12.6)
       coderay (~> 1.0)
       method_source (~> 0.8)
       slop (~> 3.4)
@@ -107,7 +108,7 @@ GEM
     rake (10.1.1)
     rdf (1.0.8)
       addressable (>= 2.2)
-    redis (3.0.6)
+    redis (3.0.7)
     rest-client (1.6.7)
       mime-types (>= 1.16)
     rsolr (1.0.9)

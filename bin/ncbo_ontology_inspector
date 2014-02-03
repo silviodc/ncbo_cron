@@ -82,7 +82,7 @@ end
 
 def submission_status(sub)
   submission_status = sub.submissionStatus.map {|s| s.id.to_s.split('/').last }
-  unless submission_status.include?('ERROR_RDF')
+  unless submission_status.map{|s| s.start_with? 'ERROR_RDF'}.any?
     submission_status4solr(sub, submission_status) # append a SOLR count
     submission_status4annotator(sub, submission_status) # append an Annotator status
   end
@@ -136,15 +136,20 @@ def submission_status4solr(sub, submission_status)
 end
 
 def get_solr_class_count(acronym)
-  call = "#{LinkedData.settings.search_server_url}/collection1/select"
-  response = RestClient.get call, {:params => {
-      :q => "submissionAcronym:#{acronym}",
-      :group => "true",
-      "group.field" => "submissionAcronym",
-      :wt => "json"
-  }}
-  response = JSON.load(response)
-  return response["grouped"]["submissionAcronym"]["groups"].first["doclist"]["numFound"].to_i
+  begin
+    call = "#{LinkedData.settings.search_server_url}/collection1/select"
+    response = RestClient.get call, {:params => {
+        :q => "submissionAcronym:#{acronym}",
+        :group => "true",
+        "group.field" => "submissionAcronym",
+        :wt => "json"
+    }}
+    response = JSON.load(response)
+    count = response["grouped"]["submissionAcronym"]["groups"].first["doclist"]["numFound"].to_i
+  rescue
+    count = 0
+  end
+  return count
 end
 
 # Generic output method

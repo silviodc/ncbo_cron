@@ -108,7 +108,9 @@ def get_annotator(sub)
   # contain classes from the submission ontology.
   sub_ont = sub.ontology.id.to_s
   classes = LinkedData::Models::Class.in(sub).include(:prefLabel).all[0..4]
+  raise "NO CLASSES" if classes.empty?
   text_to_annotate = classes.map {|c| c.prefLabel }.join(' ')
+  raise "NO CLASS PREFLABELS" if text_to_annotate.empty?
   # annotator.annotate(text, ontologies=?, semantic_types=?, filter_integers=?,
   # expand_hierachy_levels=?, expand_with_mappings=?, min_term_size=?, whole_word_only=?, with_synonyms=?)
   annotator = Annotator::Models::NcboAnnotator.new

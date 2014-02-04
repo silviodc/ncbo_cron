@@ -49,7 +49,7 @@ echo 'Ontologies missing a latest submission:'
 echo
 
 grep -F 'submissionId=ERROR' $SUBMISSION_NOTSUMMARYONLY_LOG > $SUBMISSION_ERROR_LOG
-cat $SUBMISSION_ERROR_LOG | sed -e $REFORMAT_LINES | tee $SUBMISSION_ERROR_FORMAT_LOG
+cat $SUBMISSION_ERROR_LOG | sed -e $REFORMAT_LINES | grep -v -F 'metrics=' | tee $SUBMISSION_ERROR_FORMAT_LOG
 # cleanup the submission log
 grep -v -F 'submissionId=ERROR' $SUBMISSION_NOTSUMMARYONLY_LOG | grep -F 'UPLOAD' > $SUBMISSION_UPLOAD_LOG
 
@@ -62,7 +62,7 @@ echo '**************************************************************************
 echo "Ontologies failing to parse, without RDF data ('ERROR_RDF','ERROR_RDF_LABELS'):"
 echo
 grep -F 'ERROR_RDF' $SUBMISSION_UPLOAD_LOG > $SUBMISSION_ERROR_RDF_LOG
-cat  $SUBMISSION_ERROR_RDF_LOG | sed -e $REFORMAT_LINES | tee $SUBMISSION_ERROR_RDF_FORMAT_LOG
+cat  $SUBMISSION_ERROR_RDF_LOG | sed -e $REFORMAT_LINES | grep -v -F 'metrics=' | tee $SUBMISSION_ERROR_RDF_FORMAT_LOG
 # Filter the output log to remove RDF errors from the ontologies with submissions.
 grep -v -F 'ERROR_RDF' $SUBMISSION_UPLOAD_LOG | grep -F 'RDF' > $SUBMISSION_RDF_LOG
 

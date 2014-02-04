@@ -38,7 +38,7 @@ module NcboCron
         interval = "#{minutes_between}m" if minutes_between
         interval = "5m" unless interval
       end
-      
+
       if scheduler_type == :cron
         interval = options[:cron_schedule]
       end
@@ -48,33 +48,35 @@ module NcboCron
 
       scheduler.send(scheduler_type, interval, {:allow_overlapping => false}) do
         redis.lock(job_name, life: lock_life) do
-          begin
-            logger.debug("#{job_name} -- Lock acquired"); logger.flush
+          fork do
+            begin
+              logger.debug("#{job_name} -- Lock acquired"); logger.flush
 
-            # Spawn a thread to re-acquire the lock every 60 seconds
-            thread = Thread.new do
-              sleep(relock_period) do
-                lock.extend_life(relock_period)
+              # Spawn a thread to re-acquire the lock every 60 seconds
+              thread = Thread.new do
+                sleep(relock_period) do
+                  lock.extend_life(relock_period)
+                end
               end
-            end
-      
-            # Make sure thread gets killed if we exit abnormally
-            at_exit do
+
+              # Make sure thread gets killed if we exit abnormally
+              at_exit do
+                logger.debug("#{job_name} -- Killing thread"); logger.flush
+                Thread.kill(thread)
+              end
+
+              # Run the process if we have a job
+              yield if block_given?
+              process.call if process
+            ensure
+              # Release lock
               logger.debug("#{job_name} -- Killing thread"); logger.flush
-              Thread.kill(thread)
+              if defined?(thread)
+                Thread.kill(thread)
+                thread.join
+              end
+              logger.debug("#{job_name} -- Thread alive? #{defined?(thread) ? thread.alive? : 'false'}"); logger.flush
             end
-      
-            # Run the process if we have a job
-            yield if block_given?
-            process.call if process
-          ensure
-            # Release lock
-            logger.debug("#{job_name} -- Killing thread"); logger.flush
-            if defined?(thread)
-              Thread.kill(thread)
-              thread.join
-            end
-            logger.debug("#{job_name} -- Thread alive? #{defined?(thread) ? thread.alive? : 'false'}"); logger.flush
           end
         end
       end

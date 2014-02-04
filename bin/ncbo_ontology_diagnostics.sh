@@ -28,7 +28,7 @@ SUBMISSION_ERROR_ANNOTATOR_FORMAT_LOG='logs/submission_status_errorAnnotator_for
 
 
 echo "Inspecting submissionStatus and metrics for all ontologies."
-./bin/ncbo_ontology_inspector -p submissionStatus,metrics > $SUBMISSION_STATUS_LOG
+./bin/ncbo_ontology_inspector -p flat,hasOntologyLanguage,metrics,submissionStatus > $SUBMISSION_STATUS_LOG
 
 echo
 echo '*********************************************************************************************'

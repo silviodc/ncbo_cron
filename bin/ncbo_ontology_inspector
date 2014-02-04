@@ -52,7 +52,7 @@ end
 exit(1) if options[:properties].empty?  # nothing to be done
 unless options[:ontologies]
   onts = LinkedData::Models::Ontology.where.include(:acronym).all  # this includes views
-  options[:ontologies] = onts.map {|o| o.acronym }
+  options[:ontologies] = onts.map {|o| o.acronym }.sort
 end
 
 

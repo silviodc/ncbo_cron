@@ -1,7 +1,7 @@
 GIT
   remote: git://github.com/ncbo/goo.git
-  revision: 46515044deb8c3593aa6c6d72746ca28f2f95be6
-  branch: master
+  revision: 4217cbfafe425b8d1428aafd0b95daa3e4ee27fa
+  branch: staging
   specs:
     goo (0.0.2)
       pry
@@ -14,8 +14,8 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ncbo_annotator.git
-  revision: 46a4fe6f2c7a67a21a48862860da67cef02ad740
-  branch: master
+  revision: 08a36098343e9a6d404d303377d51f2f38e5106a
+  branch: staging
   specs:
     ncbo_annotator (0.0.1)
       goo
@@ -24,8 +24,8 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ontologies_linked_data.git
-  revision: e4792d91faf2db7cef84e352a39353dbd758ff13
-  branch: master
+  revision: dcc5630b548e98790086e6061423b1cb24f31e2b
+  branch: staging
   specs:
     ontologies_linked_data (0.0.1)
       activesupport

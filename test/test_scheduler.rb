@@ -12,20 +12,32 @@ class TestScheduler < MiniTest::Unit::TestCase
         redis_host: $QUEUE_REDIS_HOST,
         redis_port: $QUEUE_REDIS_PORT
       }
-    
+
+      # Create a simple TCPServer to listen from the fork
+      require 'socket'
+      listen_string = ""
+      port = 21212
+      socket_server = Thread.new do
+        server = TCPServer.new(port)
+        loop {
+          session = server.accept
+          listen_string << session.gets
+        }
+      end
+
       # Spawn a thread with a job that takes a while to finish
-      test_array = []
       job1_thread = Thread.new do
         NcboCron::Scheduler.scheduled_locking_job(options) do
-          test_array << Time.now
+          client = TCPSocket.new('localhost', port)
+          client.puts("MESSAGE_SENT\n")
         end
       end
-    
+
       sleep(5)
-      finished_array = test_array.dup.freeze
-    
-      assert_equal 4, finished_array.length
-    
+      finished_array = listen_string.split("\n")
+
+      assert finished_array.length >= 4
+
       assert job1_thread.alive?
       job1_thread.kill
       job1_thread.join
@@ -34,6 +46,10 @@ class TestScheduler < MiniTest::Unit::TestCase
       if defined?(job1_thread) && job1_thread.alive?
         job1_thread.kill
         job1_thread.join
+      end
+      if defined?(socket_server) && socket_server.alive?
+        socket_server.kill
+        socket_server.join
       end
     end
   end
@@ -46,34 +62,47 @@ class TestScheduler < MiniTest::Unit::TestCase
         redis_host: $QUEUE_REDIS_HOST,
         redis_port: $QUEUE_REDIS_PORT
       }
-      job1 = false
-      job2 = false
-  
+
+      # Create a simple TCPServer to listen from the fork
+      require 'socket'
+      listen_string = ""
+      port = 12121
+      socket_server = Thread.new do
+        server = TCPServer.new(port)
+        loop {
+          session = server.accept
+          listen_string << session.gets
+        }
+      end
+
       # Spawn a thread with a job that takes a while to finish
       job1_thread = Thread.new do
         NcboCron::Scheduler.scheduled_locking_job(options) do
-          job1 = true
-          sleep(30)
+          client = TCPSocket.new('localhost', port)
+          client.puts("JOB1\n")
+          sleep(60)
         end
       end
-  
+
       # Wait for the lock to be acquired and the job to run
       sleep(10)
-  
+
       # Spawn a second thread with the same name. This one shouldn't
       # be able to get a lock because of the long-running job above.
       job2_thread = Thread.new do
         NcboCron::Scheduler.scheduled_locking_job(options.merge(seconds_between: 1)) do
-          job2 = true
+          client = TCPSocket.new('localhost', port)
+          client.puts("JOB2\n")
+          sleep(60)
         end
       end
-  
+
       sleep(10)
-  
+
       assert job1_thread.alive?
       assert job2_thread.alive?
-      assert job1
-      refute job2
+      assert listen_string.include?("JOB1")
+      refute listen_string.include?("JOB2")
       job1_thread.kill
       job1_thread.join
       refute job1_thread.alive?
@@ -88,6 +117,10 @@ class TestScheduler < MiniTest::Unit::TestCase
       if defined?(job2_thread)
         job2_thread.kill
         job2_thread.join
+      end
+      if defined?(socket_server)
+        socket_server.kill
+        socket_server.join
       end
     end
    end

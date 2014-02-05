@@ -79,6 +79,10 @@ grep -v -F 'METRICS'      $SUBMISSION_RDF_LOG >  $SUBMISSION_ERROR_METRICS_LOG
 grep -F 'METRICS_MISSING' $SUBMISSION_RDF_LOG >> $SUBMISSION_ERROR_METRICS_LOG
 grep -F 'classes:0'       $SUBMISSION_RDF_LOG >> $SUBMISSION_ERROR_METRICS_LOG
 grep -F 'maxDepth:0'      $SUBMISSION_RDF_LOG >> $SUBMISSION_ERROR_METRICS_LOG
+#
+# TODO: Add additional filters to exclude false positives, e.g.
+# TODO: it's OK for maxDepth:0 when flat=true
+# TODO: it's OK for maxDepth:0 when classes:0 ????
 cat $SUBMISSION_ERROR_METRICS_LOG | sort -u | sed -e $REFORMAT_LINES | tee $SUBMISSION_ERROR_METRICS_FORMAT_LOG
 
 echo

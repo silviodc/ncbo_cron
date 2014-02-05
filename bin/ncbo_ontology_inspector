@@ -127,7 +127,7 @@ def submission_status4solr(sub, submission_status)
   if submission_status.include? 'INDEXED'
     begin
       acronym = sub.ontology.id.to_s.split('/').last
-      count = get_solr_class_count(acronym)
+      count = get_solr_class_count(acronym, sub.submissionId)
       submission_status.push("INDEXCOUNT:#{count}")
     rescue Exception => e
       submission_status.push("INDEXCOUNT_ERROR:#{e.message}")
@@ -137,11 +137,11 @@ def submission_status4solr(sub, submission_status)
   end
 end
 
-def get_solr_class_count(acronym)
+def get_solr_class_count(acronym, submissionId)
   begin
     call = "#{LinkedData.settings.search_server_url}/collection1/select"
     response = RestClient.get call, {:params => {
-        :q => "submissionAcronym:#{acronym}",
+        :q => "submissionAcronym:#{acronym}\nsubmissionID:#{submissionId}",
         :group => "true",
         "group.field" => "submissionAcronym",
         :wt => "json"

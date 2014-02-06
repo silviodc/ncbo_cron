@@ -23,7 +23,7 @@ module NcboCron
       lock_life       = options[:life] || 10*60
       job_name        = options[:job_name] || "ncbo_cron"
       logger          = options[:logger] || Logger.new($stdout)
-      relock_period   = options[:relock_period] || 60
+      relock_period   = options[:relock_period] || lock_life - 15
       redis_host      = options[:redis_host] || "localhost"
       redis_port      = options[:redis_port] || 6379
       process         = options[:process]
@@ -38,7 +38,7 @@ module NcboCron
         interval = "#{minutes_between}m" if minutes_between
         interval = "5m" unless interval
       end
-      
+
       if scheduler_type == :cron
         interval = options[:cron_schedule]
       end
@@ -47,35 +47,29 @@ module NcboCron
       scheduler = Rufus::Scheduler.start_new(:thread_name => job_name)
 
       scheduler.send(scheduler_type, interval, {:allow_overlapping => false}) do
-        redis.lock(job_name, life: lock_life) do
-          begin
-            logger.debug("#{job_name} -- Lock acquired"); logger.flush
+        redis.lock(job_name, life: lock_life, owner: "ncbo_cron") do
+          pid = fork do
+            $0 = job_name # rename the process
+            begin
+              logger.debug("#{job_name} -- Lock acquired"); logger.flush
 
-            # Spawn a thread to re-acquire the lock every 60 seconds
-            thread = Thread.new do
-              sleep(relock_period) do
-                lock.extend_life(relock_period)
+              # Spawn a thread to re-acquire the lock every 60 seconds
+              Thread.new do
+                sleep(relock_period) do
+                  logger.debug("Re-locking for #{lock_life}")
+                  lock.extend_life(lock_life)
+                end
               end
+
+              # Run the process if we have a job
+              yield if block_given?
+              process.call if process
+            ensure
+              Kernel.exit!
             end
-      
-            # Make sure thread gets killed if we exit abnormally
-            at_exit do
-              logger.debug("#{job_name} -- Killing thread"); logger.flush
-              Thread.kill(thread)
-            end
-      
-            # Run the process if we have a job
-            yield if block_given?
-            process.call if process
-          ensure
-            # Release lock
-            logger.debug("#{job_name} -- Killing thread"); logger.flush
-            if defined?(thread)
-              Thread.kill(thread)
-              thread.join
-            end
-            logger.debug("#{job_name} -- Thread alive? #{defined?(thread) ? thread.alive? : 'false'}"); logger.flush
           end
+          logger.debug("#{job_name} -- running in pid #{pid}")
+          Process.wait(pid)
         end
       end
 

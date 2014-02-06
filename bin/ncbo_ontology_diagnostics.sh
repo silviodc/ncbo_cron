@@ -85,10 +85,6 @@ grep -F 'maxDepth:0'      $SUBMISSION_RDF_LOG >> $SUBMISSION_ERROR_METRICS_LOG
 # TODO: it's OK for maxDepth:0 when classes:0 ????
 cat $SUBMISSION_ERROR_METRICS_LOG | sort -u | sed -e $REFORMAT_LINES | tee $SUBMISSION_ERROR_METRICS_FORMAT_LOG
 
-# TODO: possible automation of fixes, e.g.
-# ./bin/ncbo_ontology_metrics -o {ONTOLOGY_ACRONYM}
-# TODO: then check the output from
-# ./bin/ncbo_ontology_inspector -p flat,metrics,submissionStatus -o {ONTOLOGY_ACRONYM}
 
 echo
 echo '*********************************************************************************************'
@@ -99,11 +95,6 @@ grep -F 'INDEXCOUNT_MISSING' $SUBMISSION_RDF_LOG >> $SUBMISSION_ERROR_INDEX_LOG
 grep -F 'INDEXCOUNT_ERROR'   $SUBMISSION_RDF_LOG >> $SUBMISSION_ERROR_INDEX_LOG
 cat $SUBMISSION_ERROR_INDEX_LOG | sort -u | sed -e $REFORMAT_LINES | tee $SUBMISSION_ERROR_INDEX_FORMAT_LOG
 
-# TODO: possible automation of fixes, e.g.
-# ./bin/ncbo_ontology_index -o {ONTOLOGY_ACRONYM}
-# TODO: then check the output from
-# ./bin/ncbo_ontology_inspector -p submissionStatus -o {ONTOLOGY_ACRONYM}
-
 
 echo
 echo '*********************************************************************************************'
@@ -112,4 +103,21 @@ echo
 grep -F 'ANNOTATOR_MISSING' $SUBMISSION_RDF_LOG >  $SUBMISSION_ERROR_ANNOTATOR_LOG
 grep -F 'ANNOTATOR_ERROR'   $SUBMISSION_RDF_LOG >> $SUBMISSION_ERROR_ANNOTATOR_LOG
 cat $SUBMISSION_ERROR_ANNOTATOR_LOG | sort -u | sed -e $REFORMAT_LINES | tee $SUBMISSION_ERROR_ANNOTATOR_FORMAT_LOG
+
+
+# TODO: possible automation of fixes, e.g.
+
+# TODO: Call ncbo_cron to reprocess the RDF failures once.
+#./bin/ncbo_cron --add-submission {submission id to add to the queue}
+
+# TODO: possible metrics fix:
+# ./bin/ncbo_ontology_metrics -o {ONTOLOGY_ACRONYM}
+# TODO: then check the output from
+# ./bin/ncbo_ontology_inspector -p flat,metrics,submissionStatus -o {ONTOLOGY_ACRONYM}
+
+# TODO: possible SOLR index fix:
+# ./bin/ncbo_ontology_index -o {ONTOLOGY_ACRONYM}
+# TODO: then check the output from
+# ./bin/ncbo_ontology_inspector -p submissionStatus -o {ONTOLOGY_ACRONYM}
+
 

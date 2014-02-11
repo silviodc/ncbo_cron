@@ -20,6 +20,10 @@ opt_parser = OptionParser.new do |opts|
   opts.on('-o', '--ontologies ACRONYM[,ACRONYM,...]', 'Ontology acronym(s) to process.') do |acronym|
     options[:ontologies] = acronym.split(',')
   end
+  options[:logfile] = "processing.log"
+  opts.on( '-l', '--logfile FILE', "Write log to FILE (default is 'processing.log')" ) do |filename|
+    options[:logfile] = filename
+  end
   # Display the help screen, all programs are assumed to have this option.
   opts.on( '-h', '--help', 'Display this screen' ) do
     puts opts
@@ -40,10 +44,11 @@ end
 # MAIN
 #
 
+logger = Logger.new(options[:logfile])
+puts "Processing details are logged to #{options[:logfile]}"
+
 options[:ontologies].each do |acronym|
   begin
-    logger = Logger.new(options[:logfile])
-    puts "Processing details are logged to #{options[:logfile]}"
     ont = LinkedData::Models::Ontology.find(acronym).first
     if ont.nil?
       msg = "Error, ontology not found: #{acronym}"
@@ -68,8 +73,8 @@ options[:ontologies].each do |acronym|
     msg = "Failed, exception: #{e.to_json}."
     logger.error(msg)
     puts msg
-    next
+    print e.backtrace.join("\n")
+    exit(1)
   end
 end
 
-STDOUT.flush

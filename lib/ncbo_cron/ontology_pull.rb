@@ -32,6 +32,12 @@ module NcboCron
             last.bring(:pullLocation) if last.bring?(:pullLocation)
             last.bring(:uploadFilePath) if last.bring?(:uploadFilePath)
 
+            if (last.hasOntologyLanguage.umls? && $UMLS_DOWNLOAD_URL)
+              last.pullLocation= RDF::URI.new(
+                $UMLS_DOWNLOAD_URL + "/" + last.pullLocation.split("/")[-1])
+              logger.info("Using alternative download for umls #{last.pullLocation.to_s}")
+              logger.flush
+            end
             if (last.remote_file_exists?(last.pullLocation.to_s))
               logger.info "Checking download for #{ont.acronym}"
               logger.info "Location: #{last.pullLocation.to_s}"; logger.flush

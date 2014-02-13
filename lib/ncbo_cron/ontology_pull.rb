@@ -12,7 +12,11 @@ module NcboCron
 
       def do_remote_ontology_pull(options = {})
         logger = options[:logger] || Logger.new($stdout)
+        logger.info "UMLS auto-pull #{options[:enable_pull_umls] == true}"
+        logger.flush
         ontologies = LinkedData::Models::Ontology.where.include(:acronym).all
+        enable_pull_umls = options[:enable_pull_umls]
+
         
         ontologies.sort! {|a,b| a.acronym.downcase <=> b.acronym.downcase}
 
@@ -21,6 +25,10 @@ module NcboCron
           begin
             last = ont.latest_submission(status: :any)
             next if last.nil?
+            last.bring(:hasOntologyLanguage) if last.bring?:hasOntologyLanguage
+            if !enable_pull_umls && last.hasOntologyLanguage.umls?
+              next
+            end
             last.bring(:pullLocation) if last.bring?(:pullLocation)
             last.bring(:uploadFilePath) if last.bring?(:uploadFilePath)
 

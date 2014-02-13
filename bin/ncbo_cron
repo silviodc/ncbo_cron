@@ -56,6 +56,9 @@ runner.with_options do |opts|
   opts.on("--disable-flush", "disable flush archive class graphs") do |v|
     options[:disable_flush] = v
   end
+  opts.on("--enable-umls", "enable UMLS auto-pull") do |v|
+    options[:enable_pull_umls] = true
+  end
   opts.on("--disable-annotator-dictionary", "disable annotator cache and dictionary rebuild") do |v|
     options[:disable_annotator_dictionary_rebuild] = v
   end
@@ -196,7 +199,8 @@ runner.execute do |opts|
         logger.info "Starting ncbo pull"; logger.flush
         logger.info "Logging pull details to #{pull_log_path}"; logger.flush
         puller = NcboCron::Models::OntologyPull.new
-        pulled_onts = puller.do_remote_ontology_pull(logger: pull_logger)
+        pulled_onts = puller.do_remote_ontology_pull(logger: pull_logger, 
+                                                     enable_pull_umls: options[:enable_pull_umls])
         logger.info "Finished ncbo pull"; logger.flush
         logger.info "Pull summary:\n#{pulled_onts.map {|o| o.id.to_s}}"
       end

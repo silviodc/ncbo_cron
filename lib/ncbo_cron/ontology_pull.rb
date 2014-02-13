@@ -12,7 +12,11 @@ module NcboCron
 
       def do_remote_ontology_pull(options = {})
         logger = options[:logger] || Logger.new($stdout)
+        logger.info "UMLS auto-pull #{options[:enable_pull_umls] == true}"
+        logger.flush
         ontologies = LinkedData::Models::Ontology.where.include(:acronym).all
+        enable_pull_umls = options[:enable_pull_umls]
+
         
         ontologies.sort! {|a,b| a.acronym.downcase <=> b.acronym.downcase}
 
@@ -21,9 +25,19 @@ module NcboCron
           begin
             last = ont.latest_submission(status: :any)
             next if last.nil?
+            last.bring(:hasOntologyLanguage) if last.bring?:hasOntologyLanguage
+            if !enable_pull_umls && last.hasOntologyLanguage.umls?
+              next
+            end
             last.bring(:pullLocation) if last.bring?(:pullLocation)
             last.bring(:uploadFilePath) if last.bring?(:uploadFilePath)
 
+            if (last.hasOntologyLanguage.umls? && $UMLS_DOWNLOAD_URL)
+              last.pullLocation= RDF::URI.new(
+                $UMLS_DOWNLOAD_URL + "/" + last.pullLocation.split("/")[-1])
+              logger.info("Using alternative download for umls #{last.pullLocation.to_s}")
+              logger.flush
+            end
             if (last.remote_file_exists?(last.pullLocation.to_s))
               logger.info "Checking download for #{ont.acronym}"
               logger.info "Location: #{last.pullLocation.to_s}"; logger.flush

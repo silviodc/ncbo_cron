@@ -34,7 +34,7 @@ module NcboCron
 
             if (last.hasOntologyLanguage.umls? && $UMLS_DOWNLOAD_URL)
               last.pullLocation= RDF::URI.new(
-                $UMLS_DOWNLOAD_URL + "/" + last.pullLocation.split("/")[-1])
+                $UMLS_DOWNLOAD_URL + last.pullLocation.split("/")[-1])
               logger.info("Using alternative download for umls #{last.pullLocation.to_s}")
               logger.flush
             end

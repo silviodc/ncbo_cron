@@ -8,23 +8,8 @@
 
 REFORMAT_LINES='s/;;/\n\t/g'
 
-
-echo "Inspecting submissionStatus and metrics for all ontologies."
-./bin/ncbo_ontology_inspector -p submissionStatus,metrics > logs/submission_status.log
-
-echo
-echo '*********************************************************************************************'
-echo 'System config:'
-grep -E '(.*) >> Using' logs/submission_status.log
-grep -v -E '(.*) >> Using' logs/submission_status.log > logs/tmp.log
-mv logs/tmp.log logs/submission_status.log
-
-echo
-echo '*********************************************************************************************'
-echo 'Filtering log to remove summaryOnly ontologies.'
-echo
-grep -v -F 'summaryOnly' logs/submission_status.log | sed -e 's/ontology=found;;//' > logs/submission_status_notSummaryOnly.log
-
+SUBMISSION_STATUS_LOG='logs/submission_status.log'
+SUBMISSION_NOTSUMMARYONLY_LOG='logs/submission_status_notSummaryOnly.log'
 SUBMISSION_ERROR_LOG='logs/submission_status_errorSubmission.log'
 SUBMISSION_UPLOAD_LOG='logs/submission_status_hasSubmission.log'
 SUBMISSION_RDF_LOG='logs/submission_status_hasRDF.log'
@@ -32,25 +17,60 @@ SUBMISSION_ERROR_RDF_LOG='logs/submission_status_errorRDF.log'
 SUBMISSION_ERROR_METRICS_LOG='logs/submission_status_errorMetrics.log'
 SUBMISSION_ERROR_INDEX_LOG='logs/submission_status_errorIndex.log'
 SUBMISSION_ERROR_ANNOTATOR_LOG='logs/submission_status_errorAnnotator.log'
+SUBMISSION_ERROR_TMP_LOG='logs/submission_status_errorTMP.log'
+
+SUBMISSION_ERROR_FORMAT_LOG='logs/submission_status_errorSubmission_formatted.log'
+SUBMISSION_UPLOAD_FORMAT_LOG='logs/submission_status_hasSubmission_formatted.log'
+SUBMISSION_RDF_FORMAT_LOG='logs/submission_status_hasRDF_formatted.log'
+SUBMISSION_ERROR_RDF_FORMAT_LOG='logs/submission_status_errorRDF_formatted.log'
+SUBMISSION_ERROR_METRICS_FORMAT_LOG='logs/submission_status_errorMetrics_formatted.log'
+SUBMISSION_ERROR_INDEX_FORMAT_LOG='logs/submission_status_errorIndex_formatted.log'
+SUBMISSION_ERROR_ANNOTATOR_FORMAT_LOG='logs/submission_status_errorAnnotator_formatted.log'
+
+
+echo "Running ncbo_ontology_inspector for all ontologies."
+./bin/ncbo_ontology_inspector -p flat,hasOntologyLanguage,metrics,submissionStatus > $SUBMISSION_STATUS_LOG
+
+echo
+echo '*********************************************************************************************'
+echo 'System config:'
+grep -E '(.*) >> Using|ncbo-cube' $SUBMISSION_STATUS_LOG
+grep -v -E '(.*) >> Using|ncbo-cube' $SUBMISSION_STATUS_LOG > logs/tmp.log
+mv logs/tmp.log $SUBMISSION_STATUS_LOG
+
+echo
+echo '*********************************************************************************************'
+echo 'Filtering log to remove summaryOnly ontologies.'
+echo
+grep -v -F 'summaryOnly' $SUBMISSION_STATUS_LOG | sed -e 's/ontology=found;;//' > $SUBMISSION_NOTSUMMARYONLY_LOG
 
 echo
 echo '*********************************************************************************************'
 echo 'Ontologies missing a latest submission:'
 echo
 
-grep -F 'submissionId=ERROR' logs/submission_status_notSummaryOnly.log > $SUBMISSION_ERROR_LOG
-cat $SUBMISSION_ERROR_LOG | sed -e $REFORMAT_LINES
+grep -F 'submissionId=ERROR' $SUBMISSION_NOTSUMMARYONLY_LOG > $SUBMISSION_ERROR_LOG
+cat $SUBMISSION_ERROR_LOG | sed -e $REFORMAT_LINES | grep -v -F 'metrics=' | tee $SUBMISSION_ERROR_FORMAT_LOG
 # cleanup the submission log
-grep -v -F 'submissionId=ERROR' logs/submission_status_notSummaryOnly.log > $SUBMISSION_UPLOAD_LOG
+grep -v -F 'submissionId=ERROR' $SUBMISSION_NOTSUMMARYONLY_LOG | grep -F 'UPLOAD' > $SUBMISSION_UPLOAD_LOG
+
+
+#############################################################################################################
+# The RDF processing requires a successful submission UPLOAD.
 
 echo
 echo '*********************************************************************************************'
 echo "Ontologies failing to parse, without RDF data ('ERROR_RDF','ERROR_RDF_LABELS'):"
 echo
 grep -F 'ERROR_RDF' $SUBMISSION_UPLOAD_LOG > $SUBMISSION_ERROR_RDF_LOG
-cat  $SUBMISSION_ERROR_RDF_LOG | sed -e $REFORMAT_LINES
+cat  $SUBMISSION_ERROR_RDF_LOG | sed -e $REFORMAT_LINES | grep -v -F 'metrics=' | tee $SUBMISSION_ERROR_RDF_FORMAT_LOG
 # Filter the output log to remove RDF errors from the ontologies with submissions.
-grep -v -F 'ERROR_RDF' $SUBMISSION_UPLOAD_LOG > $SUBMISSION_RDF_LOG
+grep -v -F 'ERROR_RDF' $SUBMISSION_UPLOAD_LOG | grep -F 'RDF' > $SUBMISSION_RDF_LOG
+
+
+#############################################################################################################
+# The metrics, SOLR index, and annotator all depend on successful RDF parsing.  Otherwise, they are
+# independent processing operations.
 
 echo
 echo '*********************************************************************************************'
@@ -60,22 +80,54 @@ grep -v -F 'METRICS'      $SUBMISSION_RDF_LOG >  $SUBMISSION_ERROR_METRICS_LOG
 grep -F 'METRICS_MISSING' $SUBMISSION_RDF_LOG >> $SUBMISSION_ERROR_METRICS_LOG
 grep -F 'classes:0'       $SUBMISSION_RDF_LOG >> $SUBMISSION_ERROR_METRICS_LOG
 grep -F 'maxDepth:0'      $SUBMISSION_RDF_LOG >> $SUBMISSION_ERROR_METRICS_LOG
-cat $SUBMISSION_ERROR_METRICS_LOG | sort -u | sed -e $REFORMAT_LINES
+#
+# TODO: Add additional filters to exclude false positives, e.g.
+# TODO: it's OK for maxDepth:0 when flat=true
+# TODO: it's OK for maxDepth:0 when classes:0 ????
+cat $SUBMISSION_ERROR_METRICS_LOG | sort -u | sed -e $REFORMAT_LINES | tee $SUBMISSION_ERROR_METRICS_FORMAT_LOG
+
+
+echo
+echo '*********************************************************************************************'
+echo "Ontologies with RDF data, with no classes (may be an error, or by design):"
+echo
+grep -F 'classes:0'     $SUBMISSION_RDF_LOG | sort -u | sed -e $REFORMAT_LINES
+# Exclude entries without any classes, they cannot be indexed or used in the annotator.
+grep -v -F 'classes:0'  $SUBMISSION_RDF_LOG > $SUBMISSION_ERROR_TMP_LOG
+
 
 echo
 echo '*********************************************************************************************'
 echo "Ontologies with RDF data, without SOLR data:"
 echo
-grep -F 'INDEXCOUNT:0'       $SUBMISSION_RDF_LOG >  $SUBMISSION_ERROR_INDEX_LOG
-grep -F 'INDEXCOUNT_MISSING' $SUBMISSION_RDF_LOG >> $SUBMISSION_ERROR_INDEX_LOG
-grep -F 'INDEXCOUNT_ERROR'   $SUBMISSION_RDF_LOG >> $SUBMISSION_ERROR_INDEX_LOG
-cat $SUBMISSION_ERROR_INDEX_LOG | sort -u | sed -e $REFORMAT_LINES
+grep -F 'INDEXCOUNT:0'       $SUBMISSION_ERROR_TMP_LOG >  $SUBMISSION_ERROR_INDEX_LOG
+grep -F 'INDEXCOUNT_MISSING' $SUBMISSION_ERROR_TMP_LOG >> $SUBMISSION_ERROR_INDEX_LOG
+grep -F 'INDEXCOUNT_ERROR'   $SUBMISSION_ERROR_TMP_LOG >> $SUBMISSION_ERROR_INDEX_LOG
+cat $SUBMISSION_ERROR_INDEX_LOG | sort -u | sed -e $REFORMAT_LINES | tee $SUBMISSION_ERROR_INDEX_FORMAT_LOG
+
 
 echo
 echo '*********************************************************************************************'
 echo "Ontologies with RDF data, without ANNOTATOR data:"
 echo
-grep -F 'ANNOTATOR_MISSING' $SUBMISSION_RDF_LOG >  $SUBMISSION_ERROR_ANNOTATOR_LOG
-grep -F 'ANNOTATOR_ERROR'   $SUBMISSION_RDF_LOG >> $SUBMISSION_ERROR_ANNOTATOR_LOG
-cat $SUBMISSION_ERROR_ANNOTATOR_LOG | sort -u | sed -e $REFORMAT_LINES
+grep -F 'ANNOTATOR_MISSING' $SUBMISSION_ERROR_TMP_LOG >  $SUBMISSION_ERROR_ANNOTATOR_LOG
+grep -F 'ANNOTATOR_ERROR'   $SUBMISSION_ERROR_TMP_LOG >> $SUBMISSION_ERROR_ANNOTATOR_LOG
+cat $SUBMISSION_ERROR_ANNOTATOR_LOG | sort -u | sed -e $REFORMAT_LINES | tee $SUBMISSION_ERROR_ANNOTATOR_FORMAT_LOG
+
+
+# TODO: possible automation of fixes, e.g.
+
+# TODO: Call ncbo_cron to reprocess the RDF failures once.
+#./bin/ncbo_cron --add-submission {submission id to add to the queue}
+
+# TODO: possible metrics fix:
+# ./bin/ncbo_ontology_metrics -o {ONTOLOGY_ACRONYM}
+# TODO: then check the output from
+# ./bin/ncbo_ontology_inspector -p flat,metrics,submissionStatus -o {ONTOLOGY_ACRONYM}
+
+# TODO: possible SOLR index fix:
+# ./bin/ncbo_ontology_index -o {ONTOLOGY_ACRONYM}
+# TODO: then check the output from
+# ./bin/ncbo_ontology_inspector -p submissionStatus -o {ONTOLOGY_ACRONYM}
+
 

@@ -17,6 +17,7 @@ SUBMISSION_ERROR_RDF_LOG='logs/submission_status_errorRDF.log'
 SUBMISSION_ERROR_METRICS_LOG='logs/submission_status_errorMetrics.log'
 SUBMISSION_ERROR_INDEX_LOG='logs/submission_status_errorIndex.log'
 SUBMISSION_ERROR_ANNOTATOR_LOG='logs/submission_status_errorAnnotator.log'
+SUBMISSION_ERROR_TMP_LOG='logs/submission_status_errorTMP.log'
 
 SUBMISSION_ERROR_FORMAT_LOG='logs/submission_status_errorSubmission_formatted.log'
 SUBMISSION_UPLOAD_FORMAT_LOG='logs/submission_status_hasSubmission_formatted.log'
@@ -88,11 +89,20 @@ cat $SUBMISSION_ERROR_METRICS_LOG | sort -u | sed -e $REFORMAT_LINES | tee $SUBM
 
 echo
 echo '*********************************************************************************************'
+echo "Ontologies with RDF data, with no classes (may be an error, or by design):"
+echo
+grep -F 'classes:0'     $SUBMISSION_RDF_LOG | sort -u | sed -e $REFORMAT_LINES
+# Exclude entries without any classes, they cannot be indexed or used in the annotator.
+grep -v -F 'classes:0'  $SUBMISSION_RDF_LOG > $SUBMISSION_ERROR_TMP_LOG
+
+
+echo
+echo '*********************************************************************************************'
 echo "Ontologies with RDF data, without SOLR data:"
 echo
-grep -F 'INDEXCOUNT:0'       $SUBMISSION_RDF_LOG >  $SUBMISSION_ERROR_INDEX_LOG
-grep -F 'INDEXCOUNT_MISSING' $SUBMISSION_RDF_LOG >> $SUBMISSION_ERROR_INDEX_LOG
-grep -F 'INDEXCOUNT_ERROR'   $SUBMISSION_RDF_LOG >> $SUBMISSION_ERROR_INDEX_LOG
+grep -F 'INDEXCOUNT:0'       $SUBMISSION_ERROR_TMP_LOG >  $SUBMISSION_ERROR_INDEX_LOG
+grep -F 'INDEXCOUNT_MISSING' $SUBMISSION_ERROR_TMP_LOG >> $SUBMISSION_ERROR_INDEX_LOG
+grep -F 'INDEXCOUNT_ERROR'   $SUBMISSION_ERROR_TMP_LOG >> $SUBMISSION_ERROR_INDEX_LOG
 cat $SUBMISSION_ERROR_INDEX_LOG | sort -u | sed -e $REFORMAT_LINES | tee $SUBMISSION_ERROR_INDEX_FORMAT_LOG
 
 
@@ -100,8 +110,8 @@ echo
 echo '*********************************************************************************************'
 echo "Ontologies with RDF data, without ANNOTATOR data:"
 echo
-grep -F 'ANNOTATOR_MISSING' $SUBMISSION_RDF_LOG >  $SUBMISSION_ERROR_ANNOTATOR_LOG
-grep -F 'ANNOTATOR_ERROR'   $SUBMISSION_RDF_LOG >> $SUBMISSION_ERROR_ANNOTATOR_LOG
+grep -F 'ANNOTATOR_MISSING' $SUBMISSION_ERROR_TMP_LOG >  $SUBMISSION_ERROR_ANNOTATOR_LOG
+grep -F 'ANNOTATOR_ERROR'   $SUBMISSION_ERROR_TMP_LOG >> $SUBMISSION_ERROR_ANNOTATOR_LOG
 cat $SUBMISSION_ERROR_ANNOTATOR_LOG | sort -u | sed -e $REFORMAT_LINES | tee $SUBMISSION_ERROR_ANNOTATOR_FORMAT_LOG
 
 

@@ -1,6 +1,6 @@
 GIT
   remote: git://github.com/ncbo/goo.git
-  revision: 85dfa6f17da6e1d9674ebcb975a4b6e4386fa740
+  revision: 9b0623b79e01047fb9578f523034db9fcfb65f5f
   branch: staging
   specs:
     goo (0.0.2)
@@ -10,6 +10,7 @@ GIT
       rest-client
       rsolr
       sparql-client
+      systemu
       uuid
 
 GIT
@@ -24,7 +25,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ontologies_linked_data.git
-  revision: 3e498baec67e14aa062835a6684924f0c2d20296
+  revision: 30198090fe52a9be541b6749cc44d778c0f10d7a
   branch: staging
   specs:
     ontologies_linked_data (0.0.1)
@@ -93,7 +94,7 @@ GEM
       redis
     multi_json (1.8.4)
     net-http-persistent (2.9.4)
-    oj (2.5.4)
+    oj (2.5.5)
     polyglot (0.3.4)
     pony (1.8)
       mail (>= 2.0)
@@ -143,4 +144,3 @@ DEPENDENCIES
   rake
   redis
   sparql-client!
-  systemu

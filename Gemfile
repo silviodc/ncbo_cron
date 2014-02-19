@@ -9,8 +9,6 @@ gem 'redis'
 gem 'minitest', '< 5.0'
 gem 'pony'
 
-gem 'systemu' # remove when https://github.com/ahoward/macaddr/pull/19 is resolved
-
 # Monitoring
 gem 'cube-ruby', require: 'cube'
 

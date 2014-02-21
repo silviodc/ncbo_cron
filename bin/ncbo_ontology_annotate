@@ -66,15 +66,21 @@ begin
     exit(1)
   end
   sub.bring_remaining
+  # Note: there is no option for annotator in sub.process_submission.
   #sub.process_submission(logger,
   #                     process_rdf: false, index_search: false,
   #                     run_metrics: true, reasoning: false)
-
   # make available in annotator
+  status_annotator = LinkedData::Models::SubmissionStatus.find('ANNOTATOR').first
+  status_annotator_error = LinkedData::Models::SubmissionStatus.find('ERROR_ANNOTATOR').first
+  sub.remove_submission_status(status_annotator)
+  sub.remove_submission_status(status_annotator_error)
   annotator = Annotator::Models::NcboAnnotator.new
   annotator.create_cache_for_submission(logger, sub)
   annotator.generate_dictionary_file()
+  sub.add_submission_status(status_annotator)
 rescue Exception => e
+  sub.add_submission_status(status_annotator_error)
   msg = "Failed, exception: #{e.to_json}."
   logger.error(msg)
   puts msg

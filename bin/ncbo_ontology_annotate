@@ -24,25 +24,16 @@ require 'optparse'
 options = {}
 opt_parser = OptionParser.new do |opts|
   # Set a banner, displayed at the top of the help screen.
-  #opts.banner = "Usage: ncbo_ontology_index [options]"
+  #opts.banner = "Usage: ncbo_ontology_metrics [options]"
   options[:ontology] = false
-  opts.on('-o', '--ontology ONTOLOGY_ACRONYM', 'Ontology acronym to index (required).') do |acronym|
-    puts "Processing index for ontology: #{acronym}"
+  opts.on('-o', '--ontology ONTOLOGY_ACRONYM', 'Ontology acronym to annotate (required).') do |acronym|
+    puts "Processing annotations for ontology: #{acronym}"
     options[:ontology] = acronym
   end
-  #options[:dry_run] = false
-  #opts.on('-n', '--dryrun', 'Ontology index is not committed to SOLR.') do
-  #  puts 'This is a dry-run, the index will not be committed to SOLR.'
-  #  options[:dry_run] = true
-  #end
-  options[:logfile] = "indexing.log"
-  opts.on( '-l', '--logfile FILE', "Write log to FILE (default is 'indexing.log')" ) do |filename|
+  options[:logfile] = "annotations.log"
+  opts.on( '-l', '--logfile FILE', "Write log to FILE (default is 'annotations.log')" ) do |filename|
     options[:logfile] = filename
   end
-  #options[:verbose] = false
-  #opts.on( '-v', '--verbose', 'Output more information' ) do
-  #  options[:verbose] = true
-  #end
   # Display the help screen, all programs are assumed to have this option.
   opts.on( '-h', '--help', 'Display this screen' ) do
     puts opts
@@ -67,7 +58,6 @@ begin
     puts msg
     exit(1)
   end
-  #logger.info("Retrieved ontology: #{options[:ontology]}.")
   sub = ont.latest_submission(status: :rdf)
   if sub.nil?
     msg = "Quitting, cannot find latest submission with 'rdf' parsed status."
@@ -75,13 +65,22 @@ begin
     puts msg
     exit(1)
   end
-  # NOTE: process_submission controls all aspects of re-indexing, including
-  # removal of the old index and committing a new index.  There is no 'dry-run' option.
   sub.bring_remaining
-  sub.process_submission(logger,
-                       process_rdf: false, index_search: true,
-                       run_metrics: false, reasoning: false)
+  # Note: there is no option for annotator in sub.process_submission.
+  #sub.process_submission(logger,
+  #                     process_rdf: false, index_search: false,
+  #                     run_metrics: true, reasoning: false)
+  # make available in annotator
+  status_annotator = LinkedData::Models::SubmissionStatus.find('ANNOTATOR').first
+  status_annotator_error = LinkedData::Models::SubmissionStatus.find('ERROR_ANNOTATOR').first
+  sub.remove_submission_status(status_annotator)
+  sub.remove_submission_status(status_annotator_error)
+  annotator = Annotator::Models::NcboAnnotator.new
+  annotator.create_cache_for_submission(logger, sub)
+  annotator.generate_dictionary_file()
+  sub.add_submission_status(status_annotator)
 rescue Exception => e
+  sub.add_submission_status(status_annotator_error)
   msg = "Failed, exception: #{e.to_json}."
   logger.error(msg)
   puts msg

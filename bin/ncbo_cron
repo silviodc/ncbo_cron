@@ -199,7 +199,7 @@ runner.execute do |opts|
         logger.info "Starting ncbo pull"; logger.flush
         logger.info "Logging pull details to #{pull_log_path}"; logger.flush
         puller = NcboCron::Models::OntologyPull.new
-        pulled_onts = puller.do_remote_ontology_pull(logger: pull_logger, 
+        pulled_onts = puller.do_remote_ontology_pull(logger: pull_logger,
                                                      enable_pull_umls: options[:enable_pull_umls])
         logger.info "Finished ncbo pull"; logger.flush
         logger.info "Pull summary:\n#{pulled_onts.map {|o| o.id.to_s}}"
@@ -257,7 +257,7 @@ runner.execute do |opts|
         logger.info "Logging flush details to #{flush_log_path}"; logger.flush
         t0 = Time.now
         parser = NcboCron::Models::OntologySubmissionParser.new
-        flush_onts = parser.process_flush_classes(logger)
+        flush_onts = parser.process_flush_classes(flush_logger)
         logger.info "Flushed #{flush_onts.length} submissions in #{Time.now - t0} sec."; logger.flush
         logger.info "Finished flush"; logger.flush
       end
@@ -289,7 +289,7 @@ runner.execute do |opts|
         logger.info "Logging warmq details to #{warmq_log_path}"; logger.flush
         t0 = Time.now
         parser = NcboCron::Models::OntologySubmissionParser.new
-        NcboCron::Models::QueryWarmer.new(logger).run
+        NcboCron::Models::QueryWarmer.new(warmq_logger).run
         logger.info "Warm queries job run in #{Time.now - t0} sec."; logger.flush
         logger.info "Finished warmq"; logger.flush
       end
@@ -307,4 +307,5 @@ runner.execute do |opts|
   pull_thread.join if pull_thread
   flush_thread.join if flush_thread
   warmq_thread.join if warmq_thread
+  annotator_dictionary_rebuild_thread.join if annotator_dictionary_rebuild_thread
 end

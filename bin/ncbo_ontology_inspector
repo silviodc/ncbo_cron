@@ -52,7 +52,7 @@ end
 exit(1) if options[:properties].empty?  # nothing to be done
 unless options[:ontologies]
   onts = LinkedData::Models::Ontology.where.include(:acronym).all  # this includes views
-  options[:ontologies] = onts.map {|o| o.acronym }
+  options[:ontologies] = onts.map {|o| o.acronym }.sort
 end
 
 
@@ -107,10 +107,11 @@ def get_annotator(sub)
   # Annotate the text using only the submission ontology. The annotator response should
   # contain classes from the submission ontology.
   classes = LinkedData::Models::Class.in(sub).include(:prefLabel).all[0..4]
-  return false if classes.empty?
+  raise "NO CLASSES" if classes.empty?
   text_to_annotate = classes.map {|c| c.prefLabel }.join(' ')
+  raise "NO CLASS PREFLABELS" if text_to_annotate.empty?
   # annotator.annotate(text, ontologies=?, semantic_types=?, filter_integers=?,
-  # expand_hierachy_levels=?, expand_with_mappings=?, min_term_size=?, whole_word_only=?, with_synonyms=?)
+  # expand_hierarchy_levels=?, expand_with_mappings=?, min_term_size=?, whole_word_only=?, with_synonyms=?)
   sub_ont = sub.ontology.id.to_s
   annotator = Annotator::Models::NcboAnnotator.new
   annotations = annotator.annotate(text_to_annotate, [sub_ont])
@@ -126,7 +127,7 @@ def submission_status4solr(sub, submission_status)
   if submission_status.include? 'INDEXED'
     begin
       acronym = sub.ontology.id.to_s.split('/').last
-      count = get_solr_class_count(acronym)
+      count = get_solr_class_count(acronym, sub.submissionId)
       submission_status.push("INDEXCOUNT:#{count}")
     rescue Exception => e
       submission_status.push("INDEXCOUNT_ERROR:#{e.message}")
@@ -136,21 +137,14 @@ def submission_status4solr(sub, submission_status)
   end
 end
 
-def get_solr_class_count(acronym)
-  begin
-    call = "#{LinkedData.settings.search_server_url}/collection1/select"
-    response = RestClient.get call, {:params => {
-        :q => "submissionAcronym:#{acronym}",
-        :group => "true",
-        "group.field" => "submissionAcronym",
-        :wt => "json"
-    }}
-    response = JSON.load(response)
-    count = response["grouped"]["submissionAcronym"]["groups"].first["doclist"]["numFound"].to_i
-  rescue
-    count = 0
-  end
-  return count
+def get_solr_class_count(acronym, submissionId)
+  call = "#{LinkedData.settings.search_server_url}/collection1/select"
+  response = RestClient.get call, {:params => {
+      :q => "submissionAcronym:#{acronym}\nsubmissionID:#{submissionId}",
+      :wt => "json"
+  }}
+  response = JSON.load(response)
+  return response['response']['numFound'].to_i
 end
 
 # Generic output method

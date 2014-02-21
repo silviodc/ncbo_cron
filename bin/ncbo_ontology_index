@@ -75,33 +75,12 @@ begin
     puts msg
     exit(1)
   end
-
   # NOTE: process_submission controls all aspects of re-indexing, including
   # removal of the old index and committing a new index.  There is no 'dry-run' option.
-
-  #logger.info("Retrieved submission: #{sub.submissionId}.")
-  #logger.info("Began remove old index on ontology: #{options[:ontology]}...")
-  #ont.unindex
-  #logger.info("Completed remove old index on ontology: #{options[:ontology]}.")
-  #logger.info("Began indexing ontology: #{options[:ontology]}...")
-
   sub.bring_remaining
   sub.process_submission(logger,
                        process_rdf: false, index_search: true,
                        run_metrics: false, reasoning: false)
-
-  #logger.info("Completed indexing ontology: #{options[:ontology]}.")
-  #unless options[:dry_run]
-  #  logger.info("Began index commit...")
-  #  # TODO: Ask Misha about whether to commit index on ontology or class model.
-  #  #ont.indexCommit
-  #  LinkedData::Models::Class.indexCommit()
-  #  logger.info("Completed index commit.")
-  #  logger.info("Began optimizing index...")
-  #  # TODO: Ask Misha about whether this is required for a single ontology update.
-  #  LinkedData::Models::Class.indexOptimize()
-  #  logger.info("Completed optimizing index.")
-  #end
 rescue Exception => e
   msg = "Failed, exception: #{e.to_json}."
   logger.error(msg)

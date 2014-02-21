@@ -114,7 +114,7 @@ def get_annotator(sub)
   # expand_hierarchy_levels=?, expand_with_mappings=?, min_term_size=?, whole_word_only=?, with_synonyms=?)
   sub_ont = sub.ontology.id.to_s
   annotator = Annotator::Models::NcboAnnotator.new
-  annotations = annotator.annotate(text_to_annotate, [sub_ont])
+  annotations = annotator.annotate(text_to_annotate, {ontologies: [sub_ont]})
   return false if annotations.nil? || annotations.empty?
   annotated_onts = annotations.map {|a| a.annotatedClass.submission.ontology.id.to_s }.to_set
   return annotated_onts.include? sub_ont

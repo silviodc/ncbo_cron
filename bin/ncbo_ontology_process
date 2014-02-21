@@ -1,0 +1,90 @@
+#!/usr/bin/env ruby
+
+# Exit cleanly from an early interrupt
+Signal.trap("INT") { exit 1 }
+
+# Setup the bundled gems in our environment
+require 'bundler/setup'
+
+# Configure the process for the current cron configuration.
+require_relative '../lib/ncbo_cron'
+config_exists = File.exist?(File.expand_path('../../config/config.rb', __FILE__))
+abort("Please create a config/config.rb file using the config/config.rb.sample as a template") unless config_exists
+require_relative '../config/config';
+
+require 'optparse'
+options = {}
+opt_parser = OptionParser.new do |opts|
+  # Set a banner, displayed at the top of the help screen.
+  #opts.banner = "Usage: ncbo_ontology_process [options]"
+  opts.on('-o', '--ontologies ACRONYM[,ACRONYM,...]', 'Ontology acronym(s) to process.') do |acronym|
+    options[:ontologies] = acronym.split(',')
+  end
+  options[:logfile] = "processing.log"
+  opts.on( '-l', '--logfile FILE', "Write log to FILE (default is 'processing.log')" ) do |filename|
+    options[:logfile] = filename
+  end
+  # Display the help screen, all programs are assumed to have this option.
+  opts.on( '-h', '--help', 'Display this screen' ) do
+    puts opts
+    exit
+  end
+end
+# Parse the command-line. The 'parse' method simply parses ARGV, while the 'parse!' method parses ARGV and removes
+# any options found there, as well as any parameters for the options.
+opt_parser.parse!
+unless options[:ontologies]
+  puts opt_parser.help
+  exit(1)
+end
+
+
+#######################################################################################################################
+#
+# MAIN
+#
+
+logger = Logger.new(options[:logfile])
+puts "Processing details are logged to #{options[:logfile]}"
+
+options[:ontologies].each do |acronym|
+  begin
+    ont = LinkedData::Models::Ontology.find(acronym).first
+    if ont.nil?
+      msg = "Error, ontology not found: #{acronym}"
+      logger.error(msg)
+      puts msg
+      next
+    end
+    sub = ont.latest_submission(status: :any)
+    if sub.nil?
+      msg = "Error, cannot find latest submission."
+      logger.error(msg)
+      puts msg
+      next
+    end
+    sub.bring_remaining
+    sub.process_submission(logger)
+    begin
+      # make available in annotator
+      status_annotator = LinkedData::Models::SubmissionStatus.find('ANNOTATOR').first
+      status_annotator_error = LinkedData::Models::SubmissionStatus.find('ERROR_ANNOTATOR').first
+      sub.remove_submission_status(status_annotator)
+      sub.remove_submission_status(status_annotator_error)
+      annotator = Annotator::Models::NcboAnnotator.new
+      annotator.create_cache_for_submission(logger, sub)
+      annotator.generate_dictionary_file()
+      sub.add_submission_status(status_annotator)
+    rescue Exception => e
+      sub.add_submission_status(status_annotator_error)
+      raise e
+    end
+  rescue Exception => e
+    msg = "Failed, exception: #{e.to_json}."
+    logger.error(msg)
+    puts msg
+    print e.backtrace.join("\n")
+    exit(1)
+  end
+end
+

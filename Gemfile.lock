@@ -15,7 +15,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ncbo_annotator.git
-  revision: b991710603f5c341acdaaa5fe7be57c063c62668
+  revision: ba0c666ff10f437730d3c21706010a98ec34c501
   branch: staging
   specs:
     ncbo_annotator (0.0.1)
@@ -73,7 +73,7 @@ GEM
       multi_json (~> 1.0)
     addressable (2.3.5)
     atomic (1.1.14)
-    bcrypt (3.1.6)
+    bcrypt (3.1.7)
     bcrypt-ruby (3.1.5)
       bcrypt (>= 3.1.3)
     builder (3.2.2)

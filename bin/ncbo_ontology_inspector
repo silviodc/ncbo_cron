@@ -91,14 +91,20 @@ end
 
 def submission_status4annotator(sub, submission_status)
   begin
-    if get_annotator(sub)
-      submission_status.push('ANNOTATOR') unless submission_status.include? 'ANNOTATOR'
+    processed = submission_status.include? 'ANNOTATOR'
+    unless processed
+      submission_status.push('ANNOTATIONS_MISSING')
+      return
+    end
+    # Verify the annotations are available.
+    available = get_annotator(sub)
+    if available
+      submission_status.push('ANNOTATIONS_AVAILABLE')
     else
-      #submission_status.delete('ANNOTATOR')
-      submission_status.push('ANNOTATOR_MISSING')
+      submission_status.push('ANNOTATIONS_UPDATING?')
     end
   rescue Exception => e
-    submission_status.push("ANNOTATOR_ERROR:#{e.message}")
+    submission_status.push("ANNOTATIONS_ERROR:#{e.message}")
   end
 end
 

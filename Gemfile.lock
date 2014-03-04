@@ -15,7 +15,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ncbo_annotator.git
-  revision: bf021639f4839ea6ade8decc906cc75341d81695
+  revision: eeb6ccb80ad1b7889bd205f7d7c74012b660203e
   branch: staging
   specs:
     ncbo_annotator (0.0.1)
@@ -25,7 +25,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ontologies_linked_data.git
-  revision: b949811e725c0e51ef17f7efaa7c6f91eaad85cb
+  revision: 20d333b89e3d9918badad1c31ed9655c9e7c8c6e
   branch: staging
   specs:
     ontologies_linked_data (0.0.1)
@@ -82,7 +82,7 @@ GEM
     json (1.8.1)
     json_pure (1.8.1)
     libxml-ruby (2.7.0)
-    macaddr (1.6.5)
+    macaddr (1.6.7)
       systemu (~> 2.6.2)
     mail (2.2.7)
       activesupport (>= 2.3.6)
@@ -118,7 +118,7 @@ GEM
     rufus-scheduler (2.0.24)
       tzinfo (>= 0.3.22)
     slop (3.4.7)
-    systemu (2.6.3)
+    systemu (2.6.4)
     thread_safe (0.2.0)
       atomic (>= 1.1.7, < 2)
     treetop (1.4.15)

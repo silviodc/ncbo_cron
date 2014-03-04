@@ -91,14 +91,20 @@ end
 
 def submission_status4annotator(sub, submission_status)
   begin
-    if get_annotator(sub)
-      submission_status.push('ANNOTATOR') unless submission_status.include? 'ANNOTATOR'
+    processed = submission_status.include? 'ANNOTATOR'
+    unless processed
+      submission_status.push('ANNOTATIONS_MISSING')
+      return
+    end
+    # Verify the annotations are available.
+    available = get_annotator(sub)
+    if available
+      submission_status.push('ANNOTATIONS_AVAILABLE')
     else
-      #submission_status.delete('ANNOTATOR')
-      submission_status.push('ANNOTATOR_MISSING')
+      submission_status.push('ANNOTATIONS_UPDATING?')
     end
   rescue Exception => e
-    submission_status.push("ANNOTATOR_ERROR:#{e.message}")
+    submission_status.push("ANNOTATIONS_ERROR:#{e.message}")
   end
 end
 
@@ -114,7 +120,7 @@ def get_annotator(sub)
   # expand_hierarchy_levels=?, expand_with_mappings=?, min_term_size=?, whole_word_only=?, with_synonyms=?)
   sub_ont = sub.ontology.id.to_s
   annotator = Annotator::Models::NcboAnnotator.new
-  annotations = annotator.annotate(text_to_annotate, [sub_ont])
+  annotations = annotator.annotate(text_to_annotate, {ontologies: [sub_ont]})
   return false if annotations.nil? || annotations.empty?
   annotated_onts = annotations.map {|a| a.annotatedClass.submission.ontology.id.to_s }.to_set
   return annotated_onts.include? sub_ont
@@ -124,27 +130,34 @@ def get_annotator(sub)
 end
 
 def submission_status4solr(sub, submission_status)
-  if submission_status.include? 'INDEXED'
-    begin
-      acronym = sub.ontology.id.to_s.split('/').last
-      count = get_solr_class_count(acronym, sub.submissionId)
-      submission_status.push("INDEXCOUNT:#{count}")
-    rescue Exception => e
-      submission_status.push("INDEXCOUNT_ERROR:#{e.message}")
+  begin
+    acronym = sub.ontology.id.to_s.split('/').last
+    solr_data = get_solr_data(acronym)
+    if solr_data[:count] > 0
+      if solr_data[:subId] != sub.submissionId
+        submission_status.push("INDEX_ERROR:submissionId:#{solr_data[:subId]}")
+      else
+        submission_status.push("INDEX_COUNT:#{solr_data[:count]}")
+      end
+    else
+      submission_status.push("INDEX_ERROR:missing")
     end
-  else
-    submission_status.push('INDEXCOUNT_MISSING')
+  rescue Exception => e
+    submission_status.push("INDEX_ERROR:#{e.message}")
   end
 end
 
-def get_solr_class_count(acronym, submissionId)
-  call = "#{LinkedData.settings.search_server_url}/collection1/select"
-  response = RestClient.get call, {:params => {
-      :q => "submissionAcronym:#{acronym}\nsubmissionID:#{submissionId}",
-      :wt => "json"
-  }}
-  response = JSON.load(response)
-  return response['response']['numFound'].to_i
+def get_solr_data(acronym)
+  # Note: SOLR index should contain only data from one ontology submission, i.e. it should not
+  #       contain data from multiple submissions of one ontology.
+  solr_select_url = "#{LinkedData.settings.search_server_url}/collection1/select"
+  query = "submissionAcronym:#{acronym}"
+  response = RestClient.get solr_select_url, {:params => { :q => query, :wt => "json" }}
+  json = JSON.load(response)
+  return {
+      :subId => json['response']['docs'].first['submissionId'],
+      :count => json['response']['numFound']
+  }
 end
 
 # Generic output method

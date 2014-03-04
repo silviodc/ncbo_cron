@@ -11,5 +11,6 @@ repo*
 .DS_Store
 tmp
 
+logs/
 *.log
 *.pid

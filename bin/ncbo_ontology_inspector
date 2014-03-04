@@ -140,7 +140,7 @@ def submission_status4solr(sub, submission_status)
         submission_status.push("INDEX_COUNT:#{solr_data[:count]}")
       end
     else
-      submission_status.push("INDEX_MISSING")
+      submission_status.push("INDEX_ERROR:missing")
     end
   rescue Exception => e
     submission_status.push("INDEX_ERROR:#{e.message}")

@@ -17,7 +17,7 @@ module NcboCron
         ontologies = LinkedData::Models::Ontology.where.include(:acronym).all
         enable_pull_umls = options[:enable_pull_umls]
 
-        
+
         ontologies.sort! {|a,b| a.acronym.downcase <=> b.acronym.downcase}
 
         new_submissions = []
@@ -25,7 +25,7 @@ module NcboCron
           begin
             last = ont.latest_submission(status: :any)
             next if last.nil?
-            last.bring(:hasOntologyLanguage) if last.bring?:hasOntologyLanguage
+            last.bring(:hasOntologyLanguage) if last.bring?(:hasOntologyLanguage)
             if !enable_pull_umls && last.hasOntologyLanguage.umls?
               next
             end
@@ -54,7 +54,7 @@ module NcboCron
                 new_file_exists = true
               end
 
-              if new_file_exists 
+              if new_file_exists
                 logger.info "New file found for #{ont.acronym}\nold: #{md5local}\nnew: #{md5remote}"
                 logger.flush()
                 new_submissions << create_submission(ont, last, file, filename, logger)
@@ -97,7 +97,7 @@ module NcboCron
           logger.error("Unable to create a new submission in OntologyPull: #{new_sub.errors}")
           logger.flush()
         end
-        
+
         new_sub
       end
     end

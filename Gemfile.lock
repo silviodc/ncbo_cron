@@ -15,7 +15,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ncbo_annotator.git
-  revision: 4692833837a8fdaaa5fbd22a92ad16a5781e25be
+  revision: bda4c5ab2914b23853aaa2e42f74b7ce5e7bbfe5
   branch: staging
   specs:
     ncbo_annotator (0.0.1)
@@ -95,7 +95,7 @@ GEM
       redis
     multi_json (1.9.0)
     net-http-persistent (2.9.4)
-    oj (2.5.5)
+    oj (2.6.0)
     polyglot (0.3.4)
     pony (1.8)
       mail (>= 2.0)
@@ -121,9 +121,8 @@ GEM
     systemu (2.6.4)
     thread_safe (0.2.0)
       atomic (>= 1.1.7, < 2)
-    treetop (1.4.15)
-      polyglot
-      polyglot (>= 0.3.1)
+    treetop (1.5.0)
+      polyglot (~> 0.3)
     tzinfo (1.1.0)
       thread_safe (~> 0.1)
     uuid (2.3.7)

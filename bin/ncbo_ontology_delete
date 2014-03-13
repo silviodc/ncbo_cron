@@ -51,6 +51,7 @@ begin
     exit(1)
   end
   ont.delete
+  logger.info("Ontology deleted: #{options[:ontology]}")
 rescue Exception => e
   msg = "Failed, exception: #{e.to_json}."
   logger.error(msg)

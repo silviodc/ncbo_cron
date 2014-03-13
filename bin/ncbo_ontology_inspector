@@ -154,10 +154,9 @@ def get_solr_data(acronym)
   query = "submissionAcronym:#{acronym}"
   response = RestClient.get solr_select_url, {:params => { :q => query, :wt => "json" }}
   json = JSON.load(response)
-  return {
-      :subId => json['response']['docs'].first['submissionId'],
-      :count => json['response']['numFound']
-  }
+  count = json['response']['numFound']
+  subId = count > 0 ? json['response']['docs'].first['submissionId'] : nil
+  return { :count => count, :subId => subId }
 end
 
 # Generic output method

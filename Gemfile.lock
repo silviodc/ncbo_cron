@@ -15,7 +15,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ncbo_annotator.git
-  revision: bda4c5ab2914b23853aaa2e42f74b7ce5e7bbfe5
+  revision: 7b95338cb200dc33105d47634083d0ad26d028de
   branch: staging
   specs:
     ncbo_annotator (0.0.1)
@@ -25,7 +25,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ontologies_linked_data.git
-  revision: 8adedc8fc63336f9f4c36fc4d2ac5f31463b92a6
+  revision: 0975314b884f4f43a6a85b6b9879be2a873ff701
   branch: staging
   specs:
     ontologies_linked_data (0.0.1)
@@ -117,11 +117,11 @@ GEM
     rubyzip (1.1.0)
     rufus-scheduler (2.0.24)
       tzinfo (>= 0.3.22)
-    slop (3.4.7)
+    slop (3.5.0)
     systemu (2.6.4)
     thread_safe (0.2.0)
       atomic (>= 1.1.7, < 2)
-    treetop (1.5.0)
+    treetop (1.5.1)
       polyglot (~> 0.3)
     tzinfo (1.1.0)
       thread_safe (~> 0.1)

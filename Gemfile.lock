@@ -15,7 +15,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ncbo_annotator.git
-  revision: 7b95338cb200dc33105d47634083d0ad26d028de
+  revision: 4786a3ac379d7ceb56eb7552c800227db3b2bab7
   branch: staging
   specs:
     ncbo_annotator (0.0.1)
@@ -25,7 +25,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ontologies_linked_data.git
-  revision: 0975314b884f4f43a6a85b6b9879be2a873ff701
+  revision: 89aa0aed871a08517722b0e68461eeba463d0cc9
   branch: staging
   specs:
     ontologies_linked_data (0.0.1)
@@ -89,7 +89,7 @@ GEM
       mime-types
       treetop (>= 1.4.5)
     method_source (0.8.2)
-    mime-types (2.1)
+    mime-types (2.2)
     minitest (4.7.5)
     mlanett-redis-lock (0.2.5)
       redis

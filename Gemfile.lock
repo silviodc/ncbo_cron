@@ -15,7 +15,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ncbo_annotator.git
-  revision: 4786a3ac379d7ceb56eb7552c800227db3b2bab7
+  revision: 927949bc0fe6d48e0a51207fa0acd553d92bce3a
   branch: staging
   specs:
     ncbo_annotator (0.0.1)
@@ -114,7 +114,7 @@ GEM
       mime-types (>= 1.16)
     rsolr (1.0.9)
       builder (>= 2.1.2)
-    rubyzip (1.1.0)
+    rubyzip (1.1.1)
     rufus-scheduler (2.0.24)
       tzinfo (>= 0.3.22)
     slop (3.5.0)

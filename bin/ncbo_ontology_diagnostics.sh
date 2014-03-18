@@ -53,7 +53,7 @@ echo 'Ontologies missing a latest submission:'
 echo
 
 grep -F 'submissionId=ERROR' $SUBMISSION_NOTSUMMARYONLY_LOG > $SUBMISSION_ERROR_LOG
-cat $SUBMISSION_ERROR_LOG | sed -e $SED_ARG1 -e $SED_ARG2 | grep -v -F 'metrics=' | tee $SUBMISSION_ERROR_FORMAT_LOG
+cat $SUBMISSION_ERROR_LOG | sed -e $SED_ARG1 -e $SED_ARG2 | grep -F 'http' | tee $SUBMISSION_ERROR_FORMAT_LOG
 # cleanup the submission log
 grep -v -F 'submissionId=ERROR' $SUBMISSION_NOTSUMMARYONLY_LOG | grep -F 'UPLOAD' > $SUBMISSION_UPLOAD_LOG
 
@@ -98,7 +98,7 @@ cat $SUBMISSION_ERROR_METRICS_LOG | sort -u | sed -e $SED_ARG1 -e $SED_ARG2 | te
 echo '*********************************************************************************************'
 echo 'Ontologies with RDF data and METRICS has maxDepth == 0 && classesWithOneChild != 0 :'
 echo
-grep -F 'maxDepth:0' $SUBMISSION_ERROR_TMP_LOG | grep -v -F 'classesWithOneChild:0' >> $SUBMISSION_ERROR_MAXDEPTH_LOG
+grep -F 'maxDepth:0' $SUBMISSION_ERROR_TMP_LOG | grep -F -v 'classesWithOneChild:0' > $SUBMISSION_ERROR_MAXDEPTH_LOG
 cat $SUBMISSION_ERROR_MAXDEPTH_LOG | sort -u | sed -e $SED_ARG1 -e $SED_ARG2 | tee $SUBMISSION_ERROR_MAXDEPTH_FORMAT_LOG
 
 # TODO: possible metrics fix:

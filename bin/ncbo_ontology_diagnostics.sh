@@ -96,12 +96,10 @@ grep -F 'METRICS_MISSING' $SUBMISSION_ERROR_TMP_LOG >> $SUBMISSION_ERROR_METRICS
 cat $SUBMISSION_ERROR_METRICS_LOG | sort -u | sed -e $SED_ARG1 -e $SED_ARG2 | tee $SUBMISSION_ERROR_METRICS_FORMAT_LOG
 
 echo '*********************************************************************************************'
-echo 'Ontologies with RDF data, where METRICS has maxDepth=0:'
+echo 'Ontologies with RDF data and METRICS has maxDepth == 0 && classesWithOneChild != 0 :'
 echo
-grep -F 'maxDepth:0'      $SUBMISSION_ERROR_TMP_LOG >> $SUBMISSION_ERROR_MAXDEPTH_LOG
+grep -F 'maxDepth:0' $SUBMISSION_ERROR_TMP_LOG | grep -v -F 'classesWithOneChild:0' >> $SUBMISSION_ERROR_MAXDEPTH_LOG
 cat $SUBMISSION_ERROR_MAXDEPTH_LOG | sort -u | sed -e $SED_ARG1 -e $SED_ARG2 | tee $SUBMISSION_ERROR_MAXDEPTH_FORMAT_LOG
-# TODO: Add additional filters to exclude false positives, e.g.
-# TODO: it's OK for maxDepth:0 when flat=true
 
 # TODO: possible metrics fix:
 # ./bin/ncbo_ontology_metrics -o {ONTOLOGY_ACRONYM}

@@ -15,7 +15,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ncbo_annotator.git
-  revision: 927949bc0fe6d48e0a51207fa0acd553d92bce3a
+  revision: 5dffa249b2e40fcafd0400151a68a80ab568e332
   branch: staging
   specs:
     ncbo_annotator (0.0.1)
@@ -25,7 +25,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ontologies_linked_data.git
-  revision: 89aa0aed871a08517722b0e68461eeba463d0cc9
+  revision: 0ee52b60392caf159637516e2dd772199e385642
   branch: staging
   specs:
     ontologies_linked_data (0.0.1)
@@ -72,7 +72,7 @@ GEM
       i18n (~> 0.6, >= 0.6.4)
       multi_json (~> 1.0)
     addressable (2.3.5)
-    atomic (1.1.15)
+    atomic (1.1.16)
     bcrypt (3.1.7)
     builder (3.2.2)
     coderay (1.1.0)
@@ -119,7 +119,7 @@ GEM
       tzinfo (>= 0.3.22)
     slop (3.5.0)
     systemu (2.6.4)
-    thread_safe (0.2.0)
+    thread_safe (0.3.0)
       atomic (>= 1.1.7, < 2)
     treetop (1.5.1)
       polyglot (~> 0.3)

@@ -1,7 +1,7 @@
 GIT
   remote: git://github.com/ncbo/goo.git
-  revision: ff827f51398c7ad43b5a6257458eeef4d6275c51
-  branch: master
+  revision: f3446b8563baff15c6804a133610b981008062e8
+  branch: merge_treeview
   specs:
     goo (0.0.2)
       pry
@@ -15,8 +15,8 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ncbo_annotator.git
-  revision: 1af2842f341d8ccd89fb390300d3ca34362769e7
-  branch: master
+  revision: 4786a3ac379d7ceb56eb7552c800227db3b2bab7
+  branch: merge_treeview
   specs:
     ncbo_annotator (0.0.1)
       goo
@@ -25,8 +25,8 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ontologies_linked_data.git
-  revision: e05bda16c123ab381fe85c17c33f81a68f7f0b92
-  branch: master
+  revision: 18dbf6221ac571867e57cf36ca0beb4013498eab
+  branch: merge_treeview
   specs:
     ontologies_linked_data (0.0.1)
       activesupport
@@ -44,8 +44,8 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/sparql-client.git
-  revision: bfec1e7222c1f54100000dc988b27d8f0ff9ca46
-  branch: master
+  revision: e6a2d6b4fda4e23d77a70c440f058bd08c801e26
+  branch: staging
   specs:
     sparql-client (1.0.4.1)
       json_pure (>= 1.4)
@@ -72,7 +72,7 @@ GEM
       i18n (~> 0.6, >= 0.6.4)
       multi_json (~> 1.0)
     addressable (2.3.5)
-    atomic (1.1.15)
+    atomic (1.1.16)
     bcrypt (3.1.7)
     builder (3.2.2)
     coderay (1.1.0)
@@ -89,13 +89,13 @@ GEM
       mime-types
       treetop (>= 1.4.5)
     method_source (0.8.2)
-    mime-types (2.1)
+    mime-types (2.2)
     minitest (4.7.5)
     mlanett-redis-lock (0.2.5)
       redis
-    multi_json (1.8.4)
+    multi_json (1.9.1)
     net-http-persistent (2.9.4)
-    oj (2.5.5)
+    oj (2.6.0)
     polyglot (0.3.4)
     pony (1.8)
       mail (>= 2.0)
@@ -114,16 +114,15 @@ GEM
       mime-types (>= 1.16)
     rsolr (1.0.9)
       builder (>= 2.1.2)
-    rubyzip (1.1.0)
+    rubyzip (1.1.2)
     rufus-scheduler (2.0.24)
       tzinfo (>= 0.3.22)
-    slop (3.4.7)
+    slop (3.5.0)
     systemu (2.6.4)
     thread_safe (0.2.0)
       atomic (>= 1.1.7, < 2)
-    treetop (1.4.15)
-      polyglot
-      polyglot (>= 0.3.1)
+    treetop (1.5.1)
+      polyglot (~> 0.3)
     tzinfo (1.1.0)
       thread_safe (~> 0.1)
     uuid (2.3.7)

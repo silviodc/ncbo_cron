@@ -12,7 +12,40 @@ config_exists = File.exist?(File.expand_path('../../config/config.rb', __FILE__)
 abort("Please create a config/config.rb file using the config/config.rb.sample as a template") unless config_exists
 require_relative '../config/config'
 
+require 'optparse'
+$options = {}
+opt_parser = OptionParser.new do |opts|
+  # Set a banner, displayed at the top of the help screen.
+  #opts.banner = "Usage: ncbo_ontology_process [options]"
+  opts.on('-a', '--logall', 'Log all upload file paths, annoted as correct or erroneous.') {
+    $options[:log_all] = true
+  }
+  opts.on('-d', '--dryrun', 'Only log upload file problems, do not change any data or files.') {
+    $options[:dry_run] = true
+  }
+  opts.on('-n', '--ontologies ACRONYM[,ACRONYM,...]', 'Ontology acronym(s) to process.') do |acronym|
+    $options[:ontologies] = acronym.split(',')
+  end
+  $options[:logfile] = 'uploadFilePaths.log'
+  opts.on( '-l', '--logfile FILE', "Write log to FILE (default is '#{$options[:logfile]}')" ) do |filename|
+    $options[:logfile] = filename
+  end
+  # Display the help screen, all programs are assumed to have this option.
+  opts.on( '-h', '--help', 'Display this screen' ) do
+    puts opts
+    exit
+  end
+end
+# Parse the command-line. The 'parse' method simply parses ARGV, while the 'parse!' method parses ARGV and removes
+# any options found there, as well as any parameters for the options.
+opt_parser.parse!
 
+if $options[:dry_run]
+  puts 'This is a dry-run, to log upload file problems.'
+end
+
+$logger = Logger.new($options[:logfile])
+puts "Processing details are logged to #{$options[:logfile]}"
 
 platform = "local"
 if LinkedData.settings.goo_host.include? "stage"
@@ -20,22 +53,57 @@ if LinkedData.settings.goo_host.include? "stage"
 elsif LinkedData.settings.goo_host.include? "prod"
   platform = "prod"
 end
-puts "Running on #{platform} platform; repository = #{LinkedData.settings.repository_folder}"
+$logger.info("Running on #{platform} platform; repository = #{LinkedData.settings.repository_folder}")
 unless File.exists? LinkedData.settings.repository_folder
-  puts "ERROR: repository path does not exist: #{LinkedData.settings.repository_folder}"
+  $logger.error("Repository path does not exist: #{LinkedData.settings.repository_folder}")
   exit!
 end
 
-require 'optparse'
-OptionParser.new do |o|
-  o.on('-a', '--logall', 'Log all upload file paths, annoted as correct or erroneous.') { $log_all = true }
-  o.on('-n', '--dryrun', 'Only log upload file problems, do not change any data or files.') { $dry_run = true }
-  o.on('-h', '--help', 'Display the help screen') { puts o; exit }
-  o.parse!
+def create_submission_path(sub, ont)
+  upload_file_path = "#{LinkedData.settings.repository_folder}/#{ont.acronym}/#{sub.submissionId}"
+  begin
+    FileUtils.mkdir_p upload_file_path
+  rescue Exception => e
+    $logger.error("Failed to create submission repository directory.")
+    raise e
+  end
+  return upload_file_path
 end
-if $dry_run
-  puts 'This is a dry-run, to log upload file problems.'
+
+def retrievePullLocation2uploadFilePath(sub, ont)
+  begin
+    if (sub.hasOntologyLanguage.umls? && $UMLS_DOWNLOAD_URL)
+      sub.pullLocation= RDF::URI.new(
+          $UMLS_DOWNLOAD_URL + sub.pullLocation.split("/")[-1])
+      $logger.info("Using alternative download for umls #{sub.pullLocation.to_s}")
+      $logger.flush
+    end
+    pull_location = sub.pullLocation.to_s
+    if (sub.remote_file_exists?(pull_location))
+      $logger.info "Checking download for #{ont.acronym}"
+      $logger.info "Location: #{pull_location}"
+      $logger.flush
+      file, filename = sub.download_ontology_file()
+      filename.sub!('/','_')  # do not allow forward-slashes in a filename.
+      # Create the new repository location, if it doesn't exist already.
+      upload_file_dir = create_submission_path(sub, ont)
+      upload_file_path = "#{upload_file_dir}/#{filename}"
+      FileUtils.move(file.path, upload_file_path, {:verbose => true} )
+      if File.exist?(upload_file_path)
+        sub.uploadFilePath = upload_file_path
+      else
+        raise "Remote file was not retrieved for uploadFilePath"
+      end
+    else
+      raise "Remote file doesn't exist"
+    end
+  rescue Exception => e
+    $logger.error "Problem retrieving #{sub.pullLocation}:\n" + e.message + "\n" + e.backtrace.join("\n\t")
+    $logger.flush()
+  end
 end
+
+
 
 def process_submission_upload(sub, ont)
   # UMLS ontologies do not have a valid pull location.  Set the pull location
@@ -44,28 +112,38 @@ def process_submission_upload(sub, ont)
   if sub.uploadFilePath.nil?
     # Some submissions can have a nil uploadFilePath
     sub.bring_remaining
-    if $log_all || ! sub.valid?
+    if $options[:log_all] || ! sub.valid?
       # This should not be a nil uploadFilePath, just report it, nothing can be done about it here.
-      printf("ERROR:\t%-15s\tsubmission: %4d; uploadFilePath: %s; pullLocation: %s\n", "#{ont.acronym}:", sub.submissionId, sub.uploadFilePath, sub.pullLocation)
-      # TODO: should we delete invalid submissions?
+      msg = sprintf("%-15s\tsubmission: %4d; uploadFilePath: %s; pullLocation: %s", "#{ont.acronym}:",
+            sub.submissionId, sub.uploadFilePath, sub.pullLocation)
+      $logger.error(msg)
+      # TODO: delete an invalid submission?
+    end
+    # Download any old BioPortal REST files into the new REST repository
+    if sub.pullLocation.to_s.include?('bioportal/ontologies/download')
+      retrievePullLocation2uploadFilePath(sub, ont)
+      if sub.valid?
+        unless $options[:dry_run]
+          sub.save
+          $logger.info "Updated submission.uploadFilePath to: #{sub.uploadFilePath}"
+        end
+      else
+        $logger.error("Failed to update the triple store: #{sub.errors.to_json}" )
+      end
     end
   elsif sub.uploadFilePath.start_with? "#{LinkedData.settings.repository_folder}/#{ont.acronym}/#{sub.submissionId}"
     # This could be OK
-    if $log_all
-      printf("VALID:\t%-15s\tsubmission: %4d; uploadFilePath: %s\n", "#{ont.acronym}:", sub.submissionId, sub.uploadFilePath)
+    if $options[:log_all]
+      msg = sprintf("VALID:\t%-15s\tsubmission: %4d; uploadFilePath: %s", "#{ont.acronym}:", sub.submissionId, sub.uploadFilePath)
+      $logger.info(msg)
     end
   else
-    printf("ERROR:\t%-15s\tsubmission: %4d; uploadFilePath: %s\n", "#{ont.acronym}:", sub.submissionId, sub.uploadFilePath)
-    return if $dry_run
+    msg = sprintf("%-15s\tsubmission: %4d; uploadFilePath: %s", "#{ont.acronym}:", sub.submissionId, sub.uploadFilePath)
+    $logger.error(msg)
+    return if $options[:dry_run]
     sub.bring_remaining
     # Create the new repository location, if it doesn't exist already.
-    begin
-      upload_file_path = "#{LinkedData.settings.repository_folder}/#{ont.acronym}/#{sub.submissionId}"
-      FileUtils.mkdir_p upload_file_path
-    rescue Exception => e
-      puts "ERROR: failed to create submission repository directory."
-      raise e
-    end
+    upload_file_path = create_submission_path(sub, ont)
     begin
       # Copy over the ontology upload file.
       upload_file_name = File.basename(sub.uploadFilePath)
@@ -87,11 +165,10 @@ def process_submission_upload(sub, ont)
         # Note: The old upload file is 'orphaned' after the sub.save; this script could remove them
         # after a successful sub.save.  Instead, the files are logged so they can be removed by another process.
       else
-        puts "ERROR: failed to update the triple store"
-        puts sub.errors.to_json
+        $logger.error("Failed to update the triple store: #{sub.errors.to_json}" )
       end
     rescue Exception => e
-      puts "ERROR: failed to relocate the upload file"
+      $logger.error("Failed to relocate the upload file")
       raise e
     end
     begin
@@ -116,12 +193,11 @@ def process_submission_upload(sub, ont)
           # Note: The old diff file is 'orphaned' after the sub.save; this script could remove them
           # after a successful sub.save.  Instead, the files are logged so they can be removed by another process.
         else
-          puts "ERROR: failed to update the triple store"
-          puts sub.errors.to_json
+          $logger.error("Failed to update the triple store: #{sub.errors.to_json}" )
         end
       end
     rescue Exception => e
-      puts "ERROR: failed to relocate the diff file"
+      $logger.error("Failed to relocate the diff file")
       raise e
     end
   end
@@ -130,7 +206,20 @@ end
 #
 # MAIN
 #
-ontologies = LinkedData::Models::Ontology.where.include(:acronym,:submissions,:summaryOnly).all
+
+if $options[:ontologies]
+  ontologies = []
+  $options[:ontologies].each do |ont_acronym|
+    ont = LinkedData::Models::Ontology.find(ont_acronym).include(:acronym,:submissions,:summaryOnly).first
+    if ont.instance_of? LinkedData::Models::Ontology
+      ontologies.push(ont) if ont
+    else
+      $logger.warn("WARNING: could not retrieve requested ontology by acronym: #{ont_acronym}")
+    end
+  end
+else
+  ontologies = LinkedData::Models::Ontology.where.include(:acronym,:submissions,:summaryOnly).all
+end
 ontologies.sort! {|a,b| a.acronym.downcase <=> b.acronym.downcase }
 ontologies.each do |ont|
   next if ont.summaryOnly
@@ -145,7 +234,7 @@ ontologies.each do |ont|
     begin
       process_submission_upload(sub, ont)
     rescue Exception => e
-      puts e.message
+      $logger.error(e.message)
     end
   end
 end

@@ -56,6 +56,9 @@ runner.with_options do |opts|
   opts.on("--disable-flush", "disable flush archive class graphs") do |v|
     options[:disable_flush] = v
   end
+  opts.on("--disable-warmq", "disable query warmer") do |v|
+    options[:disable_warmq] = v
+  end
   opts.on("--enable-umls", "enable UMLS auto-pull") do |v|
     options[:enable_pull_umls] = true
   end

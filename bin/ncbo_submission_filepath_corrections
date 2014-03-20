@@ -44,9 +44,9 @@ def process_submission_upload(sub, ont)
   if sub.uploadFilePath.nil?
     # Some submissions can have a nil uploadFilePath
     sub.bring_remaining
-    unless sub.valid?
+    if $log_all || ! sub.valid?
       # This should not be a nil uploadFilePath, just report it, nothing can be done about it here.
-      printf("ERROR:\t%-15s\tsubmission: %4d; uploadFilePath: nil\n", "#{ont.acronym}:", sub.submissionId)
+      printf("ERROR:\t%-15s\tsubmission: %4d; uploadFilePath: %s\n", "#{ont.acronym}:", sub.submissionId, sub.uploadFilePath)
       # TODO: should we delete invalid submissions?
     end
   elsif sub.uploadFilePath.start_with? "#{LinkedData.settings.repository_folder}/#{ont.acronym}/#{sub.submissionId}"
@@ -55,7 +55,6 @@ def process_submission_upload(sub, ont)
       printf("VALID:\t%-15s\tsubmission: %4d; uploadFilePath: %s\n", "#{ont.acronym}:", sub.submissionId, sub.uploadFilePath)
     end
   else
-    # This is an error
     printf("ERROR:\t%-15s\tsubmission: %4d; uploadFilePath: %s\n", "#{ont.acronym}:", sub.submissionId, sub.uploadFilePath)
     return if $dry_run
     sub.bring_remaining

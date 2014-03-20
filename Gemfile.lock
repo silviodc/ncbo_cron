@@ -1,7 +1,7 @@
 GIT
   remote: git://github.com/ncbo/goo.git
-  revision: f3446b8563baff15c6804a133610b981008062e8
-  branch: merge_treeview
+  revision: 96b789173332809b37b79626744abebda793786f
+  branch: master
   specs:
     goo (0.0.2)
       pry
@@ -15,8 +15,8 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ncbo_annotator.git
-  revision: 4786a3ac379d7ceb56eb7552c800227db3b2bab7
-  branch: merge_treeview
+  revision: 974fd0f3673441c2073ba2a7a5cf04090b313dcd
+  branch: master
   specs:
     ncbo_annotator (0.0.1)
       goo
@@ -25,8 +25,8 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ontologies_linked_data.git
-  revision: 18dbf6221ac571867e57cf36ca0beb4013498eab
-  branch: merge_treeview
+  revision: fee8a0811d175fe747fedbc59b3b4c639d045ec8
+  branch: master
   specs:
     ontologies_linked_data (0.0.1)
       activesupport
@@ -44,8 +44,8 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/sparql-client.git
-  revision: e6a2d6b4fda4e23d77a70c440f058bd08c801e26
-  branch: staging
+  revision: bfec1e7222c1f54100000dc988b27d8f0ff9ca46
+  branch: master
   specs:
     sparql-client (1.0.4.1)
       json_pure (>= 1.4)
@@ -93,7 +93,7 @@ GEM
     minitest (4.7.5)
     mlanett-redis-lock (0.2.5)
       redis
-    multi_json (1.9.1)
+    multi_json (1.9.2)
     net-http-persistent (2.9.4)
     oj (2.6.0)
     polyglot (0.3.4)

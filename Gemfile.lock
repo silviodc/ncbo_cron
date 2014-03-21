@@ -15,7 +15,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ncbo_annotator.git
-  revision: 6c9882babf5030e2f375f37efef663f9df80f7c1
+  revision: ec9e6f64ebef8a38203847495e7d58f48c4abfbe
   branch: staging
   specs:
     ncbo_annotator (0.0.1)
@@ -119,9 +119,9 @@ GEM
       tzinfo (>= 0.3.22)
     slop (3.5.0)
     systemu (2.6.4)
-    thread_safe (0.3.0)
+    thread_safe (0.3.1)
       atomic (>= 1.1.7, < 2)
-    treetop (1.5.1)
+    treetop (1.5.3)
       polyglot (~> 0.3)
     tzinfo (1.1.0)
       thread_safe (~> 0.1)

@@ -1,6 +1,6 @@
 GIT
   remote: git://github.com/ncbo/goo.git
-  revision: b62913940061ea056bf6fa7bfcc815e896e79f60
+  revision: 5bfbd9b562c93b44d132f69a801e824ba102fc7c
   branch: staging
   specs:
     goo (0.0.2)
@@ -15,7 +15,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ncbo_annotator.git
-  revision: ec9e6f64ebef8a38203847495e7d58f48c4abfbe
+  revision: 43261966891e87a9a416c5dcc2f3b59c1facb755
   branch: staging
   specs:
     ncbo_annotator (0.0.1)
@@ -25,7 +25,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ontologies_linked_data.git
-  revision: d741e693b4f0e9a87d6130036256c886e79882ea
+  revision: 642cc4462c5dd0d5a6d12786529eda5388a9d3a2
   branch: staging
   specs:
     ontologies_linked_data (0.0.1)
@@ -95,7 +95,7 @@ GEM
       redis
     multi_json (1.9.2)
     net-http-persistent (2.9.4)
-    oj (2.6.0)
+    oj (2.6.1)
     polyglot (0.3.4)
     pony (1.8)
       mail (>= 2.0)
@@ -106,7 +106,7 @@ GEM
     rack (1.5.2)
     rack-test (0.6.2)
       rack (>= 1.0)
-    rake (10.1.1)
+    rake (10.2.0)
     rdf (1.0.8)
       addressable (>= 2.2)
     redis (3.0.7)
@@ -132,6 +132,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  addressable (= 2.3.5)
   cube-ruby
   goo!
   minitest (< 5.0)

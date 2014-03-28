@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 
 # Exit cleanly from an early interrupt
-Signal.trap("INT") { exit 1 }
+Signal.trap("INT") { exit! }
 
 # Setup the bundled gems in our environment
 require 'bundler/setup'
@@ -229,37 +229,16 @@ options[:ontologies].each do |acronym|
       end
 
       if properties[:acl]
-        # TODO: check how to display acl
-        binding.pry
-        print_element('acl', ont.acl)
+        print_element('acl', ont.acl.collect {|a| a.id.to_s }.join(',') )
         properties.delete(:acl)
         print "\n" or next if properties.empty?
       end
 
       if properties[:administeredBy]
-        # TODO: check how to display administeredBy
-        binding.pry
-        print_element('administeredBy', ont.administeredBy)
+        print_element('administeredBy', ont.administeredBy.collect {|a| a.id.to_s }.join(',') )
         properties.delete(:administeredBy)
         print "\n" or next if properties.empty?
       end
-      #@administeredBy=
-      #    [#<LinkedData::Models::User:0x007f1bfeafbf60
-      #        @aggregates=nil,
-      #        @id=#<RDF::URI:0x3f8dff54d2d4(http://data.bioontology.org/users/rubin)>,
-      #            @loaded_attributes=#<Set: {}>,
-      #                @modified_attributes=#<Set: {}>,
-      #                    @persistent=true,
-      #        @previous_values=nil,
-      #        @unmapped=nil>,
-      #        #<LinkedData::Models::User:0x007f1bfeb1e2e0
-      #        @aggregates=nil,
-      #        @id=#<RDF::URI:0x3f8dff557428(http://data.bioontology.org/users/paul)>,
-      #            @loaded_attributes=#<Set: {}>,
-      #                @modified_attributes=#<Set: {}>,
-      #                    @persistent=true,
-      #        @previous_values=nil,
-      #        @unmapped=nil>],
 
       if properties[:doNotUpdate]
         print_element('doNotUpdate', ont.doNotUpdate)

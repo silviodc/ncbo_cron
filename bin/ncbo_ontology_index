@@ -25,10 +25,17 @@ options = {}
 opt_parser = OptionParser.new do |opts|
   # Set a banner, displayed at the top of the help screen.
   #opts.banner = "Usage: ncbo_ontology_index [options]"
-  options[:ontology] = false
-  opts.on('-o', '--ontology ONTOLOGY_ACRONYM', 'Ontology acronym to index (required).') do |acronym|
+  options[:ontologies] = []
+  opts.on('-a', '--all-ontologies', 'Index all ontologies (this or -o option required).') do
+    puts "Processing index for all ontologies:"
+    LinkedData::Models::Ontology.all.each  do |ont|
+        ont.bring(:acronym)
+        options[:ontologies].push(ont.acronym)
+    end
+  end
+  opts.on('-o', '--ontology ONTOLOGY_ACRONYM', 'Ontology to index (this or -a option required).') do |acronym|
     puts "Processing index for ontology: #{acronym}"
-    options[:ontology] = acronym
+    options[:ontologies].push(acronym)
   end
   #options[:dry_run] = false
   #opts.on('-n', '--dryrun', 'Ontology index is not committed to SOLR.') do
@@ -52,35 +59,45 @@ end
 # Parse the command-line. The 'parse' method simply parses ARGV, while the 'parse!' method parses ARGV and removes
 # any options found there, as well as any parameters for the options.
 opt_parser.parse!
-unless options[:ontology]
+unless options[:ontologies]
   puts opt_parser.help
   exit(1)
 end
 
+def index_ontology(acronym, logger)
+    begin
+      ont = LinkedData::Models::Ontology.find(acronym).first
+      if ont.nil?
+        msg = "Ontology not found: #{acronym}"
+        logger.error(msg)
+        return
+      end
+      logger.info("Retrieved ontology: #{acronym}.")
+      sub = ont.latest_submission(status: :rdf)
+      if sub.nil?
+        msg = "Cannot find latest submission with 'rdf' parsed status."
+        logger.error(msg)
+        return
+      end
+      # NOTE: process_submission controls all aspects of re-indexing, including
+      # removal of the old index and committing a new index.  There is no 'dry-run' option.
+      sub.bring_remaining
+      sub.process_submission(logger,
+                           process_rdf: false, index_search: true,
+                           run_metrics: false, reasoning: false)
+    rescue Exception => e
+      msg = "Failed, exception: #{e.to_json}."
+      logger.error(msg)
+    end
+end
+
+
 begin
   logger = Logger.new(options[:logfile])
   puts "Processing details are logged to #{options[:logfile]}"
-  ont = LinkedData::Models::Ontology.find(options[:ontology]).first
-  if ont.nil?
-    msg = "Quitting, ontology not found: #{options[:ontology]}"
-    logger.error(msg)
-    puts msg
-    exit(1)
+  options[:ontologies].each do |acronym|
+      index_ontology(acronym, logger)
   end
-  #logger.info("Retrieved ontology: #{options[:ontology]}.")
-  sub = ont.latest_submission(status: :rdf)
-  if sub.nil?
-    msg = "Quitting, cannot find latest submission with 'rdf' parsed status."
-    logger.error(msg)
-    puts msg
-    exit(1)
-  end
-  # NOTE: process_submission controls all aspects of re-indexing, including
-  # removal of the old index and committing a new index.  There is no 'dry-run' option.
-  sub.bring_remaining
-  sub.process_submission(logger,
-                       process_rdf: false, index_search: true,
-                       run_metrics: false, reasoning: false)
 rescue Exception => e
   msg = "Failed, exception: #{e.to_json}."
   logger.error(msg)

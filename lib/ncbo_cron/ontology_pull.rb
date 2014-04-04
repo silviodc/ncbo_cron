@@ -16,9 +16,7 @@ module NcboCron
         logger.flush
         ontologies = LinkedData::Models::Ontology.where.include(:acronym).all
         enable_pull_umls = options[:enable_pull_umls]
-        if enable_pull_umls
-          umls_download_url = options[:pull_umls_url]
-        end
+        umls_download_url = options[:pull_umls_url]
 
         ontologies.sort! {|a,b| a.acronym.downcase <=> b.acronym.downcase}
 

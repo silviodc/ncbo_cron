@@ -17,7 +17,7 @@ module NcboCron
         ontologies = LinkedData::Models::Ontology.where.include(:acronym).all
         enable_pull_umls = options[:enable_pull_umls]
         if enable_pull_umls
-          UMLS_DOWNLOAD_URL = options[:pull_umls_url]
+          umls_download_url = options[:pull_umls_url]
         end
 
         ontologies.sort! {|a,b| a.acronym.downcase <=> b.acronym.downcase}
@@ -34,8 +34,8 @@ module NcboCron
             last.bring(:pullLocation) if last.bring?(:pullLocation)
             last.bring(:uploadFilePath) if last.bring?(:uploadFilePath)
 
-            if (last.hasOntologyLanguage.umls? && UMLS_DOWNLOAD_URL)
-              last.pullLocation= RDF::URI.new(UMLS_DOWNLOAD_URL + last.pullLocation.split("/")[-1])
+            if (last.hasOntologyLanguage.umls? && umls_download_url)
+              last.pullLocation= RDF::URI.new(umls_download_url + last.pullLocation.split("/")[-1])
               logger.info("Using alternative download for umls #{last.pullLocation.to_s}")
               logger.flush
             end

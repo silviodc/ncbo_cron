@@ -20,7 +20,9 @@ Annotator.config do |config|
   config.annotator_redis_port  ||= 6379
 end
 
-$QUEUE_REDIS_HOST = Annotator.settings.annotator_redis_host
-$QUEUE_REDIS_PORT = Annotator.settings.annotator_redis_port
+NcboCron.config do |config|
+  config.redis_host  ||= "localhost"
+  config.redis_port  ||= 6379
+end
 
 Goo.use_cache = true

@@ -17,21 +17,16 @@ require 'redis'
 
 # Daemonize the process
 require 'dante'
-
 runner = Dante::Runner.new('ncbo_cron')
 runner.description = "This will run a scheduled job for NCBO-related processing"
-
+runner.options = NcboCron.settings.to_h
+runner.options.delete(:log_path) # remove these here for more control over logging
+runner.options.delete(:pid_path) # remove these here for more control over logging
 runner.with_options do |opts|
   ########################################################
   # WARNING: Before adding options, run `ncbo_cron --help` to see which flags
   # are already defined
   ########################################################
-  opts.on("-h", "--redis-host HOST", String, "redis host (for shared locking)", "(default: localhost)") do |host|
-    options[:redis_host] = host
-  end
-  opts.on("-p", "--redis-port PORT", Integer, "redis port (for shared locking)", "(default: 6379)") do |port|
-    options[:redis_port] = port
-  end
   opts.on("-m", "--minutes MIN", Integer, "minutes between process queue checks (override seconds)") do |m|
     options[:minutes_between] = m
   end
@@ -41,38 +36,41 @@ runner.with_options do |opts|
   opts.on("-c", "--pull-cron SCHED", String, "cron schedule for ontology pull") do |c|
     options[:cron_schedule] = c
   end
-  opts.on("-D", "--annotator-dictionary-cron SCHED", String, "cron schedule for annotator cache and dictionary rebuild") do |c|
-    options[:annotator_dictionary_rebuild_schedule] = c
-  end
   opts.on("-l", "--log-level LEVEL", String, "set the log level (debug, info, error)", "(default: info)") do |c|
     options[:log_level] = c.to_sym
   end
+  opts.on("-D", "--annotator-dictionary-cron SCHED", String, "cron schedule for annotator cache and dictionary rebuild") do |c|
+    options[:annotator_dictionary_rebuild_schedule] = c
+  end
+  opts.on("--disable-annotator-dictionary", "disable annotator cache and dictionary rebuild") do |v|
+    options[:enable_annotator_dictionary_rebuild] = false
+  end
   opts.on("--disable-processing", "disable ontology processing") do |v|
-    options[:disable_processing] = v
+    options[:enable_processing] = false
   end
   opts.on("--disable-pull", "disable ontology pull") do |v|
-    options[:disable_pull] = v
+    options[:enable_pull] = false
   end
   opts.on("--disable-flush", "disable flush archive class graphs") do |v|
-    options[:disable_flush] = v
+    options[:enable_flush] = false
   end
   opts.on("--disable-warmq", "disable query warmer") do |v|
-    options[:disable_warmq] = v
+    options[:enable_warmq] = false
   end
   opts.on("--enable-umls", "enable UMLS auto-pull") do |v|
     options[:enable_pull_umls] = true
   end
-  opts.on("--disable-annotator-dictionary", "disable annotator cache and dictionary rebuild") do |v|
-    options[:disable_annotator_dictionary_rebuild] = v
+  opts.on("--pull-umls-url URL", "set UMLS pull location") do |v|
+    options[:pull_umls_url] = v
   end
   opts.on("-v", "--view-queue", "view queued jobs") do |v|
-    options[:view_queue] = v
+    options[:view_queue] = true
   end
   opts.on("-a", "--add-submission ID", String, "submission id to add to the queue") do |v|
     options[:queue_submission] = v
   end
   opts.on("--console", "REPL for working with scheduler") do |v|
-    options[:console] = v
+    options[:console] = true
   end
   opts.on("-f","--flush-old-graphs FSCHED", String, "Delete class graphs of archive submissions") do |c|
     options[:cron_flush] = c
@@ -80,41 +78,33 @@ runner.with_options do |opts|
   opts.on("-w","--warm-long-queries WSCHED", String, "Warmup long time running queries") do |c|
     options[:cron_warmq] = c
   end
-
-  options.delete(:host)
-  options.delete(:port)
-  options.delete(:log_path)
-  options.delete(:pid_path)
-
-  # Defaults
-  options[:redis_host]    ||= "localhost"
-  options[:redis_port]    ||= 6379
 end
 
-# Veryify and set defaults
+# Verify and set defaults
 runner.verify_options_hook = lambda { |opts|
-  # Setup options for when we are daemonized
-  opts[:skip_cron_jobs] = opts[:view_queue] || opts[:queue_submission] || opts[:console]
-  unless opts[:skip_cron_jobs]
+  # Setup options when daemonized
+  run_cron_jobs = ! (opts[:view_queue] || opts[:queue_submission] || opts[:console])
+  if run_cron_jobs
     opts[:cron_schedule] ||= "30 */4 * * *"
-    opts[:annotator_dictionary_rebuild_schedule] ||= "0 0 */3 * *" #every 3 days
-    opts[:cron_flush]    ||= "00 23 * * 1-5"
-    opts[:cron_warmq]    ||= "00 */4 * * *"
-    opts[:log_level]     ||= :info
+    opts[:annotator_dictionary_rebuild_schedule] ||= "0 0 */3 * *" # 3 days
+    opts[:cron_flush] ||= "00 23 * * 1-5"
+    opts[:cron_warmq] ||= "00 */4 * * *"
 
+    # The log opts are not set until now, because the stdout/stderr should not be
+    # redirected for the view_queue, queue_submission, or console; the runner will
+    # automatically redirect to logs on runner.execute, if the opts are set.
     require 'logger'
     log_dir = File.expand_path("../../logs", __FILE__)
     FileUtils.mkdir_p(log_dir)
     opts[:log_path] ||= "#{log_dir}/scheduler.log"
     opts[:pid_path] ||= File.expand_path("../ncbo_cron.pid", __FILE__)
+    opts[:log_level] ||= :info
   end
 }
 
 runner.execute do |opts|
-  redis = Redis.new(host: opts[:redis_host], port: opts[:redis_port])
 
-  puts "Running ncbo_cron with options:"
-  pp opts
+  redis = Redis.new(host: opts[:redis_host], port: opts[:redis_port])
 
   # If we're viewing queued entries, show them and quit
   if opts[:view_queue]
@@ -135,18 +125,15 @@ runner.execute do |opts|
     exit
   end
 
-
-
-
-
-
-
   if opts[:console]
     require 'pry'; binding.pry(quiet: true)
     exit
   end
 
   # Redirect stdout, stderr
+  # The log opts are not set until now, because the stdout/stderr should not be
+  # redirected for the view_queue, queue_submission, or console; the runner will
+  # automatically redirect to logs on runner.execute, if the opts are set.
   log_file = File.new(opts[:log_path], "a")
   logger = Logger.new(log_file, shift_age = 'daily')
   $stderr = log_file
@@ -160,11 +147,12 @@ runner.execute do |opts|
   }
   logger.level = log_levels[opts[:log_level]]
 
-  options = {
-    logger: logger
-  }.merge(opts)
+  options = { logger: logger }.merge(opts)
 
-  unless options[:disable_processing]
+  puts "Running ncbo_cron with options:"
+  pp options
+
+  if options[:enable_processing]
     parsing_thread = Thread.new do
       logger.debug "Setting up process queue check job"; logger.flush
       parse_options = options.dup
@@ -178,7 +166,6 @@ runner.execute do |opts|
       end
     end
   end
-
   at_exit do
     if parsing_thread
       parsing_thread.kill
@@ -186,7 +173,7 @@ runner.execute do |opts|
     end
   end
 
-  unless options[:disable_pull]
+  if options[:enable_pull]
     pull_thread = Thread.new do
       logger.debug "Setting up pull cron job"; logger.flush
       pull_options = options.dup
@@ -194,7 +181,6 @@ runner.execute do |opts|
       pull_options.delete(:seconds_between)
       pull_options[:job_name] = "pull_thread"
       pull_options[:scheduler_type] = :cron
-
       NcboCron::Scheduler.scheduled_locking_job(pull_options) do
         filename = File.basename(options[:log_path]).sub(/\.\w{1,4}$/, "")
         pull_log_path = options[:log_path].split("/")[0..-2].push("#{filename}-pull.log").join("/")
@@ -203,13 +189,12 @@ runner.execute do |opts|
         logger.info "Logging pull details to #{pull_log_path}"; logger.flush
         puller = NcboCron::Models::OntologyPull.new
         pulled_onts = puller.do_remote_ontology_pull(logger: pull_logger,
-                                                     enable_pull_umls: options[:enable_pull_umls])
+         enable_pull_umls: options[:enable_pull_umls])
         logger.info "Finished ncbo pull"; logger.flush
         logger.info "Pull summary:\n#{pulled_onts.map {|o| o.id.to_s}}"
       end
     end
   end
-
   at_exit do
     if pull_thread
       pull_thread.kill
@@ -217,14 +202,13 @@ runner.execute do |opts|
     end
   end
 
-  unless options[:disable_annotator_dictionary_rebuild]
+  if options[:enable_annotator_dictionary_rebuild]
     annotator_dictionary_rebuild_thread = Thread.new do
       logger.debug "Setting up annotator cache and dictionary rebuild cron job"; logger.flush
       annotator_dictionary_rebuild_options = options.dup
       annotator_dictionary_rebuild_options[:job_name] = "annotator_dictionary_rebuild_thread"
       annotator_dictionary_rebuild_options[:scheduler_type] = :cron
       annotator_dictionary_rebuild_options[:cron_schedule] = annotator_dictionary_rebuild_options[:annotator_dictionary_rebuild_schedule]
-
       NcboCron::Scheduler.scheduled_locking_job(annotator_dictionary_rebuild_options) do
         logger.info "Starting annotator cache and dictionary rebuild"; logger.flush
         annotator = Annotator::Models::NcboAnnotator.new
@@ -234,7 +218,6 @@ runner.execute do |opts|
       end
     end
   end
-
   at_exit do
     if annotator_dictionary_rebuild_thread
       annotator_dictionary_rebuild_thread.kill
@@ -242,16 +225,15 @@ runner.execute do |opts|
     end
   end
 
-  unless options[:disable_flush]
+  if options[:enable_flush]
     flush_thread = Thread.new do
       flush_options = options.dup
-      logger.debug "Setting up the flush cron job with options #{flush_options[:cron_flush]}"; logger.flush
       flush_options.delete(:minutes_between)
       flush_options.delete(:seconds_between)
       flush_options[:job_name] = "flush_thread"
       flush_options[:scheduler_type] = :cron
       flush_options[:cron_schedule] = flush_options[:cron_flush]
-
+      logger.debug "Setting up the flush cron job with options #{flush_options[:cron_flush]}"; logger.flush
       NcboCron::Scheduler.scheduled_locking_job(flush_options) do
         logger.info "Starting ncbo flush"; logger.flush
         filename = File.basename(options[:log_path]).sub(/\.\w{1,4}$/, "")
@@ -266,7 +248,6 @@ runner.execute do |opts|
       end
     end
   end
-
   at_exit do
     if flush_thread
       flush_thread.kill
@@ -274,16 +255,15 @@ runner.execute do |opts|
     end
   end
 
-  unless options[:disable_warmq]
+  if options[:enable_warmq]
     warmq_thread = Thread.new do
       warmq_options = options.dup
-      logger.debug "Setting up warm up queries #{warmq_options[:cron_warmq]}"; logger.flush
       warmq_options.delete(:minutes_between)
       warmq_options.delete(:seconds_between)
       warmq_options[:job_name] = "warmq_thread"
       warmq_options[:scheduler_type] = :cron
       warmq_options[:cron_schedule] = warmq_options[:cron_warmq]
-
+      logger.debug "Setting up warm up queries #{warmq_options[:cron_warmq]}"; logger.flush
       NcboCron::Scheduler.scheduled_locking_job(warmq_options) do
         logger.info "Starting ncbo warmq"; logger.flush
         filename = File.basename(options[:log_path]).sub(/\.\w{1,4}$/, "")
@@ -291,14 +271,16 @@ runner.execute do |opts|
         warmq_logger = Logger.new(warmq_log_path, "a")
         logger.info "Logging warmq details to #{warmq_log_path}"; logger.flush
         t0 = Time.now
+        
+        # TODO-DLW: why is this parser here?
         parser = NcboCron::Models::OntologySubmissionParser.new
+
         NcboCron::Models::QueryWarmer.new(warmq_logger).run
         logger.info "Warm queries job run in #{Time.now - t0} sec."; logger.flush
         logger.info "Finished warmq"; logger.flush
       end
     end
   end
-
   at_exit do
     if warmq_thread
       warmq_thread.kill

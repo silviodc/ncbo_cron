@@ -229,7 +229,7 @@ module NcboCron
 
         begin
           annotator = Annotator::Models::NcboAnnotator.new
-          annotator.create_cache_for_submission(logger, sub)
+          annotator.create_term_cache_for_submission(logger, sub)
           annotator.generate_dictionary_file()
           sub.add_submission_status(status)
         rescue Exception => e

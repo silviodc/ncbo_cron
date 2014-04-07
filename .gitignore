@@ -11,6 +11,11 @@ repo*
 .DS_Store
 tmp
 
+# Ignore eclipse .project
+.project
+.pmd
+.settings/
+
 logs/
 *.log
 *.pid

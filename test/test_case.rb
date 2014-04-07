@@ -4,8 +4,6 @@ require_relative "../config/config.rb"
 
 require "test/unit"
 
-binding.pry
-
 # Check to make sure you want to run if not pointed at localhost
 safe_host = Regexp.new(/localhost|ncbo-dev*|ncbo-stg-app-22*|ncbo-unittest*/)
 unless LinkedData.settings.goo_host.match(safe_host) &&

@@ -6,7 +6,7 @@ require 'redis'
 class TestOntologySubmissionParser < TestCase
 
   def self.before_suite
-    @@redis = Redis.new(:host => $QUEUE_REDIS_HOST, :port => $QUEUE_REDIS_PORT)
+    @@redis = Redis.new(:host => NcboCron.settings.redis_host, :port => NcboCron.settings.redis_port)
     db_size = @@redis.dbsize
 
     if db_size > 5000

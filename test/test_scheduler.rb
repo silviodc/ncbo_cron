@@ -9,8 +9,8 @@ class TestScheduler < MiniTest::Unit::TestCase
       options = {
         job_name: "test_scheduled_job",
         seconds_between: 1,
-        redis_host: $QUEUE_REDIS_HOST,
-        redis_port: $QUEUE_REDIS_PORT
+        redis_host: NcboCron.settings.redis_host,
+        redis_port: NcboCron.settings.redis_port
       }
 
       # Create a simple TCPServer to listen from the fork
@@ -59,8 +59,8 @@ class TestScheduler < MiniTest::Unit::TestCase
       options = {
         job_name: "test_scheduled_job_locking",
         seconds_between: 5,
-        redis_host: $QUEUE_REDIS_HOST,
-        redis_port: $QUEUE_REDIS_PORT
+        redis_host: NcboCron.settings.redis_host,
+        redis_port: NcboCron.settings.redis_port
       }
 
       # Create a simple TCPServer to listen from the fork

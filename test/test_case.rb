@@ -4,15 +4,19 @@ require_relative "../config/config.rb"
 
 require "test/unit"
 
+binding.pry
+
 # Check to make sure you want to run if not pointed at localhost
 safe_host = Regexp.new(/localhost|ncbo-dev*|ncbo-stg-app-22*|ncbo-unittest*/)
-unless LinkedData.settings.goo_host.match(safe_host) && LinkedData.settings.search_server_url.match(safe_host) && $QUEUE_REDIS_HOST.match(safe_host)
+unless LinkedData.settings.goo_host.match(safe_host) &&
+    LinkedData.settings.search_server_url.match(safe_host) && 
+    NcboCron.settings.redis_host.match(safe_host)
   print "\n\n================================== WARNING ==================================\n"
   print "** TESTS CAN BE DESTRUCTIVE -- YOU ARE POINTING TO A POTENTIAL PRODUCTION/STAGE SERVER **\n"
   print "Servers:\n"
   print "triplestore -- #{LinkedData.settings.goo_host}\n"
   print "search -- #{LinkedData.settings.search_server_url}\n"
-  print "redis -- #{$QUEUE_REDIS_HOST}\n"
+  print "redis -- #{NcboCron.settings.redis_host}\n"
   print "Type 'y' to continue: "
   $stdout.flush
   confirm = $stdin.gets

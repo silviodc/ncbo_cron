@@ -27,6 +27,12 @@ runner.with_options do |opts|
   # WARNING: Before adding options, run `ncbo_cron --help` to see which flags
   # are already defined
   ########################################################
+  opts.on("-h", "--redis-host HOST", String, "redis host (for shared locking)", "(default: #{options[:redis_host]})") do |host|
+    options[:redis_host] = host
+  end
+  opts.on("-p", "--redis-port PORT", Integer, "redis port (for shared locking)", "(default: #{options[:redis_port])") do |port|
+    options[:redis_port] = port
+  end
   opts.on("-m", "--minutes MIN", Integer, "minutes between process queue checks (override seconds)") do |m|
     options[:minutes_between] = m
   end

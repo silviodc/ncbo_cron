@@ -57,14 +57,10 @@ module NcboCron
     end
     @settings.pid_path ||= pid_path
 
-    #
-    # TODO: set reasonable defaults
-    #
-
     # minutes between process queue checks (override seconds)
-    #@settings.minutes_between ||= nil
+    @settings.minutes_between ||= nil
     # seconds between process queue checks
-    #@settings.seconds_between ||= nil
+    @settings.seconds_between ||= nil
 
   end
 end

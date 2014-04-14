@@ -1,6 +1,6 @@
 GIT
   remote: git://github.com/ncbo/goo.git
-  revision: 72847bee918b24fcdda4a65b811282e1234bae52
+  revision: 85db1aaa576f5d93b944b2734ef84c2e9f58fe1f
   branch: staging
   specs:
     goo (0.0.2)
@@ -26,7 +26,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ontologies_linked_data.git
-  revision: 6c2033790f81ecf738644ca1322ff7d119272fec
+  revision: 0a4b6ec2f186e91b52cfe2fcfeb6df0842fe32a1
   branch: staging
   specs:
     ontologies_linked_data (0.0.1)
@@ -82,7 +82,7 @@ GEM
     json (1.8.1)
     json_pure (1.8.1)
     libxml-ruby (2.7.0)
-    macaddr (1.7.0)
+    macaddr (1.7.1)
       systemu (~> 2.6.2)
     mail (2.2.7)
       activesupport (>= 2.3.6)
@@ -95,7 +95,7 @@ GEM
       redis
     multi_json (1.9.2)
     net-http-persistent (2.9.4)
-    oj (2.7.2)
+    oj (2.7.3)
     polyglot (0.3.4)
     pony (1.8)
       mail (>= 2.0)

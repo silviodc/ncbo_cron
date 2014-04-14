@@ -20,8 +20,7 @@ require 'dante'
 runner = Dante::Runner.new('ncbo_cron')
 runner.description = "This will run a scheduled job for NCBO-related processing"
 runner.options = NcboCron.settings.to_h
-runner.options.delete(:log_path) # remove these here for more control over logging
-runner.options.delete(:pid_path) # remove these here for more control over logging
+runner.options.delete(:log_path) # remove this here for more control over logging
 runner.with_options do |opts|
   ########################################################
   # WARNING: Before adding options, run `ncbo_cron --help` to see which flags

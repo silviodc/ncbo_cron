@@ -5,6 +5,10 @@ Signal.trap("INT") { exit 1 }
 
 # Setup the bundled gems in our environment
 require 'bundler/setup'
+# redis store for looking up queued jobs
+require 'redis'
+# Daemonize the process
+require 'dante'
 
 # Used for getting jobs from the queue and processing them
 require_relative '../lib/ncbo_cron'
@@ -12,20 +16,11 @@ config_exists = File.exist?(File.expand_path('../../config/config.rb', __FILE__)
 abort("Please create a config/config.rb file using the config/config.rb.sample as a template") unless config_exists
 require_relative '../config/config'
 
-# redis store for looking up queued jobs
-require 'redis'
-
-# Daemonize the process
-require 'dante'
-runner = Dante::Runner.new('ncbo_cron')
-runner.description = "This will run a scheduled job for NCBO-related processing"
-runner.options = NcboCron.settings.to_h
-runner.options.delete(:log_path) # remove this here for more control over logging
-runner.with_options do |opts|
-  ########################################################
-  # WARNING: Before adding options, run `ncbo_cron --help` to see which flags
-  # are already defined
-  ########################################################
+require 'optparse'
+options = NcboCron.settings.to_h
+opt_parser = OptionParser.new do |opts|
+  # Set a banner, displayed at the top of the help screen.
+  opts.banner = "Usage: ncbo_cron [options]"
   opts.on("-h", "--redis-host HOST", String, "redis host (for shared locking)", "(default: #{options[:redis_host]})") do |host|
     options[:redis_host] = host
   end
@@ -83,8 +78,23 @@ runner.with_options do |opts|
   opts.on("-w","--warm-long-queries WSCHED", String, "Warmup long time running queries") do |c|
     options[:cron_warmq] = c
   end
+  # Display the help screen, all programs are assumed to have this option.
+  opts.on('--help', 'Display this screen' ) do
+    puts opts
+    exit
+  end
 end
+# Parse the command-line. The 'parse' method simply parses ARGV, while the 'parse!' method parses ARGV and removes
+# any options found there, as well as any parameters for the options.
+opt_parser.parse!
 
+# Update the NcboCron.settings with CLI options
+options.each_pair {|k,v| NcboCron.settings[k] = v}
+
+# Initialize Dante with options
+runner = Dante::Runner.new('ncbo_cron', options)
+runner.description = "This will run a scheduled job for NCBO-related processing"
+runner.options.delete(:log_path) # remove this here for more control over logging
 # Verify and set defaults
 runner.verify_options_hook = lambda { |opts|
   # Setup options when daemonized
@@ -94,15 +104,14 @@ runner.verify_options_hook = lambda { |opts|
     opts[:annotator_dictionary_rebuild_schedule] ||= "0 0 */3 * *" # 3 days
     opts[:cron_flush] ||= "00 23 * * 1-5"
     opts[:cron_warmq] ||= "00 */4 * * *"
-
     # The log opts are not set until now, because the stdout/stderr should not be
     # redirected for the view_queue, queue_submission, or console; the runner will
     # automatically redirect to logs on runner.execute, if the opts are set.
     require 'logger'
     log_dir = File.expand_path("../../logs", __FILE__)
     FileUtils.mkdir_p(log_dir)
-    opts[:log_path] ||= "#{log_dir}/scheduler.log"
     opts[:pid_path] ||= File.expand_path("../ncbo_cron.pid", __FILE__)
+    opts[:log_path] ||= "#{log_dir}/scheduler.log"
     opts[:log_level] ||= :info
   end
 }
@@ -110,6 +119,7 @@ runner.verify_options_hook = lambda { |opts|
 runner.execute do |opts|
 
   redis = Redis.new(host: opts[:redis_host], port: opts[:redis_port])
+  puts "Running ncbo_cron with redis: #{redis.inspect}"
 
   # If we're viewing queued entries, show them and quit
   if opts[:view_queue]

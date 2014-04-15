@@ -7,8 +7,6 @@ Signal.trap("INT") { exit 1 }
 require 'bundler/setup'
 # redis store for looking up queued jobs
 require 'redis'
-# Daemonize the process
-require 'dante'
 
 # Used for getting jobs from the queue and processing them
 require_relative '../lib/ncbo_cron'
@@ -21,41 +19,55 @@ options = NcboCron.settings.to_h
 opt_parser = OptionParser.new do |opts|
   # Set a banner, displayed at the top of the help screen.
   opts.banner = "Usage: ncbo_cron [options]"
+
+  # Options from Dante gem, see
+  # https://github.com/nesquena/dante/blob/master/lib/dante/runner.rb#L168-L214
+  opts.on("-d", "--daemon", "Daemonize mode") do |v|
+    options[:daemonize] = true
+  end
+  opts.on("-k", "--kill [PORT]", String, "Kill specified running daemons - leave blank to kill all.") do |v|
+    options[:kill] = v || true
+  end
+  opts.on("-p", "--port PORT", Integer, "Specify port", "(default: #{options[:port]})") do |v|
+    options[:port] = v
+  end
+  opts.on("-P", "--pid FILE", String, "save PID in FILE when using -d option.", "(default: #{options[:pid_path]})") do |v|
+    options[:pid_path] = File.expand_path(v)
+  end
+  opts.on("-l", "--log FILE", String, "Logfile for output", "(default: /var/log/#{@name}.log)") do |v|
+    options[:log_path] = v
+  end
+  opts.on("-u", "--user USER", String, "User to run as") do |user|
+    options[:user] = user
+  end
+  opts.on("-G", "--group GROUP", String, "Group to run as") do |group|
+    options[:group] = group
+  end
+
+  # NCBO Cron options (may override options above, see validation below)
   opts.on("--console", "REPL for working with scheduler") do |v|
     options[:console] = true
   end
-  opts.on("-v", "--view-queue", "view queued jobs") do |v|
+  opts.on("--view-queue", "view queued jobs") do |v|
     options[:view_queue] = true
   end
-  opts.on("-a", "--add-submission ID", String, "submission id to add to the queue") do |v|
+  opts.on("--add-submission ID", String, "submission id to add to the queue") do |v|
     options[:queue_submission] = v
   end
-  opts.on("-d", "--daemonize", "Run cron in daemon mode (default: true)") do |v|
-    options[:daemonize] = true
-    options[:console] = false
-    options[:view_queue] = false
-    options[:queue_submission] = false
-  end
-  opts.on("-h", "--redis-host HOST", String, "redis host (for shared locking)", "(default: #{options[:redis_host]})") do |host|
+  opts.on("--redis-host HOST", String, "redis host (for shared locking)", "(default: #{options[:redis_host]})") do |host|
     options[:redis_host] = host
   end
-  opts.on("-p", "--redis-port PORT", Integer, "redis port (for shared locking)", "(default: #{options[:redis_port]})") do |port|
+  opts.on("--redis-port PORT", Integer, "redis port (for shared locking)", "(default: #{options[:redis_port]})") do |port|
     options[:redis_port] = port
   end
-  opts.on("-m", "--minutes MIN", Integer, "minutes between process queue checks (override seconds)") do |m|
-    options[:minutes_between] = m
-  end
-  opts.on("-s", "--seconds SEC", Integer, "seconds between process queue checks") do |s|
-    options[:seconds_between] = s
-  end
-  opts.on("-c", "--pull-cron SCHED", String, "cron schedule for ontology pull") do |c|
-    options[:cron_schedule] = c
-  end
-  opts.on("-l", "--log-level LEVEL", String, "set the log level (debug, info, error)", "(default: info)") do |c|
+  opts.on("--log-level LEVEL", String, "set the log level (debug, info, error)", "(default: info)") do |c|
     options[:log_level] = c.to_sym
   end
-  opts.on("-D", "--annotator-dictionary-cron SCHED", String, "cron schedule for annotator cache and dictionary rebuild") do |c|
-    options[:annotator_dictionary_rebuild_schedule] = c
+  opts.on("--minutes MIN", Integer, "minutes between process queue checks (override seconds)") do |m|
+    options[:minutes_between] = m
+  end
+  opts.on("--seconds SEC", Integer, "seconds between process queue checks") do |s|
+    options[:seconds_between] = s
   end
   opts.on("--disable-annotator-dictionary", "disable annotator cache and dictionary rebuild") do |v|
     options[:enable_annotator_dictionary_rebuild] = false
@@ -78,14 +90,20 @@ opt_parser = OptionParser.new do |opts|
   opts.on("--pull-umls-url URL", "set UMLS pull location") do |v|
     options[:pull_umls_url] = v
   end
-  opts.on("-f","--flush-old-graphs FSCHED", String, "Delete class graphs of archive submissions") do |c|
+  opts.on("--pull-cron SCHED", String, "cron schedule for ontology pull") do |c|
+    options[:cron_schedule] = c
+  end
+  opts.on("--annotator-dictionary-cron SCHED", String, "cron schedule for annotator cache and dictionary rebuild") do |c|
+    options[:annotator_dictionary_rebuild_schedule] = c
+  end
+  opts.on("--flush-old-graphs SCHED", String, "cron schedule to delete class graphs of archive submissions") do |c|
     options[:cron_flush] = c
   end
-  opts.on("-w","--warm-long-queries WSCHED", String, "Warmup long time running queries") do |c|
+  opts.on("--warm-long-queries SCHED", String, "cron schedule to warmup long time running queries") do |c|
     options[:cron_warmq] = c
   end
   # Display the help screen, all programs are assumed to have this option.
-  opts.on('--help', 'Display this screen' ) do
+  opts.on_tail('--help', 'Display this screen' ) do
     puts opts
     exit
   end
@@ -94,33 +112,27 @@ end
 # any options found there, as well as any parameters for the options.
 opt_parser.parse!
 
-# Verify options
-run_cron_jobs = ! (options[:view_queue] || options[:queue_submission] || options[:console])
-if run_cron_jobs
-  options[:cron_schedule] ||= "30 */4 * * *"
-  options[:annotator_dictionary_rebuild_schedule] ||= "0 0 */3 * *" # 3 days
-  options[:cron_flush] ||= "00 23 * * 1-5"
-  options[:cron_warmq] ||= "00 */4 * * *"
-  # The log options are not set until now, because the stdout/stderr should not be
-  # redirected for the view_queue, queue_submission, or console; the runner will
-  # automatically redirect to logs on runner.execute, if the options are set.
-  require 'logger'
-  log_dir = File.expand_path("../../logs", __FILE__)
-  FileUtils.mkdir_p(log_dir)
-  options[:pid_path] ||= File.expand_path("../ncbo_cron.pid", __FILE__)
-  options[:log_path] ||= "#{log_dir}/scheduler.log"
-  options[:log_level] ||= :info
-else
+# Verify options: daemon mode takes a back seat to other options.
+if options[:view_queue] || options[:queue_submission] || options[:console] || options[:kill]
   options[:daemonize] = false
+  # The Dante runner will automatically redirect logs on runner.execute, if this option is set.
+  options.delete(:log_path) # remove this here for more control over logging
+end
+if options[:daemonize] || options[:kill]
+  options[:console] = false
+  options[:view_queue] = false
+  options[:queue_submission] = false
+  puts "Log file: #{options[:log_path]}" if options[:daemonize]
 end
 
 # Update the NcboCron.settings with CLI options
 options.each_pair {|k,v| NcboCron.settings[k] = v}
 
-# Initialize Dante with options
+
+# Configure the process controller
+require 'dante'
 runner = Dante::Runner.new('ncbo_cron', options)
 runner.description = "This will run a scheduled job for NCBO-related processing"
-runner.options.delete(:log_path) # remove this here for more control over logging
 runner.execute do |opts|
 
   redis = Redis.new(host: opts[:redis_host], port: opts[:redis_port])
@@ -154,7 +166,8 @@ runner.execute do |opts|
   # The log opts are not set until now, because the stdout/stderr should not be
   # redirected for the view_queue, queue_submission, or console; the runner will
   # automatically redirect to logs on runner.execute, if the opts are set.
-  log_file = File.new(opts[:log_path], "a")
+  require 'logger'
+  log_file = File.new(options[:log_path], "a")
   logger = Logger.new(log_file, shift_age = 'daily')
   $stderr = log_file
   $stdout = log_file
@@ -165,9 +178,8 @@ runner.execute do |opts|
     info:  Logger::INFO,
     debug: Logger::DEBUG
   }
-  logger.level = log_levels[opts[:log_level]]
-
-  options = { logger: logger }.merge(opts)
+  logger.level = log_levels[options[:log_level]]
+  options['logger'] = logger
 
   puts "Running ncbo_cron with options:"
   pp options

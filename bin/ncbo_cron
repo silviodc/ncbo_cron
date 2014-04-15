@@ -116,6 +116,8 @@ runner.verify_options_hook = lambda { |opts|
     opts[:pid_path] ||= File.expand_path("../ncbo_cron.pid", __FILE__)
     opts[:log_path] ||= "#{log_dir}/scheduler.log"
     opts[:log_level] ||= :info
+  else
+    opts[:daemonized] = false
   end
 }
 

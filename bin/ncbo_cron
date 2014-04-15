@@ -71,8 +71,10 @@ opt_parser = OptionParser.new do |opts|
   end
   opts.on("--console", "REPL for working with scheduler") do |v|
     options[:console] = true
+    options[:daemonize] = false
   end
   opts.on("-d", "--daemonize", "Run cron in daemon mode (default: true)") do |v|
+    options[:console] = false
     options[:daemonize] = true
   end
   opts.on("-f","--flush-old-graphs FSCHED", String, "Delete class graphs of archive submissions") do |c|
@@ -116,8 +118,6 @@ runner.verify_options_hook = lambda { |opts|
     opts[:pid_path] ||= File.expand_path("../ncbo_cron.pid", __FILE__)
     opts[:log_path] ||= "#{log_dir}/scheduler.log"
     opts[:log_level] ||= :info
-  else
-    opts[:daemonized] = false
   end
 }
 

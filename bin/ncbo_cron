@@ -71,11 +71,12 @@ opt_parser = OptionParser.new do |opts|
   end
   opts.on("--console", "REPL for working with scheduler") do |v|
     options[:console] = true
-    options[:daemonize] = false
   end
   opts.on("-d", "--daemonize", "Run cron in daemon mode (default: true)") do |v|
-    options[:console] = false
     options[:daemonize] = true
+    options[:console] = false
+    options[:view_queue] = false
+    options[:queue_submission] = false
   end
   opts.on("-f","--flush-old-graphs FSCHED", String, "Delete class graphs of archive submissions") do |c|
     options[:cron_flush] = c
@@ -93,6 +94,26 @@ end
 # any options found there, as well as any parameters for the options.
 opt_parser.parse!
 
+# Verify options
+run_cron_jobs = ! (options[:view_queue] || options[:queue_submission] || options[:console])
+if run_cron_jobs
+  options[:cron_schedule] ||= "30 */4 * * *"
+  options[:annotator_dictionary_rebuild_schedule] ||= "0 0 */3 * *" # 3 days
+  options[:cron_flush] ||= "00 23 * * 1-5"
+  options[:cron_warmq] ||= "00 */4 * * *"
+  # The log options are not set until now, because the stdout/stderr should not be
+  # redirected for the view_queue, queue_submission, or console; the runner will
+  # automatically redirect to logs on runner.execute, if the options are set.
+  require 'logger'
+  log_dir = File.expand_path("../../logs", __FILE__)
+  FileUtils.mkdir_p(log_dir)
+  options[:pid_path] ||= File.expand_path("../ncbo_cron.pid", __FILE__)
+  options[:log_path] ||= "#{log_dir}/scheduler.log"
+  options[:log_level] ||= :info
+else
+  options[:daemonize] = false
+end
+
 # Update the NcboCron.settings with CLI options
 options.each_pair {|k,v| NcboCron.settings[k] = v}
 
@@ -100,27 +121,6 @@ options.each_pair {|k,v| NcboCron.settings[k] = v}
 runner = Dante::Runner.new('ncbo_cron', options)
 runner.description = "This will run a scheduled job for NCBO-related processing"
 runner.options.delete(:log_path) # remove this here for more control over logging
-# Verify and set defaults
-runner.verify_options_hook = lambda { |opts|
-  # Setup options when daemonized
-  run_cron_jobs = ! (opts[:view_queue] || opts[:queue_submission] || opts[:console])
-  if run_cron_jobs
-    opts[:cron_schedule] ||= "30 */4 * * *"
-    opts[:annotator_dictionary_rebuild_schedule] ||= "0 0 */3 * *" # 3 days
-    opts[:cron_flush] ||= "00 23 * * 1-5"
-    opts[:cron_warmq] ||= "00 */4 * * *"
-    # The log opts are not set until now, because the stdout/stderr should not be
-    # redirected for the view_queue, queue_submission, or console; the runner will
-    # automatically redirect to logs on runner.execute, if the opts are set.
-    require 'logger'
-    log_dir = File.expand_path("../../logs", __FILE__)
-    FileUtils.mkdir_p(log_dir)
-    opts[:pid_path] ||= File.expand_path("../ncbo_cron.pid", __FILE__)
-    opts[:log_path] ||= "#{log_dir}/scheduler.log"
-    opts[:log_level] ||= :info
-  end
-}
-
 runner.execute do |opts|
 
   redis = Redis.new(host: opts[:redis_host], port: opts[:redis_port])

@@ -72,6 +72,9 @@ opt_parser = OptionParser.new do |opts|
   opts.on("--console", "REPL for working with scheduler") do |v|
     options[:console] = true
   end
+  opts.on("-d", "--daemonize", "Run cron in daemon mode (default: true)") do |v|
+    options[:daemonize] = true
+  end
   opts.on("-f","--flush-old-graphs FSCHED", String, "Delete class graphs of archive submissions") do |c|
     options[:cron_flush] = c
   end

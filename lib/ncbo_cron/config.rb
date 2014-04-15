@@ -19,6 +19,8 @@ module NcboCron
     @settings.redis_port ||= 6379
     puts "(CR) >> Using Redis instance at #{@settings.redis_host}:#{@settings.redis_port}"
 
+    # Daemon
+    @settings.daemonize ||= true
     # REPL for working with scheduler
     @settings.console ||= false
     # submission id to add to the queue

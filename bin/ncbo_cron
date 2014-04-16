@@ -26,7 +26,7 @@ opt_parser = OptionParser.new do |opts|
     options[:daemonize] = true
   end
   opts.on("-k", "--kill [PORT]", String, "Kill specified running daemons - leave blank to kill all.") do |v|
-    options[:kill] = v || true
+    options[:kill] = v
   end
   opts.on("-p", "--port PORT", Integer, "Specify port", "(default: #{options[:port]})") do |v|
     options[:port] = v
@@ -34,7 +34,7 @@ opt_parser = OptionParser.new do |opts|
   opts.on("-P", "--pid FILE", String, "save PID in FILE when using -d option.", "(default: #{options[:pid_path]})") do |v|
     options[:pid_path] = File.expand_path(v)
   end
-  opts.on("-l", "--log FILE", String, "Logfile for output", "(default: /var/log/#{@name}.log)") do |v|
+  opts.on("-l", "--log FILE", String, "Logfile for output", "(default: #{options[:log_path]})") do |v|
     options[:log_path] = v
   end
   opts.on("-u", "--user USER", String, "User to run as") do |user|
@@ -113,12 +113,12 @@ end
 opt_parser.parse!
 
 # Verify options: daemon mode takes a back seat to other options.
-if options[:view_queue] || options[:queue_submission] || options[:console] || options[:kill]
+if options[:view_queue] || options[:queue_submission] || options[:console] || options.include?(:kill)
   options[:daemonize] = false
   # The Dante runner will automatically redirect logs on runner.execute, if this option is set.
   options.delete(:log_path) # remove this here for more control over logging
 end
-if options[:daemonize] || options[:kill]
+if options[:daemonize] || options.include?(:kill)
   options[:console] = false
   options[:view_queue] = false
   options[:queue_submission] = false

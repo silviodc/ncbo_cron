@@ -197,11 +197,11 @@ runner.execute do |opts|
         logger.info "Finished ontology process queue check"; logger.flush
       end
     end
-  end
-  at_exit do
-    if parsing_thread
-      parsing_thread.kill
-      parsing_thread.join
+    at_exit do
+      if parsing_thread
+        parsing_thread.kill
+        parsing_thread.join
+      end
     end
   end
 
@@ -226,11 +226,11 @@ runner.execute do |opts|
         logger.info "Pull summary:\n#{pulled_onts.map {|o| o.id.to_s}}"
       end
     end
-  end
-  at_exit do
-    if pull_thread
-      pull_thread.kill
-      pull_thread.join
+    at_exit do
+      if pull_thread
+        pull_thread.kill
+        pull_thread.join
+      end
     end
   end
 
@@ -249,11 +249,11 @@ runner.execute do |opts|
         logger.info "Finished annotator cache and dictionary rebuild"; logger.flush
       end
     end
-  end
-  at_exit do
-    if annotator_dictionary_rebuild_thread
-      annotator_dictionary_rebuild_thread.kill
-      annotator_dictionary_rebuild_thread.join
+    at_exit do
+      if annotator_dictionary_rebuild_thread
+        annotator_dictionary_rebuild_thread.kill
+        annotator_dictionary_rebuild_thread.join
+      end
     end
   end
 
@@ -279,11 +279,11 @@ runner.execute do |opts|
         logger.info "Finished flush"; logger.flush
       end
     end
-  end
-  at_exit do
-    if flush_thread
-      flush_thread.kill
-      flush_thread.join
+    at_exit do
+      if flush_thread
+        flush_thread.kill
+        flush_thread.join
+      end
     end
   end
 
@@ -312,11 +312,11 @@ runner.execute do |opts|
         logger.info "Finished warmq"; logger.flush
       end
     end
-  end
-  at_exit do
-    if warmq_thread
-      warmq_thread.kill
-      warmq_thread.join
+    at_exit do
+      if warmq_thread
+        warmq_thread.kill
+        warmq_thread.join
+      end
     end
   end
 

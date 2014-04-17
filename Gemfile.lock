@@ -118,6 +118,7 @@ GEM
     rufus-scheduler (2.0.24)
       tzinfo (>= 0.3.22)
     slop (3.5.0)
+    sys-proctable (0.9.4)
     systemu (2.6.4)
     thread_safe (0.3.3)
     treetop (1.5.3)
@@ -143,3 +144,4 @@ DEPENDENCIES
   rake
   redis
   sparql-client!
+  sys-proctable

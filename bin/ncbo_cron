@@ -288,6 +288,16 @@ runner.execute do |opts|
     end
   end
 
+  # Print running child processes
+  require 'sys/proctable'
+  at_exit do
+    procs = Sys::ProcTable.ps.select {|pe| pe.ppid == $$ && !pe.state.eql?("zombie") }
+    unless procs.empty?
+      puts "The following child processes may still be running\npid\tname"
+      procs.each {|pe| puts pe.pid.to_s + "\t" + pe.cmdline.split(" ").first}
+    end
+  end
+
   # Need to join here to avoid dropping out of the process
   parsing_thread.join if parsing_thread
   pull_thread.join if pull_thread

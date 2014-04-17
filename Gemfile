@@ -8,6 +8,7 @@ gem 'multi_json'
 gem 'redis'
 gem 'minitest', '< 5.0'
 gem 'pony'
+gem 'sys-proctable'
 
 # Monitoring
 gem 'cube-ruby', require: 'cube'

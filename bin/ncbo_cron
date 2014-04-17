@@ -279,10 +279,6 @@ runner.execute do |opts|
         warmq_logger = Logger.new(warmq_log_path, "a")
         logger.info "Logging warmq details to #{warmq_log_path}"; logger.flush
         t0 = Time.now
-
-        # TODO-DLW: why is this parser here?
-        parser = NcboCron::Models::OntologySubmissionParser.new
-
         NcboCron::Models::QueryWarmer.new(warmq_logger).run
         logger.info "Warm queries job run in #{Time.now - t0} sec."; logger.flush
         logger.info "Finished warmq"; logger.flush

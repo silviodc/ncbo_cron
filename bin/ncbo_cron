@@ -197,12 +197,6 @@ runner.execute do |opts|
         logger.info "Finished ontology process queue check"; logger.flush
       end
     end
-    at_exit do
-      if parsing_thread
-        parsing_thread.kill
-        parsing_thread.join
-      end
-    end
   end
 
   if options[:enable_pull]
@@ -226,12 +220,6 @@ runner.execute do |opts|
         logger.info "Pull summary:\n#{pulled_onts.map {|o| o.id.to_s}}"
       end
     end
-    at_exit do
-      if pull_thread
-        pull_thread.kill
-        pull_thread.join
-      end
-    end
   end
 
   if options[:enable_annotator_dictionary_rebuild]
@@ -247,12 +235,6 @@ runner.execute do |opts|
         annotator.create_term_cache(ontologies_filter=nil, delete_cache=true)
         annotator.generate_dictionary_file()
         logger.info "Finished annotator cache and dictionary rebuild"; logger.flush
-      end
-    end
-    at_exit do
-      if annotator_dictionary_rebuild_thread
-        annotator_dictionary_rebuild_thread.kill
-        annotator_dictionary_rebuild_thread.join
       end
     end
   end
@@ -279,12 +261,6 @@ runner.execute do |opts|
         logger.info "Finished flush"; logger.flush
       end
     end
-    at_exit do
-      if flush_thread
-        flush_thread.kill
-        flush_thread.join
-      end
-    end
   end
 
   if options[:enable_warmq]
@@ -303,7 +279,7 @@ runner.execute do |opts|
         warmq_logger = Logger.new(warmq_log_path, "a")
         logger.info "Logging warmq details to #{warmq_log_path}"; logger.flush
         t0 = Time.now
-        
+
         # TODO-DLW: why is this parser here?
         parser = NcboCron::Models::OntologySubmissionParser.new
 
@@ -312,14 +288,9 @@ runner.execute do |opts|
         logger.info "Finished warmq"; logger.flush
       end
     end
-    at_exit do
-      if warmq_thread
-        warmq_thread.kill
-        warmq_thread.join
-      end
-    end
   end
 
+  # Need to join here to avoid dropping out of the process
   parsing_thread.join if parsing_thread
   pull_thread.join if pull_thread
   flush_thread.join if flush_thread

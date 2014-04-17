@@ -171,6 +171,8 @@ runner.execute do |opts|
   require 'logger'
   log_file = File.new(options[:log_path], "a")
   logger = Logger.new(log_file, shift_age = 'daily')
+  $consoleerr = $stderr
+  $consoleout = $stdout
   $stderr = log_file
   $stdout = log_file
   log_levels = {
@@ -293,8 +295,8 @@ runner.execute do |opts|
   at_exit do
     procs = Sys::ProcTable.ps.select {|pe| pe.ppid == $$ && !pe.state.eql?("zombie") }
     unless procs.empty?
-      puts "The following child processes may still be running\npid\tname"
-      procs.each {|pe| puts pe.pid.to_s + "\t" + pe.cmdline.split(" ").first}
+      $consoleout.puts "The following child processes may still be running\npid\tname"
+      procs.each {|pe| $consoleout.puts pe.pid.to_s + "\t" + pe.cmdline.split(" ").first}
     end
   end
 

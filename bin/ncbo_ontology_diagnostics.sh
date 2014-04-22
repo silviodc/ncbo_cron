@@ -49,13 +49,14 @@ grep -v -F 'summaryOnly' $SUBMISSION_STATUS_LOG | sed -e 's/ontology=found;;//' 
 
 echo
 echo '*********************************************************************************************'
-echo 'Ontologies missing a latest submission:'
+echo 'Ontologies missing a latest submission upload:'
 echo
 
-grep -F 'submissionId=ERROR' $SUBMISSION_NOTSUMMARYONLY_LOG > $SUBMISSION_ERROR_LOG
+# grep -F 'submissionId=ERROR' $SUBMISSION_NOTSUMMARYONLY_LOG > $SUBMISSION_ERROR_LOG
+grep -v -F 'UPLOADED' $SUBMISSION_NOTSUMMARYONLY_LOG > $SUBMISSION_ERROR_LOG
 cat $SUBMISSION_ERROR_LOG | sed -e $SED_ARG1 -e $SED_ARG2 | grep -F 'http' | tee $SUBMISSION_ERROR_FORMAT_LOG
 # cleanup the submission log
-grep -v -F 'submissionId=ERROR' $SUBMISSION_NOTSUMMARYONLY_LOG | grep -F 'UPLOAD' > $SUBMISSION_UPLOAD_LOG
+grep -F 'UPLOADED' $SUBMISSION_NOTSUMMARYONLY_LOG > $SUBMISSION_UPLOAD_LOG
 
 
 #############################################################################################################
@@ -70,7 +71,7 @@ cat  $SUBMISSION_ERROR_RDF_LOG | sed -e $SED_ARG1 -e $SED_ARG2 | grep -v -F 'met
 # Filter the output log to remove RDF errors from the ontologies with submissions.
 grep -v -F 'ERROR_RDF' $SUBMISSION_UPLOAD_LOG | grep -F 'RDF' > $SUBMISSION_RDF_LOG
 
-# TODO: Call ncbo_cron to reprocess the RDF failures once.
+# INFO: Call ncbo_cron to reprocess the RDF failures once.
 #./bin/ncbo_cron --add-submission {submission id to add to the queue}
 
 
@@ -78,7 +79,7 @@ echo
 echo '*********************************************************************************************'
 echo "Ontologies with RDF data, with no classes (may be an error, or by design):"
 echo
-grep -F 'classes:0'     $SUBMISSION_RDF_LOG | sort -u | sed -e $SED_ARG1 -e $SED_ARG2
+grep -F 'classes:0'     $SUBMISSION_RDF_LOG | sed -e $SED_ARG1 -e $SED_ARG2
 # Exclude entries without any classes, they cannot be indexed or used in the annotator.
 grep -v -F 'classes:0'  $SUBMISSION_RDF_LOG > $SUBMISSION_ERROR_TMP_LOG
 
@@ -93,37 +94,40 @@ echo 'Ontologies with RDF data, without METRICS:'
 echo
 grep -v -F 'METRICS'      $SUBMISSION_ERROR_TMP_LOG >  $SUBMISSION_ERROR_METRICS_LOG
 grep -F 'METRICS_MISSING' $SUBMISSION_ERROR_TMP_LOG >> $SUBMISSION_ERROR_METRICS_LOG
-cat $SUBMISSION_ERROR_METRICS_LOG | sort -u | sed -e $SED_ARG1 -e $SED_ARG2 | tee $SUBMISSION_ERROR_METRICS_FORMAT_LOG
+cat $SUBMISSION_ERROR_METRICS_LOG | sed -e $SED_ARG1 -e $SED_ARG2 | tee $SUBMISSION_ERROR_METRICS_FORMAT_LOG
 
 echo '*********************************************************************************************'
 echo 'Ontologies with RDF data and METRICS has maxDepth == 0 && classesWithOneChild != 0 :'
 echo
 grep -F 'maxDepth:0' $SUBMISSION_ERROR_TMP_LOG | grep -F -v 'classesWithOneChild:0' > $SUBMISSION_ERROR_MAXDEPTH_LOG
-cat $SUBMISSION_ERROR_MAXDEPTH_LOG | sort -u | sed -e $SED_ARG1 -e $SED_ARG2 | tee $SUBMISSION_ERROR_MAXDEPTH_FORMAT_LOG
+cat $SUBMISSION_ERROR_MAXDEPTH_LOG | sed -e $SED_ARG1 -e $SED_ARG2 | tee $SUBMISSION_ERROR_MAXDEPTH_FORMAT_LOG
 
-# TODO: possible metrics fix:
+# INFO: possible metrics fix:
 # ./bin/ncbo_ontology_metrics -o {ONTOLOGY_ACRONYM}
-# TODO: then check the output from
+# INFO: then check the output from
 # ./bin/ncbo_ontology_inspector -p flat,metrics,submissionStatus -o {ONTOLOGY_ACRONYM}
 
 echo
 echo '*********************************************************************************************'
 echo "Ontologies with RDF data, without SOLR data:"
 echo
-grep -F 'INDEXCOUNT:0' $SUBMISSION_ERROR_TMP_LOG >  $SUBMISSION_ERROR_INDEX_LOG
-grep -F 'INDEX_ERROR'  $SUBMISSION_ERROR_TMP_LOG >> $SUBMISSION_ERROR_INDEX_LOG
-cat $SUBMISSION_ERROR_INDEX_LOG | sort -u | sed -e $SED_ARG1 -e $SED_ARG2 | tee $SUBMISSION_ERROR_INDEX_FORMAT_LOG
+# grep -F 'INDEXCOUNT:0' $SUBMISSION_ERROR_TMP_LOG >  $SUBMISSION_ERROR_INDEX_LOG
+grep -F 'INDEX_ERROR'  $SUBMISSION_ERROR_TMP_LOG > $SUBMISSION_ERROR_INDEX_LOG
+cat $SUBMISSION_ERROR_INDEX_LOG | sed -e $SED_ARG1 -e $SED_ARG2 | tee $SUBMISSION_ERROR_INDEX_FORMAT_LOG
 
-# TODO: possible SOLR index fix:
+# INFO: possible SOLR index fix:
 # ./bin/ncbo_ontology_index -o {ONTOLOGY_ACRONYM}
 
 echo
 echo '*********************************************************************************************'
 echo "Ontologies with RDF data, without ANNOTATOR data:"
 echo
-grep -F 'ANNOTATOR_MISSING' $SUBMISSION_ERROR_TMP_LOG >  $SUBMISSION_ERROR_ANNOTATOR_LOG
-grep -F 'ANNOTATOR_ERROR'   $SUBMISSION_ERROR_TMP_LOG >> $SUBMISSION_ERROR_ANNOTATOR_LOG
-cat $SUBMISSION_ERROR_ANNOTATOR_LOG | sort -u | sed -e $SED_ARG1 -e $SED_ARG2 | tee $SUBMISSION_ERROR_ANNOTATOR_FORMAT_LOG
+grep -F 'ANNOTATIONS_UPDATING' $SUBMISSION_ERROR_TMP_LOG >  $SUBMISSION_ERROR_ANNOTATOR_LOG
+grep -F 'ANNOTATIONS_MISSING'  $SUBMISSION_ERROR_TMP_LOG >> $SUBMISSION_ERROR_ANNOTATOR_LOG
+grep -F 'ANNOTATIONS_ERROR'    $SUBMISSION_ERROR_TMP_LOG >> $SUBMISSION_ERROR_ANNOTATOR_LOG
+cat $SUBMISSION_ERROR_ANNOTATOR_LOG | sed -e $SED_ARG1 -e $SED_ARG2 | tee $SUBMISSION_ERROR_ANNOTATOR_FORMAT_LOG
 
-# TODO: possible SOLR index fix:
+# INFO: possible SOLR index fix:
 # ./bin/ncbo_ontology_annotate -o {ONTOLOGY_ACRONYM}
+
+rm $SUBMISSION_ERROR_TMP_LOG 

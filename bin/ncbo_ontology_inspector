@@ -91,17 +91,16 @@ end
 
 def submission_status4annotator(sub, submission_status)
   begin
-    processed = submission_status.include? 'ANNOTATOR'
-    unless processed
-      submission_status.push('ANNOTATIONS_MISSING')
-      return
-    end
-    # Verify the annotations are available.
-    available = get_annotator(sub)
-    if available
-      submission_status.push('ANNOTATIONS_AVAILABLE')
+    if submission_status.include? 'ANNOTATOR'
+      # Verify the annotations are available.
+      available = get_annotator(sub)
+      if available
+        submission_status.push('ANNOTATIONS_AVAILABLE')
+      else
+        submission_status.push('ANNOTATIONS_UPDATING?')
+      end
     else
-      submission_status.push('ANNOTATIONS_UPDATING?')
+      submission_status.push('ANNOTATIONS_MISSING')
     end
   rescue Exception => e
     submission_status.push("ANNOTATIONS_ERROR:#{e.message}")
@@ -134,10 +133,10 @@ def submission_status4solr(sub, submission_status)
     acronym = sub.ontology.id.to_s.split('/').last
     solr_data = get_solr_data(acronym)
     if solr_data[:count] > 0
-      if solr_data[:subId] != sub.submissionId
-        submission_status.push("INDEX_ERROR:submissionId:#{solr_data[:subId]}")
-      else
+      if solr_data[:subId] == sub.submissionId
         submission_status.push("INDEX_COUNT:#{solr_data[:count]}")
+      else
+        submission_status.push("INDEX_ERROR:submissionId:#{solr_data[:subId]}")
       end
     else
       submission_status.push("INDEX_ERROR:missing")

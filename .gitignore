@@ -1,8 +1,7 @@
 # Ignore RubyMine editor files
 .idea/
 config/config.rb
-config/config_stage.rb
-config/config_localhost.rb
+config/config_*.rb
 projectFilesBackup/
 .ruby-version
 repo*

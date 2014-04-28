@@ -93,7 +93,7 @@ GEM
     minitest (4.7.5)
     mlanett-redis-lock (0.2.6)
       redis
-    multi_json (1.9.2)
+    multi_json (1.9.3)
     net-http-persistent (2.9.4)
     oj (2.8.1)
     polyglot (0.3.4)

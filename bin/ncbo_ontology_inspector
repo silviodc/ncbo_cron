@@ -149,7 +149,13 @@ end
 def get_solr_data(acronym)
   # Note: SOLR index should contain only data from one ontology submission, i.e. it should not
   #       contain data from multiple submissions of one ontology.
+
+
+  # TODO: this search server URL will change in the April/May release.  The LD settings will contain
+  #       the collection endpoint in the URL.
   solr_select_url = "#{LinkedData.settings.search_server_url}/collection1/select"
+
+  
   query = "submissionAcronym:#{acronym}"
   response = RestClient.get solr_select_url, {:params => { :q => query, :wt => "json" }}
   json = JSON.load(response)

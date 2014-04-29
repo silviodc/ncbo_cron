@@ -111,7 +111,7 @@ def get_annotator(sub)
   # Get all classes with a limit of 5 terms, then build a text with the labels for those 5 terms.
   # Annotate the text using only the submission ontology. The annotator response should
   # contain classes from the submission ontology.
-  classes = LinkedData::Models::Class.in(sub).include(:prefLabel).all[0..4]
+  classes = LinkedData::Models::Class.in(sub).include(:prefLabel).all.sample(5)
   raise "NO CLASSES" if classes.empty?
   text_to_annotate = classes.map {|c| c.prefLabel }.join(' ')
   raise "NO CLASS PREFLABELS" if text_to_annotate.empty?

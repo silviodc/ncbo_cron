@@ -120,14 +120,23 @@ cat $SUBMISSION_ERROR_INDEX_LOG | sed -e $SED_ARG1 -e $SED_ARG2 | tee $SUBMISSIO
 
 echo
 echo '*********************************************************************************************'
-echo "Ontologies with RDF data, without ANNOTATOR data:"
+echo "Ontologies with RDF data, without ANNOTATOR status:"
 echo
-grep -F 'ANNOTATIONS_UPDATING' $SUBMISSION_ERROR_TMP_LOG >  $SUBMISSION_ERROR_ANNOTATOR_LOG
-grep -F 'ANNOTATIONS_MISSING'  $SUBMISSION_ERROR_TMP_LOG >> $SUBMISSION_ERROR_ANNOTATOR_LOG
-grep -F 'ANNOTATIONS_ERROR'    $SUBMISSION_ERROR_TMP_LOG >> $SUBMISSION_ERROR_ANNOTATOR_LOG
-cat $SUBMISSION_ERROR_ANNOTATOR_LOG | sed -e $SED_ARG1 -e $SED_ARG2 | tee $SUBMISSION_ERROR_ANNOTATOR_FORMAT_LOG
+grep -F 'ANNOTATIONS_MISSING_STATUS'  $SUBMISSION_ERROR_TMP_LOG > $SUBMISSION_ERROR_ANNOTATOR_LOG
+cat $SUBMISSION_ERROR_ANNOTATOR_LOG | sed -e $SED_ARG1 -e $SED_ARG2
 
-# INFO: possible SOLR index fix:
+echo
+echo '*********************************************************************************************'
+echo "Ontologies with RDF data, without ANNOTATIONS data:"
+echo
+grep -E 'ANNOTATIONS_MISSING_DATA|ANNOTATIONS_ERROR' $SUBMISSION_ERROR_TMP_LOG > $SUBMISSION_ERROR_ANNOTATOR_LOG
+cat $SUBMISSION_ERROR_ANNOTATOR_LOG | sed -e $SED_ARG1 -e $SED_ARG2
+
+# Process all annotation issues
+grep -E 'ANNOTATIONS_MISSING|ANNOTATIONS_ERROR' $SUBMISSION_ERROR_TMP_LOG >  $SUBMISSION_ERROR_ANNOTATOR_LOG
+cat $SUBMISSION_ERROR_ANNOTATOR_LOG | sed -e $SED_ARG1 -e $SED_ARG2 > $SUBMISSION_ERROR_ANNOTATOR_FORMAT_LOG
+
+# INFO: possible annotator fix:
 # ./bin/ncbo_ontology_annotate -o {ONTOLOGY_ACRONYM}
 
 rm $SUBMISSION_ERROR_TMP_LOG 

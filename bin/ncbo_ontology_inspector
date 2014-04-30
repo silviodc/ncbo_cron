@@ -91,16 +91,15 @@ end
 
 def submission_status4annotator(sub, submission_status)
   begin
-    if submission_status.include? 'ANNOTATOR'
-      # Verify the annotations are available.
-      available = get_annotator(sub)
-      if available
-        submission_status.push('ANNOTATIONS_AVAILABLE')
-      else
-        submission_status.push('ANNOTATIONS_UPDATING?')
-      end
+    if !submission_status.include? 'ANNOTATOR'
+      submission_status.push('ANNOTATIONS_MISSING_STATUS')
+    end
+    # Verify whether annotations are available, regardless of submission_status.
+    available = get_annotator(sub)
+    if available
+      submission_status.push('ANNOTATIONS_AVAILABLE')
     else
-      submission_status.push('ANNOTATIONS_MISSING')
+      submission_status.push('ANNOTATIONS_MISSING_DATA')
     end
   rescue Exception => e
     submission_status.push("ANNOTATIONS_ERROR:#{e.message}")
@@ -111,9 +110,13 @@ def get_annotator(sub)
   # Get all classes with a limit of 5 terms, then build a text with the labels for those 5 terms.
   # Annotate the text using only the submission ontology. The annotator response should
   # contain classes from the submission ontology.
-  classes = LinkedData::Models::Class.in(sub).include(:prefLabel).all.sample(5)
-  raise "NO CLASSES" if classes.empty?
-  text_to_annotate = classes.map {|c| c.prefLabel }.join(' ')
+  text_to_annotate = ""
+  5.times do |i|
+    classes = LinkedData::Models::Class.in(sub).include(:prefLabel).all.sample(10)
+    next if classes.nil? || classes.empty?
+    text_to_annotate = classes.map {|c| c.prefLabel }.join(' ')
+    break if text_to_annotate != ""
+  end
   raise "NO CLASS PREFLABELS" if text_to_annotate.empty?
   # annotator.annotate(text, ontologies=?, semantic_types=?, filter_integers=?,
   # expand_hierarchy_levels=?, expand_with_mappings=?, min_term_size=?, whole_word_only=?, with_synonyms=?)
@@ -121,7 +124,7 @@ def get_annotator(sub)
   annotator = Annotator::Models::NcboAnnotator.new
   annotations = annotator.annotate(text_to_annotate, {ontologies: [sub_ont]})
   return false if annotations.nil? || annotations.empty?
-  annotated_onts = annotations.map {|a| a.annotatedClass.submission.ontology.id.to_s }.to_set
+  annotated_onts = annotations.map {|a| a.annotatedClass.submission.ontology.id.to_s }.uniq
   return annotated_onts.include? sub_ont
   ## Did it return all of the classes used to generate the text_to_annotate?
   #annotated_classes = annotations.map {|a| a.annotatedClass.id.to_s }  # array of class IDs
@@ -149,13 +152,8 @@ end
 def get_solr_data(acronym)
   # Note: SOLR index should contain only data from one ontology submission, i.e. it should not
   #       contain data from multiple submissions of one ontology.
-
-
-  # TODO: this search server URL will change in the April/May release.  The LD settings will contain
-  #       the collection endpoint in the URL.
-  solr_select_url = "#{LinkedData.settings.search_server_url}/collection1/select"
-
-  
+  # The search_server_url contains the collection name in the URL.
+  solr_select_url = "#{LinkedData.settings.search_server_url}/select"
   query = "submissionAcronym:#{acronym}"
   response = RestClient.get solr_select_url, {:params => { :q => query, :wt => "json" }}
   json = JSON.load(response)

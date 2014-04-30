@@ -20,7 +20,7 @@ module NcboCron
       end
 
       def queue_submission(submission, actions={:all => true})
-        redis = Redis.new(:host => $QUEUE_REDIS_HOST, :port => $QUEUE_REDIS_PORT)
+        redis = Redis.new(:host => NcboCron.settings.redis_host, :port => NcboCron.settings.redis_port)
 
         if (actions[:all])
           actions = ACTIONS.dup
@@ -34,7 +34,7 @@ module NcboCron
       def process_queue_submissions(options = {})
         logger = options[:logger]
         logger ||= Kernel.const_defined?("LOGGER") ? Kernel.const_get("LOGGER") : Logger.new(STDOUT)
-        redis = Redis.new(:host => $QUEUE_REDIS_HOST, :port => $QUEUE_REDIS_PORT)
+        redis = Redis.new(:host => NcboCron.settings.redis_host, :port => NcboCron.settings.redis_port)
         all = queued_items(redis, logger)
 
         all.each do |process_data|
@@ -229,7 +229,7 @@ module NcboCron
 
         begin
           annotator = Annotator::Models::NcboAnnotator.new
-          annotator.create_cache_for_submission(logger, sub)
+          annotator.create_term_cache_for_submission(logger, sub)
           annotator.generate_dictionary_file()
           sub.add_submission_status(status)
         rescue Exception => e

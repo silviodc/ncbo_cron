@@ -140,15 +140,23 @@ begin
   end
 
   indexed_ontologies = []
+  remaining_ontologies = options[:ontologies].length
 
   time = Benchmark.realtime do
+    logger.info("There is a total of #{options[:ontologies].length} ontolog#{options[:ontologies].length > 1 ? "ies" : "y"} to index")
+
     if (options[:all])
       logger.info("Clearing existing index on #{options[:solr_core_url]}")
       LinkedData::Models::Class.indexClear()
       LinkedData::Models::Class.indexCommit()
     end
 
-    options[:ontologies].each { |acronym| index_ontology(indexed_ontologies, acronym, logger) }
+    options[:ontologies].each do |acronym|
+      index_ontology(indexed_ontologies, acronym, logger)
+      remaining_ontologies -= 1
+      logger.info("There is a total of #{remaining_ontologies} ontolog#{remaining_ontologies > 1 ? "ies" : "y"} remaining out of #{options[:ontologies].length} ontologies") if (remaining_ontologies > 0)
+    end
+
     logger.info("Optimizing index...")
     LinkedData::Models::Class.indexOptimize()
     logger.info("Completed optimizing index")

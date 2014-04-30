@@ -115,7 +115,12 @@ end
 abort("The Solr core URL you provided is invalid. Aborting...\n\n") unless valid_url?(options[:solr_core_url])
 
 if (options[:all] && options[:solr_core_url].downcase == LinkedData.settings.search_server_url.downcase)
-  puts "You are about to clear the main core search index. Are you sure you mean to do this?"
+  puts "WARNING: You are about to clear the main core search index on #{options[:solr_core_url]}!!! This will affect ALL searches!!! Are you sure you mean to do this?"
+elsif (options[:all])
+  puts "You are about to clear the index on #{options[:solr_core_url]} and kick off a lengthy re-indexing process. Are you sure?"
+end
+
+if (options[:all])
   puts "Type 'yes' to continue: "
   $stdout.flush
   confirm = $stdin.gets

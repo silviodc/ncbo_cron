@@ -170,6 +170,8 @@ runner.execute do |opts|
   # automatically redirect to logs on runner.execute, if the opts are set.
   require 'logger'
   log_file = File.new(options[:log_path], "a")
+  log_path = File.dirname(File.absolute_path(log_file))
+  log_filename_noExt = File.basename(log_file,".*")
   logger = Logger.new(log_file, shift_age = 'daily')
   $consoleerr = $stderr
   $consoleout = $stdout
@@ -182,7 +184,7 @@ runner.execute do |opts|
     info:  Logger::INFO,
     debug: Logger::DEBUG
   }
-  logger.level = log_levels[options[:log_level]]
+  logger.level = log_levels[options[:log_level]] || Logger::INFO
   options['logger'] = logger
 
   puts "Running ncbo_cron with options:"
@@ -211,10 +213,9 @@ runner.execute do |opts|
       pull_options.delete(:seconds_between)
       pull_options[:job_name] = "pull_thread"
       pull_options[:scheduler_type] = :cron
+      pull_log_path = File.join(log_path, "#{log_filename_noExt}-pull.log")
+      pull_logger = Logger.new(File.new(pull_log_path,'a'), 'daily')
       NcboCron::Scheduler.scheduled_locking_job(pull_options) do
-        filename = File.basename(options[:log_path]).sub(/\.\w{1,4}$/, "")
-        pull_log_path = options[:log_path].split("/")[0..-2].push("#{filename}-pull.log").join("/")
-        pull_logger = Logger.new(pull_log_path, 'daily')
         logger.info "Starting ncbo pull"; logger.flush
         logger.info "Logging pull details to #{pull_log_path}"; logger.flush
         puller = NcboCron::Models::OntologyPull.new
@@ -252,11 +253,10 @@ runner.execute do |opts|
       flush_options[:scheduler_type] = :cron
       flush_options[:cron_schedule] = flush_options[:cron_flush]
       logger.debug "Setting up the flush cron job with options #{flush_options[:cron_flush]}"; logger.flush
+      flush_log_path = File.join(log_path, "#{log_filename_noExt}-flush.log")
+      flush_logger = Logger.new(File.new(flush_log_path,'a'), 'daily')
       NcboCron::Scheduler.scheduled_locking_job(flush_options) do
         logger.info "Starting ncbo flush"; logger.flush
-        filename = File.basename(options[:log_path]).sub(/\.\w{1,4}$/, "")
-        flush_log_path = options[:log_path].split("/")[0..-2].push("#{filename}-flush.log").join("/")
-        flush_logger = Logger.new(flush_log_path, "a")
         logger.info "Logging flush details to #{flush_log_path}"; logger.flush
         t0 = Time.now
         parser = NcboCron::Models::OntologySubmissionParser.new
@@ -276,11 +276,10 @@ runner.execute do |opts|
       warmq_options[:scheduler_type] = :cron
       warmq_options[:cron_schedule] = warmq_options[:cron_warmq]
       logger.debug "Setting up warm up queries #{warmq_options[:cron_warmq]}"; logger.flush
+      warmq_log_path = File.join(log_path, "#{log_filename_noExt}-warmq.log")
+      warmq_logger = Logger.new(File.new(warmq_log_path,'a'), 'daily')
       NcboCron::Scheduler.scheduled_locking_job(warmq_options) do
         logger.info "Starting ncbo warmq"; logger.flush
-        filename = File.basename(options[:log_path]).sub(/\.\w{1,4}$/, "")
-        warmq_log_path = options[:log_path].split("/")[0..-2].push("#{filename}-warmq.log").join("/")
-        warmq_logger = Logger.new(warmq_log_path, "a")
         logger.info "Logging warmq details to #{warmq_log_path}"; logger.flush
         t0 = Time.now
         NcboCron::Models::QueryWarmer.new(warmq_logger).run

@@ -95,7 +95,7 @@ GEM
       redis
     multi_json (1.9.3)
     net-http-persistent (2.9.4)
-    oj (2.8.1)
+    oj (2.9.0)
     polyglot (0.3.4)
     pony (1.8)
       mail (>= 2.0)

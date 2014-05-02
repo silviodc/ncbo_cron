@@ -211,7 +211,7 @@ runner.execute do |opts|
       pull_options = options.dup
       pull_options.delete(:minutes_between)
       pull_options.delete(:seconds_between)
-      pull_options[:job_name] = "pull_thread"
+      pull_options[:job_name] = "ncbo_cron_pull_thread"
       pull_options[:scheduler_type] = :cron
       pull_log_path = File.join(log_path, "#{log_filename_noExt}-pull.log")
       pull_logger = Logger.new(File.new(pull_log_path,'a'), 'daily')
@@ -231,7 +231,7 @@ runner.execute do |opts|
     annotator_dictionary_rebuild_thread = Thread.new do
       logger.debug "Setting up annotator cache and dictionary rebuild cron job"; logger.flush
       annotator_dictionary_rebuild_options = options.dup
-      annotator_dictionary_rebuild_options[:job_name] = "annotator_dictionary_rebuild_thread"
+      annotator_dictionary_rebuild_options[:job_name] = "ncbo_cron_annotator_dictionary_rebuild_thread"
       annotator_dictionary_rebuild_options[:scheduler_type] = :cron
       annotator_dictionary_rebuild_options[:cron_schedule] = annotator_dictionary_rebuild_options[:annotator_dictionary_rebuild_schedule]
       NcboCron::Scheduler.scheduled_locking_job(annotator_dictionary_rebuild_options) do
@@ -249,7 +249,7 @@ runner.execute do |opts|
       flush_options = options.dup
       flush_options.delete(:minutes_between)
       flush_options.delete(:seconds_between)
-      flush_options[:job_name] = "flush_thread"
+      flush_options[:job_name] = "ncbo_cron_flush_thread"
       flush_options[:scheduler_type] = :cron
       flush_options[:cron_schedule] = flush_options[:cron_flush]
       logger.debug "Setting up the flush cron job with options #{flush_options[:cron_flush]}"; logger.flush
@@ -272,7 +272,7 @@ runner.execute do |opts|
       warmq_options = options.dup
       warmq_options.delete(:minutes_between)
       warmq_options.delete(:seconds_between)
-      warmq_options[:job_name] = "warmq_thread"
+      warmq_options[:job_name] = "ncbo_cron_warmq_thread"
       warmq_options[:scheduler_type] = :cron
       warmq_options[:cron_schedule] = warmq_options[:cron_warmq]
       logger.debug "Setting up warm up queries #{warmq_options[:cron_warmq]}"; logger.flush

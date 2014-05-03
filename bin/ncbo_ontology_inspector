@@ -34,8 +34,8 @@ opt_parser = OptionParser.new do |opts|
     options[:properties] = {}
     properties.split(',').each {|property| options[:properties][property.to_sym] = true }
   end
-  opts.on('--get_parsing_logs', 'Get ontology parsing logs when submissionStatus contains ERROR_RDF') do |properties|
-    options[:get_parsing_logs] = true
+  opts.on('--get_parsing_logs', 'Get ontology parsing logs when submissionStatus contains ERROR_RDF') do |v|
+    $get_parsing_logs = true
   end
   # Display the help screen, all programs are assumed to have this option.
   opts.on( '-h', '--help', 'Display this screen' ) do
@@ -60,7 +60,7 @@ unless options[:ontologies]
 end
 
 # # Add JIRA for creating parsing error tickets
-# if options[:get_parsing_logs]
+# if $get_parsing_logs
 #   require 'jira'
 #   username = "dlweber"
 #   password = "pots4sunet2014"
@@ -151,7 +151,7 @@ def submission_status(sub)
     # pp issue
 
 
-    if options[:get_parsing_logs]
+    if $get_parsing_logs
       begin
         # Locate submission repository and copy parsing log into logs/parsing_error_logs
         sub_repo = File.dirname(sub.uploadFilePath)

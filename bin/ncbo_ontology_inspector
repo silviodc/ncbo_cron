@@ -155,16 +155,25 @@ def submission_status(sub)
     if $get_parsing_logs
       begin
         # Locate submission repository and copy parsing log into logs/parsing_error_logs
+        cron_logpath = File.dirname(NcboCron.settings[:log_path])
+        cron_parsing_logpath = File.join(cron_logpath, 'parsing_error_logs')
+        FileUtils.mkdir_p(cron_parsing_logpath)
         sub_repo = File.dirname(sub.uploadFilePath)
         sub_parsing_logfile = Dir.entries(sub_repo).grep(/parsing\.log$/)
         unless sub_parsing_logfile.nil? || sub_parsing_logfile.empty?
-          sub_parsing_logpath = File.join(sub_repo, sub_parsing_logfile)
-          cron_logpath = File.dirname(NcboCron.settings[:log_path])
-          cron_parsing_logpath = File.join(cron_logpath, 'parsing_error_logs')
-          FileUtils.mkdir_p(cron_parsing_logpath)
+          sub_parsing_logpath = File.join(sub_repo, sub_parsing_logfile.first)
           FileUtils.cp_r(sub_parsing_logpath, cron_parsing_logpath)
           
           # TODO: append a parsing log to a JIRA issue
+          # https://github.com/sumoheavy/jira-ruby/pull/28
+
+        end
+        sub_parsing_errorsfile = Dir.entries(sub_repo).grep(/errors\.log$/)
+        unless sub_parsing_errorsfile.nil? || sub_parsing_errorsfile.empty?
+          sub_parsing_errorspath = File.join(sub_repo, sub_parsing_errorsfile.first)
+          FileUtils.cp_r(sub_parsing_errorspath, cron_parsing_logpath)
+          
+          # TODO: append an error log to a JIRA issue
           # https://github.com/sumoheavy/jira-ruby/pull/28
 
         end

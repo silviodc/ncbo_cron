@@ -62,8 +62,8 @@ end
 # # Add JIRA for creating parsing error tickets
 # if $get_parsing_logs
 #   require 'jira'
-#   username = "dlweber"
-#   password = "pots4sunet2014"
+#   username = "YOURS"
+#   password = "YOURS"
 #   options = {
 #               :username => username,
 #               :password => password,

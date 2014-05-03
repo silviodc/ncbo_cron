@@ -5,6 +5,7 @@ Signal.trap("INT") { exit! }
 
 # Setup the bundled gems in our environment
 require 'bundler/setup'
+require 'fileutils'
 require 'rest-client'
 require 'json'
 
@@ -33,6 +34,9 @@ opt_parser = OptionParser.new do |opts|
     options[:properties] = {}
     properties.split(',').each {|property| options[:properties][property.to_sym] = true }
   end
+  opts.on('--get_parsing_logs', 'Get ontology parsing logs when submissionStatus contains ERROR_RDF') do |properties|
+    options[:get_parsing_logs] = true
+  end
   # Display the help screen, all programs are assumed to have this option.
   opts.on( '-h', '--help', 'Display this screen' ) do
     puts opts
@@ -54,6 +58,28 @@ unless options[:ontologies]
   onts = LinkedData::Models::Ontology.where.include(:acronym).all  # this includes views
   options[:ontologies] = onts.map {|o| o.acronym }.sort
 end
+
+# # Add JIRA for creating parsing error tickets
+# if options[:get_parsing_logs]
+#   require 'jira'
+#   username = "dlweber"
+#   password = "pots4sunet2014"
+#   options = {
+#               :username => username,
+#               :password => password,
+#               :site     => 'https://bmir-jira.stanford.edu/',
+#               :context_path => "",
+#               :rest_base_path => "/rest/api/latest",
+#               :auth_type => :basic
+#             }
+#   ncbo_jira_client = JIRA::Client.new(options)
+#   ncbo_jira_project = ncbo_jira_client.Project.find('NCBO')
+#   # ncbo_jira_project.issues.each do |issue|
+#   #   puts "#{issue.id} - #{issue.summary}"
+#   # end
+# end
+
+
 
 
 #######################################################################################################################
@@ -82,7 +108,71 @@ end
 
 def submission_status(sub)
   submission_status = sub.submissionStatus.map {|s| s.id.to_s.split('/').last }
-  unless submission_status.map{|s| s.start_with? 'ERROR_RDF'}.any?
+  if submission_status.map{|s| s.start_with? 'ERROR_RDF'}.any?
+
+    # TODO: Create a new JIRA ticket and add the parsing log as an attachment? See
+    # https://github.com/sumoheavy/jira-ruby
+    # https://github.com/sumoheavy/jira-ruby/blob/master/example.rb
+    # http://stackoverflow.com/questions/18724965/how-to-create-remote-jira-issue-with-ruby-jira-gem
+    # https://confluence.atlassian.com/display/DOCSPRINT/The+Simplest+Possible+JIRA+REST+Examples
+    #
+    # issue.save({"fields"=>{"summary"=>"blarg from in example.rb","project"=>{"id"=>"10001"},"issuetype"=>{"id"=>"3"}}})
+    # issue.fetch
+    # pp issue
+
+    # # Create an issue
+    # # https://github.com/sumoheavy/jira-ruby/blob/master/lib/jira/resource/issue.rb
+      #
+      # has_one :reporter, :class => JIRA::Resource::User,
+      #                     :nested_under => 'fields'
+      # has_one :assignee, :class => JIRA::Resource::User,
+      #                     :nested_under => 'fields'
+      # has_one :project, :nested_under => 'fields'
+      # has_one :issuetype, :nested_under => 'fields'
+      # has_one :priority, :nested_under => 'fields'
+      # has_one :status, :nested_under => 'fields'
+      # has_many :transitions
+      # has_many :components, :nested_under => 'fields'
+      # has_many :comments, :nested_under => ['fields','comment']
+      # has_many :attachments, :nested_under => 'fields', :attribute_key => 'attachment'
+      # has_many :versions, :nested_under => 'fields'
+      # has_many :worklogs, :nested_under => ['fields','worklog']
+
+    # # ---------------
+    # issue = ncbo_jira_client.Issue.build
+    # issue.save({"fields"=>{"summary"=>"blarg from in example.rb","project"=>{"id"=>"10001"},"issuetype"=>{"id"=>"3"}}})
+    # issue.fetch
+    # pp issue
+    #
+    # # Update an issue
+    # # ---------------
+    # issue = ncbo_jira_client.Issue.find("10002")
+    # issue.save({"fields"=>{"summary"=>"EVEN MOOOOOOARRR NINJAAAA!"}})
+    # pp issue
+
+
+    if options[:get_parsing_logs]
+      begin
+        # Locate submission repository and copy parsing log into logs/parsing_error_logs
+        sub_repo = File.dirname(sub.uploadFilePath)
+        sub_parsing_logfile = Dir.entries(sub_repo).grep(/parsing\.log$/)
+        unless sub_parsing_logfile.nil? || sub_parsing_logfile.empty?
+          sub_parsing_logpath = File.join(sub_repo, sub_parsing_logfile)
+          cron_logpath = File.dirname(NcboCron.settings[:log_path])
+          cron_parsing_logpath = File.join(cron_logpath, 'parsing_error_logs')
+          FileUtils.mkdir_p(cron_parsing_logpath)
+          FileUtils.cp_r(sub_parsing_logpath, cron_parsing_logpath)
+          
+          # TODO: append a parsing log to a JIRA issue
+          # https://github.com/sumoheavy/jira-ruby/pull/28
+
+        end
+      rescue
+        # maybe log the exception?
+      end
+
+    end
+  else
     submission_status4solr(sub, submission_status) # append a SOLR count
     submission_status4annotator(sub, submission_status) # append an Annotator status
   end

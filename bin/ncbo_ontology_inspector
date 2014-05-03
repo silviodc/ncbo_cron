@@ -163,17 +163,17 @@ def submission_status(sub)
         sub_repo = File.dirname(sub.uploadFilePath)
         sub_parsing_logfile = Dir.entries(sub_repo).grep(/parsing\.log$/)
         unless sub_parsing_logfile.nil? || sub_parsing_logfile.empty?
-          sub_parsing_logfile = "#{ont_acronym}_#{sub.submissionId}_#{sub_parsing_logfile.first}"
-          sub_parsing_logpath = File.join(sub_repo, sub_parsing_logfile)
-          FileUtils.cp_r(sub_parsing_logpath, cron_parsing_logpath)
+          cron_parsing_logfile = File.join(cron_parsing_logpath, "#{ont_acronym}_#{sub.submissionId}_#{sub_parsing_logfile.first}")
+          sub_parsing_logfile = File.join(sub_repo, sub_parsing_logfile.first)
+          FileUtils.cp_r(sub_parsing_logfile, cron_parsing_logfile)
           # TODO: append a parsing log to a JIRA issue
           # https://github.com/sumoheavy/jira-ruby/pull/28
         end
         sub_parsing_errorsfile = Dir.entries(sub_repo).grep(/errors\.log$/)
         unless sub_parsing_errorsfile.nil? || sub_parsing_errorsfile.empty?
-          sub_parsing_errorsfile = "#{ont_acronym}_#{sub.submissionId}_#{sub_parsing_errorsfile.first}"
-          sub_parsing_errorspath = File.join(sub_repo, sub_parsing_errorsfile)
-          FileUtils.cp_r(sub_parsing_errorspath, cron_parsing_logpath)
+          cron_parsing_errorsfile = File.join(cron_parsing_logpath, "#{ont_acronym}_#{sub.submissionId}_#{sub_parsing_errorsfile.first}")
+          sub_parsing_errorsfile = File.join(sub_repo, sub_parsing_errorsfile.first)
+          FileUtils.cp_r(sub_parsing_errorsfile, cron_parsing_errorsfile)
           # TODO: append an error log to a JIRA issue
           # https://github.com/sumoheavy/jira-ruby/pull/28
         end

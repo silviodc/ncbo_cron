@@ -23,6 +23,7 @@ require_relative '../config/config';
 #end
 
 require 'optparse'
+$get_parsing_logs = false
 options = {}
 opt_parser = OptionParser.new do |opts|
   # Set a banner, displayed at the top of the help screen.

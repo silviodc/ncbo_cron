@@ -10,6 +10,9 @@ gem 'minitest', '< 5.0'
 gem 'pony'
 gem 'sys-proctable'
 
+# JIRA
+gem 'jira-ruby'
+
 # Monitoring
 gem 'cube-ruby', require: 'cube'
 

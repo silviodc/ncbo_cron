@@ -173,7 +173,7 @@ def submission_status(sub)
         unless sub_parsing_errorsfile.nil? || sub_parsing_errorsfile.empty?
           cron_parsing_errorsfile = File.join(cron_parsing_logpath, "#{ont_acronym}_#{sub.submissionId}_#{sub_parsing_errorsfile.first}")
           sub_parsing_errorsfile = File.join(sub_repo, sub_parsing_errorsfile.first)
-          FileUtils.cp_r(sub_parsing_errorsfile, cron_parsing_logfile)
+          FileUtils.cp_r(sub_parsing_errorsfile, cron_parsing_errorsfile)
           # TODO: append an error log to a JIRA issue
           # https://github.com/sumoheavy/jira-ruby/pull/28
         end

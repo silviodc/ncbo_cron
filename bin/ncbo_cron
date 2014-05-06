@@ -71,9 +71,6 @@ opt_parser = OptionParser.new do |opts|
   opts.on("--seconds SEC", Integer, "seconds between process queue checks") do |s|
     options[:seconds_between] = s
   end
-  opts.on("--disable-annotator-dictionary", "disable annotator cache and dictionary rebuild") do |v|
-    options[:enable_annotator_dictionary_rebuild] = false
-  end
   opts.on("--disable-processing", "disable ontology processing") do |v|
     options[:enable_processing] = false
   end
@@ -94,9 +91,6 @@ opt_parser = OptionParser.new do |opts|
   end
   opts.on("--pull-cron SCHED", String, "cron schedule for ontology pull") do |c|
     options[:cron_schedule] = c
-  end
-  opts.on("--annotator-dictionary-cron SCHED", String, "cron schedule for annotator cache and dictionary rebuild") do |c|
-    options[:annotator_dictionary_rebuild_schedule] = c
   end
   opts.on("--flush-old-graphs SCHED", String, "cron schedule to delete class graphs of archive submissions") do |c|
     options[:cron_flush] = c
@@ -226,23 +220,6 @@ runner.execute do |opts|
     end
   end
 
-  if options[:enable_annotator_dictionary_rebuild]
-    annotator_dictionary_rebuild_thread = Thread.new do
-      logger.debug "Setting up annotator cache and dictionary rebuild cron job"; logger.flush
-      annotator_dictionary_rebuild_options = options.dup
-      annotator_dictionary_rebuild_options[:job_name] = "annotator_dictionary_rebuild_thread"
-      annotator_dictionary_rebuild_options[:scheduler_type] = :cron
-      annotator_dictionary_rebuild_options[:cron_schedule] = annotator_dictionary_rebuild_options[:annotator_dictionary_rebuild_schedule]
-      NcboCron::Scheduler.scheduled_locking_job(annotator_dictionary_rebuild_options) do
-        logger.info "Starting annotator cache and dictionary rebuild"; logger.flush
-        annotator = Annotator::Models::NcboAnnotator.new
-        annotator.create_term_cache(ontologies_filter=nil, delete_cache=true)
-        annotator.generate_dictionary_file()
-        logger.info "Finished annotator cache and dictionary rebuild"; logger.flush
-      end
-    end
-  end
-
   if options[:enable_flush]
     flush_thread = Thread.new do
       flush_options = options.dup
@@ -305,5 +282,4 @@ runner.execute do |opts|
   pull_thread.join if pull_thread
   flush_thread.join if flush_thread
   warmq_thread.join if warmq_thread
-  annotator_dictionary_rebuild_thread.join if annotator_dictionary_rebuild_thread
 end

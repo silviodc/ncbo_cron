@@ -214,7 +214,8 @@ runner.execute do |opts|
       pull_options[:job_name] = "ncbo_cron_pull_thread"
       pull_options[:scheduler_type] = :cron
       pull_log_path = File.join(log_path, "#{log_filename_noExt}-pull.log")
-      pull_logger = Logger.new(File.new(pull_log_path,'a'), 'daily')
+      # pull_logger = Logger.new(File.new(pull_log_path,'a'), 'daily')
+      pull_logger = Logger.new(pull_log_path, shift_age='daily')
       NcboCron::Scheduler.scheduled_locking_job(pull_options) do
         logger.info "Starting ncbo pull"; logger.flush
         logger.info "Logging pull details to #{pull_log_path}"; logger.flush
@@ -254,7 +255,8 @@ runner.execute do |opts|
       flush_options[:cron_schedule] = flush_options[:cron_flush]
       logger.debug "Setting up the flush cron job with options #{flush_options[:cron_flush]}"; logger.flush
       flush_log_path = File.join(log_path, "#{log_filename_noExt}-flush.log")
-      flush_logger = Logger.new(File.new(flush_log_path,'a'), 'daily')
+      # flush_logger = Logger.new(File.new(flush_log_path,'a'), 'daily')
+      flush_logger = Logger.new(flush_log_path, shift_age='daily')
       NcboCron::Scheduler.scheduled_locking_job(flush_options) do
         logger.info "Starting ncbo flush"; logger.flush
         logger.info "Logging flush details to #{flush_log_path}"; logger.flush
@@ -277,7 +279,8 @@ runner.execute do |opts|
       warmq_options[:cron_schedule] = warmq_options[:cron_warmq]
       logger.debug "Setting up warm up queries #{warmq_options[:cron_warmq]}"; logger.flush
       warmq_log_path = File.join(log_path, "#{log_filename_noExt}-warmq.log")
-      warmq_logger = Logger.new(File.new(warmq_log_path,'a'), 'daily')
+      # warmq_logger = Logger.new(File.new(warmq_log_path,'a'), 'daily')
+      warmq_logger = Logger.new(warmq_log_path, shift_age='daily')
       NcboCron::Scheduler.scheduled_locking_job(warmq_options) do
         logger.info "Starting ncbo warmq"; logger.flush
         logger.info "Logging warmq details to #{warmq_log_path}"; logger.flush

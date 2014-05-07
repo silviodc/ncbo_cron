@@ -42,9 +42,6 @@ module NcboCron
     @settings.cron_flush ||= "00 23 * * 1-5"
     # Warmup long time running queries
     @settings.cron_warmq ||= "00 */4 * * *"
-    # annotator cache and dictionary rebuild
-    @settings.enable_annotator_dictionary_rebuild ||= true
-    @settings.annotator_dictionary_rebuild_schedule ||= "0 0 */3 * *" # 3 days
 
     @settings.log_level ||= :info
     unless (@settings.log_path && File.exists?(@settings.log_path))
@@ -63,6 +60,5 @@ module NcboCron
     @settings.minutes_between ||= nil
     # seconds between process queue checks
     @settings.seconds_between ||= nil
-
   end
 end

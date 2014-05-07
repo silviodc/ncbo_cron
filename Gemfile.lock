@@ -1,6 +1,6 @@
 GIT
   remote: git://github.com/ncbo/goo.git
-  revision: 6c995078d4c15bdec5356b942d2f164ba8d2853a
+  revision: 6393f2d7233053e030b6ecbe4874eca4e68a4537
   branch: staging
   specs:
     goo (0.0.2)
@@ -26,7 +26,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ontologies_linked_data.git
-  revision: 4c4c53e65eef354d52b1dccc2a149ca8efbb3ee1
+  revision: 0853615f40d67cebeece6d8cdc30ed0f32249507
   branch: staging
   specs:
     ontologies_linked_data (0.0.1)
@@ -45,7 +45,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/sparql-client.git
-  revision: 106fa6f32c88b0845037a551705c09dd782f7de0
+  revision: 1cb3adaf2e47d1bc7189fc21e3395343276c488e
   branch: staging
   specs:
     sparql-client (1.0.4.1)
@@ -69,7 +69,7 @@ PATH
 GEM
   remote: https://rubygems.org/
   specs:
-    activesupport (3.2.17)
+    activesupport (3.2.18)
       i18n (~> 0.6, >= 0.6.4)
       multi_json (~> 1.0)
     addressable (2.3.5)
@@ -79,6 +79,9 @@ GEM
     cube-ruby (0.0.3)
     dante (0.2.0)
     i18n (0.6.9)
+    jira-ruby (0.1.9)
+      activesupport
+      oauth
     json (1.8.1)
     json_pure (1.8.1)
     libxml-ruby (2.7.0)
@@ -93,9 +96,10 @@ GEM
     minitest (4.7.5)
     mlanett-redis-lock (0.2.6)
       redis
-    multi_json (1.9.3)
+    multi_json (1.10.0)
     net-http-persistent (2.9.4)
-    oj (2.8.1)
+    oauth (0.4.7)
+    oj (2.9.0)
     polyglot (0.3.4)
     pony (1.8)
       mail (>= 2.0)
@@ -134,6 +138,7 @@ PLATFORMS
 DEPENDENCIES
   cube-ruby
   goo!
+  jira-ruby
   minitest (< 5.0)
   multi_json
   ncbo_annotator!

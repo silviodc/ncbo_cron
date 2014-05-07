@@ -54,8 +54,8 @@ opt_parser = OptionParser.new do |opts|
   #  options[:dry_run] = true
   #end
 
-  options[:logfile] = "indexing.log"
-  opts.on( '-l', '--logfile FILE', "Write log to FILE (default is 'indexing.log')" ) do |filename|
+  options[:logfile] = "logs/indexing.log"
+  opts.on( '-l', '--logfile FILE', "Write log to FILE (default is 'logs/indexing.log')" ) do |filename|
     options[:logfile] = filename
   end
 

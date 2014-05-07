@@ -1,0 +1,142 @@
+#!/usr/bin/env ruby
+
+# Exit cleanly from an early interrupt
+Signal.trap("INT") { exit 1 }
+
+# Setup the bundled gems in our environment
+require 'bundler/setup'
+
+# Configure the process for the current cron configuration.
+require_relative '../lib/ncbo_cron'
+config_exists = File.exist?(File.expand_path('../../config/config.rb', __FILE__))
+abort("Please create a config/config.rb file using the config/config.rb.sample as a template") unless config_exists
+require_relative '../config/config'
+
+platform = "local"
+if LinkedData.settings.goo_host.include? "stage"
+  platform = "stage"
+elsif LinkedData.settings.goo_host.include? "prod"
+  platform = "prod"
+end
+puts "Running on #{platform} platform"
+
+require 'uri'
+require 'benchmark'
+require 'optparse'
+
+options = {all: false, generate_dictionary: false, ontologies:[]}
+opt_parser = OptionParser.new do |opts|
+  # Set a banner, displayed at the top of the help screen.
+  #opts.banner = "Usage: ncbo_ontology_annotate_generate_cache [options]"
+
+  opts.on('-p', '--redis-prefix PREFIX', 'Optional Redis prefix to be used for caching. Ex: c1:.') do |prefix|
+    options[:redis_prefix] = prefix
+  end
+
+  opts.on('-a', '--all-ontologies', 'Re-create cache for all ontologies (this or -o option required).') do
+    options[:all] = true
+  end
+
+  opts.on('-o', '--ontologies ACRONYM1,ACRONYM2,ACRONYM3', 'Comma-separated list of ontologies to cache (this or -a option required).') do |acronyms|
+    options[:ontologies] = acronyms.split(",").map {|o| o.strip}
+  end
+
+  opts.on('-r', '--remove-cache', 'Remove existing cache before re-creating the new one.') do
+    options[:remove_cache] = true
+  end
+
+  opts.on('-d', '--generate-dictionary', 'Generate a new Mgrep dictionary file upon completion of caching.') do
+    options[:generate_dictionary] = true
+  end
+
+  options[:logfile] = "logs/annotator_cache.log"
+  opts.on('-l', '--logfile FILE', "Write log to FILE (default is 'logs/annotator_cache.log').") do |filename|
+    options[:logfile] = filename
+  end
+
+  #options[:verbose] = false
+  #opts.on( '-v', '--verbose', 'Output more information' ) do
+  #  options[:verbose] = true
+  #end
+
+  # Display the help screen, all programs are assumed to have this option.
+  opts.on('-h', '--help', 'Display this screen.') do
+    puts opts
+    exit
+  end
+end
+
+# Parse the command-line. The 'parse' method simply parses ARGV, while the 'parse!' method parses ARGV and removes
+# any options found there, as well as any parameters for the options.
+opt_parser.parse!
+
+logger = Logger.new(options[:logfile])
+
+options[:remove_cache] = (options[:remove_cache].nil?) ? options[:all] : options[:remove_cache]
+annotator = Annotator::Models::NcboAnnotator.new
+cur_inst = annotator.redis_current_instance()
+redis_prefix_set = !options[:redis_prefix].nil? && !options[:redis_prefix].empty?
+suff = (redis_prefix_set) ? " on #{options[:redis_prefix]}" : ""
+
+if (options[:remove_cache] && options[:redis_prefix] == cur_inst)
+  puts "WARNING: You are about to clear the main Annotator data repository!!! This will affect ALL queries!!! Are you sure you mean to do this?"
+elsif (options[:remove_cache] && redis_prefix_set)
+  puts "You are about to clear the Annotator cache with prefix #{options[:redis_prefix]} and kick off a lengthy re-population process. Are you sure?"
+elsif (options[:remove_cache])
+  puts "You are about to clear the alternate Annotator cache repository and kick off a lengthy re-population process. Are you sure?"
+end
+
+if (options[:remove_cache])
+  puts "Type 'yes' to continue: "
+  $stdout.flush
+  confirm = $stdin.gets
+  abort("Aborting...\n\n") unless (confirm.strip == 'yes')
+end
+
+puts "Processing details are logged to #{options[:logfile]}"
+msg = ""
+
+if (options[:all])
+  msg = "Processing Annotator cache for all ontologies#{suff}..."
+else
+  msg = "Processing Annotator cache for ontologies: #{options[:ontologies]}#{suff}"
+end
+puts msg
+logger.info(msg)
+
+def min_or_sec(time)
+  return (time > 60) ? "#{(time/60).round(1)} minutes" : "#{time.round(1)} seconds"
+end
+
+begin
+  time = Benchmark.realtime do
+    annotator.create_term_cache(options[:ontologies], options[:remove_cache], options[:redis_prefix])
+  end
+
+  if (options[:all])
+    msg = "Completed processing Annotator cache for all ontologies#{suff} in #{min_or_sec(time)}."
+  else
+    msg = "Completed processing Annotator cache for ontologies: #{options[:ontologies]}#{suff} in #{min_or_sec(time)}."
+  end
+  puts msg
+  logger.info(msg)
+
+  if (options[:generate_dictionary])
+    msg = "Generating Mgrep dictionary file..."
+    puts msg
+    logger.info(msg)
+
+    time = Benchmark.realtime do
+      annotator.generate_dictionary_file()
+    end
+
+    msg = "Completed generating Mgrep dictionary file in #{min_or_sec(time)}."
+    puts msg
+    logger.info(msg)
+  end
+rescue Exception => e
+  msg = "Failed Annotator cache processing with exception: #{e.to_json}"
+  puts msg
+  logger.error(msg)
+  exit(1)
+end

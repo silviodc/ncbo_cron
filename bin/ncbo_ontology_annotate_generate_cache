@@ -73,7 +73,7 @@ opt_parser.parse!
 logger = Logger.new(options[:logfile])
 
 options[:remove_cache] = (options[:remove_cache].nil?) ? options[:all] : options[:remove_cache]
-annotator = Annotator::Models::NcboAnnotator.new
+annotator = Annotator::Models::NcboAnnotator.new(logger)
 cur_inst = annotator.redis_current_instance()
 redis_prefix_set = !options[:redis_prefix].nil? && !options[:redis_prefix].empty?
 suff = (redis_prefix_set) ? " on #{options[:redis_prefix]}" : ""

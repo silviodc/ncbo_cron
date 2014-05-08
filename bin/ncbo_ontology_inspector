@@ -145,7 +145,7 @@ def jira_issue(sub)
   ont_acronym = sub.id.split('/')[-3]
   jira_topic = "#{ont_acronym} submission has ERROR_RDF"
   description_text = "This issue is automatically created or updated by the ncbo_cron when #{ont_acronym} contains ERROR_RDF status."
-  comment_text = "#{sub.id.to_s} contains ERROR_RDF status."
+  comment_text = "#{LinkedData.settings.goo_host}, #{sub.id.to_s} contains ERROR_RDF status."
   search_query = "project = 'NCBO' AND summary ~ '#{jira_topic}'"
   search_results = Jiralicious.search(search_query)
   issue = nil

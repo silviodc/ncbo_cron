@@ -221,19 +221,13 @@ module NcboCron
         sub.bring(to_bring) if to_bring.length > 0
         sub.ontology.bring(:acronym) if sub.ontology.bring?(:acronym)
         parsed = sub.ready?(status: [:rdf, :rdf_labels])
-
         raise Exception, "Annotator entries cannot be generated on the submission #{sub.ontology.acronym}/submissions/#{sub.submissionId} because it has not been successfully parsed" unless parsed
-        status = LinkedData::Models::SubmissionStatus.find("ANNOTATOR").first
-        #remove ANNOTATOR status before starting
-        sub.remove_submission_status(status)
 
         begin
           annotator = Annotator::Models::NcboAnnotator.new
           annotator.create_term_cache_for_submission(logger, sub)
           annotator.generate_dictionary_file()
-          sub.add_submission_status(status)
         rescue Exception => e
-          sub.add_submission_status(status.get_error_status())
           logger.error(e.message + "\n" + e.backtrace.join("\n\t"))
           logger.flush()
         end

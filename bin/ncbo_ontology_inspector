@@ -170,7 +170,7 @@ def submission_status(sub)
         if issue.fields.fields_current['status']['id'].to_i > 4
           reopen_issue = {
             'update'=> {
-              "comment"=> [ { "add"=> { "body"=> "New submission failed to parse." } } ]
+              "comment"=> [ { "add"=> { "body"=> comment_text } } ]
             },
             'transition'=> {
               "id"=>"3" # reopen issue

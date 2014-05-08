@@ -1,0 +1,10 @@
+
+# https://rubygems.org/gems/jiralicious
+# https://github.com/jstewart/jiralicious
+Jiralicious.configure do |config|
+  config.username = "youruser"
+  config.password = "yourpass"
+  config.uri = "http://example.com/foo/bar"
+  config.api_version = "latest"
+  config.auth_type = :basic
+end

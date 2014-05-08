@@ -1,6 +1,6 @@
 GIT
   remote: git://github.com/ncbo/goo.git
-  revision: 6c995078d4c15bdec5356b942d2f164ba8d2853a
+  revision: 6393f2d7233053e030b6ecbe4874eca4e68a4537
   branch: staging
   specs:
     goo (0.0.2)
@@ -26,7 +26,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ontologies_linked_data.git
-  revision: 4c4c53e65eef354d52b1dccc2a149ca8efbb3ee1
+  revision: a9d5bc6d7e7ed0a5edb3aa37f06ad4440a4dd18e
   branch: staging
   specs:
     ontologies_linked_data (0.0.1)
@@ -76,12 +76,19 @@ GEM
     bcrypt (3.1.7)
     builder (3.2.2)
     coderay (1.1.0)
+    crack (0.1.8)
     cube-ruby (0.0.3)
     dante (0.2.0)
+    hashie (2.1.1)
+    httparty (0.11.0)
+      multi_json (~> 1.0)
+      multi_xml (>= 0.5.2)
     i18n (0.6.9)
-    jira-ruby (0.1.9)
-      activesupport
-      oauth
+    jiralicious (0.4.0)
+      crack (~> 0.1.8)
+      hashie (>= 1.1)
+      httparty (>= 0.10, < 0.12.0)
+      json (>= 1.6, < 1.9.0)
     json (1.8.1)
     json_pure (1.8.1)
     libxml-ruby (2.7.0)
@@ -97,8 +104,8 @@ GEM
     mlanett-redis-lock (0.2.6)
       redis
     multi_json (1.10.0)
+    multi_xml (0.5.5)
     net-http-persistent (2.9.4)
-    oauth (0.4.7)
     oj (2.9.0)
     polyglot (0.3.4)
     pony (1.8)
@@ -138,7 +145,7 @@ PLATFORMS
 DEPENDENCIES
   cube-ruby
   goo!
-  jira-ruby
+  jiralicious
   minitest (< 5.0)
   multi_json
   ncbo_annotator!

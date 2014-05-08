@@ -35,7 +35,7 @@ opt_parser = OptionParser.new do |opts|
     options[:properties] = {}
     properties.split(',').each {|property| options[:properties][property.to_sym] = true }
   end
-  opts.on('--get_parsing_logs', 'Get ontology parsing logs when submissionStatus contains ERROR_RDF') do |v|
+  opts.on('--get_parsing_logs', 'Create JIRA issue with parsing logs when submissionStatus contains ERROR_RDF') do |v|
     $get_parsing_logs = true
   end
   # Display the help screen, all programs are assumed to have this option.
@@ -60,29 +60,9 @@ unless options[:ontologies]
   options[:ontologies] = onts.map {|o| o.acronym }.sort
 end
 
-# # Add JIRA for creating parsing error tickets
-# if $get_parsing_logs
-#   require 'jira'
-#   username = "YOURS"
-#   password = "YOURS"
-#   options = {
-#               :username => username,
-#               :password => password,
-#               :site     => 'https://bmir-jira.stanford.edu/',
-#               :context_path => "",
-#               :rest_base_path => "/rest/api/latest",
-#               :auth_type => :basic
-#             }
-#   ncbo_jira_client = JIRA::Client.new(options)
-#   jira_ncbo_project = ncbo_jira_client.Project.find('NCBO')
-#   # jira_ncbo_project.issues.each do |issue|
-#   #   puts "#{issue.id} - #{issue.summary}"
-#   # end
-# end
-
 # Add JIRA for creating or updating issues
-jira_ncbo_project = nil
-jira_rest_url = nil
+$jira_ncbo_project = nil
+$jira_rest_url = nil
 if $get_parsing_logs
   # Configure the process for the current cron configuration.
   # https://rubygems.org/gems/jiralicious
@@ -91,9 +71,9 @@ if $get_parsing_logs
   config_exists = File.exist?(File.expand_path('../../config/config_jira.rb', __FILE__))
   abort("Please create a config/config_jira.rb file using the config/config_jira.rb.sample as a template") unless config_exists
   require_relative '../config/config_jira';
-  jira_ncbo_project = Jiralicious::Project.find("NCBO")
+  $jira_ncbo_project = Jiralicious::Project.find("NCBO")
   # ncbo_project.issues.each_pair {|k,v| puts k, v }
-  jira_rest_url = "https://#{Jiralicious.username}:#{Jiralicious.password}@bmir-jira.stanford.edu/rest/api/latest"
+  $jira_rest_url = "https://#{Jiralicious.username}:#{Jiralicious.password}@bmir-jira.stanford.edu/rest/api/latest"
 end
 
 
@@ -184,7 +164,7 @@ def jira_issue(sub)
         }
       }
       # Jiralicious::Issue.update( reopen_issue, issue.jira_key )
-      jira_issue_transition_url = "#{jira_rest_url}/issue/#{issue.jira_key}/transitions?expand=transitions.fields" 
+      jira_issue_transition_url = "#{$jira_rest_url}/issue/#{issue.jira_key}/transitions?expand=transitions.fields" 
       response = RestClient.post jira_issue_transition_url, reopen_issue.to_json, :content_type => :json, :accept => :json
     end
   else
@@ -201,20 +181,20 @@ def jira_issue(sub)
           "project"=> { "key"=> "NCBO" },
           "summary" => jira_topic,
           "description" => description_text,
-          "comment" => comment_text,
           "issuetype"=> { "name"=> "Bug" }
        }
     }
     # problems with Jiralicious, see:  https://github.com/jstewart/jiralicious/issues/31
     # issue = Jiralicious::Issue.new(issue_hash)
-    response = RestClient.post "#{jira_rest_url}/issue", issue_hash.to_json, :content_type => :json, :accept => :json
+    response = RestClient.post "#{$jira_rest_url}/issue", issue_hash.to_json, :content_type => :json, :accept => :json
     # 2. get the issuekey and find the new issue
     issue_key = JSON.parse(response)['key'] 
     issue = Jiralicious::Issue.find(issue_key)
+    issue.comments.add(comment_text) # automatically saved/pushed to JIRA
   end
   unless issue.nil?
     # 3. POST attachments to the JIRA issue using /rest/api/2/issue/{issuekey}/attachments
-    issue_attachment_url = "#{jira_rest_url}/issue/#{issue.jira_key}/attachments"
+    issue_attachment_url = "#{$jira_rest_url}/issue/#{issue.jira_key}/attachments"
     unless cron_parsing_logfile.nil?
       # Get this working with RestClient?
       # RestClient.post( issue_attachment_url, :file => File.new(cron_parsing_logfile), headers = {'X-Atlassian-Token'=>'nocheck'} )

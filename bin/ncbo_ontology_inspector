@@ -198,12 +198,12 @@ def jira_issue(sub)
     unless cron_parsing_logfile.nil?
       # Get this working with RestClient?
       # RestClient.post( issue_attachment_url, :file => File.new(cron_parsing_logfile), headers = {'X-Atlassian-Token'=>'nocheck'} )
-      system("curl -s -u #{Jiralicious.username}:#{Jiralicious.password} -X POST -H 'X-Atlassian-Token: nocheck' -F 'file=@#{cron_parsing_logfile}' #{issue_attachment_url}")
+      system("curl -s -o /dev/null -u #{Jiralicious.username}:#{Jiralicious.password} -X POST -H 'X-Atlassian-Token: nocheck' -F 'file=@#{cron_parsing_logfile}' #{issue_attachment_url}")
     end
     unless cron_parsing_errorsfile.nil?
       # Get this working with RestClient?
       # RestClient.post( issue_attachment_url, :file => File.new(cron_parsing_errorsfile), headers = {'X-Atlassian-Token'=>'nocheck'} )
-      system("curl -s -u #{Jiralicious.username}:#{Jiralicious.password} -X POST -H 'X-Atlassian-Token: nocheck' -F 'file=@#{cron_parsing_errorsfile}' #{issue_attachment_url}")
+      system("curl -s -o /dev/null -u #{Jiralicious.username}:#{Jiralicious.password} -X POST -H 'X-Atlassian-Token: nocheck' -F 'file=@#{cron_parsing_errorsfile}' #{issue_attachment_url}")
     end
   end
 end

@@ -11,7 +11,8 @@ gem 'pony'
 gem 'sys-proctable'
 
 # JIRA
-gem 'jira-ruby'
+# gem 'jira-ruby'
+gem 'jiralicious'
 
 # Monitoring
 gem 'cube-ruby', require: 'cube'

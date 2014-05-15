@@ -16,7 +16,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ncbo_annotator.git
-  revision: 71d7fa90b3853cd83649f1a77322b64a47cdaa51
+  revision: 28c2fa1844cfdbff707cb14cccbbdd25f452c98c
   branch: staging
   specs:
     ncbo_annotator (0.0.1)
@@ -112,7 +112,7 @@ GEM
     nokogiri (1.6.2.1)
       mini_portile (= 0.6.0)
     oauth (0.4.7)
-    oj (2.9.0)
+    oj (2.9.2)
     polyglot (0.3.4)
     pony (1.8)
       mail (>= 2.0)

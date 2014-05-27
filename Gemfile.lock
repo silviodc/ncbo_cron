@@ -140,7 +140,7 @@ GEM
     thread_safe (0.3.3)
     treetop (1.5.3)
       polyglot (~> 0.3)
-    tzinfo (1.1.0)
+    tzinfo (1.2.0)
       thread_safe (~> 0.1)
     uuid (2.3.7)
       macaddr (~> 1.0)

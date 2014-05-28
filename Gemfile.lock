@@ -137,7 +137,7 @@ GEM
     slop (3.5.0)
     sys-proctable (0.9.4)
     systemu (2.6.4)
-    thread_safe (0.3.3)
+    thread_safe (0.3.4)
     treetop (1.5.3)
       polyglot (~> 0.3)
     tzinfo (1.2.0)

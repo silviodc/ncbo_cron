@@ -16,7 +16,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ncbo_annotator.git
-  revision: af5970e658f40839c17b743a40e0ed076d648803
+  revision: dd9c345d7818b663fa6622fb5e291f50769d95b1
   branch: staging
   specs:
     ncbo_annotator (0.0.1)
@@ -26,7 +26,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ontologies_linked_data.git
-  revision: 246a4262ca1cd6da59d1c6344b83bf9773321fc4
+  revision: d89e392e5548ddf2fa5c664bdeeee3bec3472dd8
   branch: staging
   specs:
     ontologies_linked_data (0.0.1)
@@ -112,7 +112,7 @@ GEM
     nokogiri (1.6.2.1)
       mini_portile (= 0.6.0)
     oauth (0.4.7)
-    oj (2.9.3)
+    oj (2.9.4)
     polyglot (0.3.4)
     pony (1.8)
       mail (>= 2.0)

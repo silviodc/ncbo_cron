@@ -71,9 +71,6 @@ opt_parser = OptionParser.new do |opts|
   opts.on("--seconds SEC", Integer, "seconds between process queue checks") do |s|
     options[:seconds_between] = s
   end
-  opts.on("--disable-annotator-dictionary", "disable annotator cache and dictionary rebuild") do |v|
-    options[:enable_annotator_dictionary_rebuild] = false
-  end
   opts.on("--disable-processing", "disable ontology processing") do |v|
     options[:enable_processing] = false
   end
@@ -94,9 +91,6 @@ opt_parser = OptionParser.new do |opts|
   end
   opts.on("--pull-cron SCHED", String, "cron schedule for ontology pull") do |c|
     options[:cron_schedule] = c
-  end
-  opts.on("--annotator-dictionary-cron SCHED", String, "cron schedule for annotator cache and dictionary rebuild") do |c|
-    options[:annotator_dictionary_rebuild_schedule] = c
   end
   opts.on("--flush-old-graphs SCHED", String, "cron schedule to delete class graphs of archive submissions") do |c|
     options[:cron_flush] = c
@@ -170,7 +164,9 @@ runner.execute do |opts|
   # automatically redirect to logs on runner.execute, if the opts are set.
   require 'logger'
   log_file = File.new(options[:log_path], "a")
-  logger = Logger.new(log_file, shift_age = 'daily')
+  log_path = File.dirname(File.absolute_path(log_file))
+  log_filename_noExt = File.basename(log_file,".*")
+  logger = Logger.new(log_file, shift_age='daily')
   $consoleerr = $stderr
   $consoleout = $stdout
   $stderr = log_file
@@ -182,7 +178,7 @@ runner.execute do |opts|
     info:  Logger::INFO,
     debug: Logger::DEBUG
   }
-  logger.level = log_levels[options[:log_level]]
+  logger.level = log_levels[options[:log_level]] || Logger::INFO
   options['logger'] = logger
 
   puts "Running ncbo_cron with options:"
@@ -209,12 +205,11 @@ runner.execute do |opts|
       pull_options = options.dup
       pull_options.delete(:minutes_between)
       pull_options.delete(:seconds_between)
-      pull_options[:job_name] = "pull_thread"
+      pull_options[:job_name] = "ncbo_cron_pull_thread"
       pull_options[:scheduler_type] = :cron
+      pull_log_path = File.join(log_path, "#{log_filename_noExt}-pull.log")
+      pull_logger = Logger.new(pull_log_path, shift_age='daily')
       NcboCron::Scheduler.scheduled_locking_job(pull_options) do
-        filename = File.basename(options[:log_path]).sub(/\.\w{1,4}$/, "")
-        pull_log_path = options[:log_path].split("/")[0..-2].push("#{filename}-pull.log").join("/")
-        pull_logger = Logger.new(pull_log_path, 'daily')
         logger.info "Starting ncbo pull"; logger.flush
         logger.info "Logging pull details to #{pull_log_path}"; logger.flush
         puller = NcboCron::Models::OntologyPull.new
@@ -226,37 +221,19 @@ runner.execute do |opts|
     end
   end
 
-  if options[:enable_annotator_dictionary_rebuild]
-    annotator_dictionary_rebuild_thread = Thread.new do
-      logger.debug "Setting up annotator cache and dictionary rebuild cron job"; logger.flush
-      annotator_dictionary_rebuild_options = options.dup
-      annotator_dictionary_rebuild_options[:job_name] = "annotator_dictionary_rebuild_thread"
-      annotator_dictionary_rebuild_options[:scheduler_type] = :cron
-      annotator_dictionary_rebuild_options[:cron_schedule] = annotator_dictionary_rebuild_options[:annotator_dictionary_rebuild_schedule]
-      NcboCron::Scheduler.scheduled_locking_job(annotator_dictionary_rebuild_options) do
-        logger.info "Starting annotator cache and dictionary rebuild"; logger.flush
-        annotator = Annotator::Models::NcboAnnotator.new
-        annotator.create_term_cache(ontologies_filter=nil, delete_cache=true)
-        annotator.generate_dictionary_file()
-        logger.info "Finished annotator cache and dictionary rebuild"; logger.flush
-      end
-    end
-  end
-
   if options[:enable_flush]
     flush_thread = Thread.new do
       flush_options = options.dup
       flush_options.delete(:minutes_between)
       flush_options.delete(:seconds_between)
-      flush_options[:job_name] = "flush_thread"
+      flush_options[:job_name] = "ncbo_cron_flush_thread"
       flush_options[:scheduler_type] = :cron
       flush_options[:cron_schedule] = flush_options[:cron_flush]
       logger.debug "Setting up the flush cron job with options #{flush_options[:cron_flush]}"; logger.flush
+      flush_log_path = File.join(log_path, "#{log_filename_noExt}-flush.log")
+      flush_logger = Logger.new(flush_log_path, shift_age='daily')
       NcboCron::Scheduler.scheduled_locking_job(flush_options) do
         logger.info "Starting ncbo flush"; logger.flush
-        filename = File.basename(options[:log_path]).sub(/\.\w{1,4}$/, "")
-        flush_log_path = options[:log_path].split("/")[0..-2].push("#{filename}-flush.log").join("/")
-        flush_logger = Logger.new(flush_log_path, "a")
         logger.info "Logging flush details to #{flush_log_path}"; logger.flush
         t0 = Time.now
         parser = NcboCron::Models::OntologySubmissionParser.new
@@ -272,15 +249,14 @@ runner.execute do |opts|
       warmq_options = options.dup
       warmq_options.delete(:minutes_between)
       warmq_options.delete(:seconds_between)
-      warmq_options[:job_name] = "warmq_thread"
+      warmq_options[:job_name] = "ncbo_cron_warmq_thread"
       warmq_options[:scheduler_type] = :cron
       warmq_options[:cron_schedule] = warmq_options[:cron_warmq]
       logger.debug "Setting up warm up queries #{warmq_options[:cron_warmq]}"; logger.flush
+      warmq_log_path = File.join(log_path, "#{log_filename_noExt}-warmq.log")
+      warmq_logger = Logger.new(warmq_log_path, shift_age='daily')
       NcboCron::Scheduler.scheduled_locking_job(warmq_options) do
         logger.info "Starting ncbo warmq"; logger.flush
-        filename = File.basename(options[:log_path]).sub(/\.\w{1,4}$/, "")
-        warmq_log_path = options[:log_path].split("/")[0..-2].push("#{filename}-warmq.log").join("/")
-        warmq_logger = Logger.new(warmq_log_path, "a")
         logger.info "Logging warmq details to #{warmq_log_path}"; logger.flush
         t0 = Time.now
         NcboCron::Models::QueryWarmer.new(warmq_logger).run
@@ -305,5 +281,4 @@ runner.execute do |opts|
   pull_thread.join if pull_thread
   flush_thread.join if flush_thread
   warmq_thread.join if warmq_thread
-  annotator_dictionary_rebuild_thread.join if annotator_dictionary_rebuild_thread
 end

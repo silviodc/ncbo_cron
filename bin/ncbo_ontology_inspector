@@ -5,6 +5,7 @@ Signal.trap("INT") { exit! }
 
 # Setup the bundled gems in our environment
 require 'bundler/setup'
+require 'fileutils'
 require 'rest-client'
 require 'json'
 
@@ -22,6 +23,7 @@ require_relative '../config/config';
 #end
 
 require 'optparse'
+$get_parsing_logs = false
 options = {}
 opt_parser = OptionParser.new do |opts|
   # Set a banner, displayed at the top of the help screen.
@@ -33,6 +35,9 @@ opt_parser = OptionParser.new do |opts|
     options[:properties] = {}
     properties.split(',').each {|property| options[:properties][property.to_sym] = true }
   end
+  opts.on('--get_parsing_logs', 'Create JIRA issue with parsing logs when submissionStatus contains ERROR_RDF') do |v|
+    $get_parsing_logs = true
+  end
   # Display the help screen, all programs are assumed to have this option.
   opts.on( '-h', '--help', 'Display this screen' ) do
     puts opts
@@ -43,9 +48,9 @@ end
 # any options found there, as well as any parameters for the options.
 opt_parser.parse!
 unless options[:properties]
-  # TODO: enable a default to report 'all' properties.
+  # INFO: maybe enable a default to report 'all' properties.
   #options[:properties] = [:all]
-  # Don't assume anything, ask for properties explicitly.
+  # OR: don't assume anything, ask for properties explicitly.
   puts opt_parser.help
   exit(1)
 end
@@ -54,6 +59,23 @@ unless options[:ontologies]
   onts = LinkedData::Models::Ontology.where.include(:acronym).all  # this includes views
   options[:ontologies] = onts.map {|o| o.acronym }.sort
 end
+
+# Add JIRA for creating or updating issues
+$jira_ncbo_project = nil
+$jira_rest_url = nil
+if $get_parsing_logs
+  # Configure the process for the current cron configuration.
+  # https://rubygems.org/gems/jiralicious
+  # https://github.com/jstewart/jiralicious
+  require 'jiralicious'
+  config_exists = File.exist?(File.expand_path('../../config/config_jira.rb', __FILE__))
+  abort("Please create a config/config_jira.rb file using the config/config_jira.rb.sample as a template") unless config_exists
+  require_relative '../config/config_jira';
+  $jira_ncbo_project = Jiralicious::Project.find("NCBO")
+  # ncbo_project.issues.each_pair {|k,v| puts k, v }
+  $jira_rest_url = "https://#{Jiralicious.username}:#{Jiralicious.password}@bmir-jira.stanford.edu/rest/api/latest"
+end
+
 
 
 #######################################################################################################################
@@ -82,12 +104,110 @@ end
 
 def submission_status(sub)
   submission_status = sub.submissionStatus.map {|s| s.id.to_s.split('/').last }
-  unless submission_status.map{|s| s.start_with? 'ERROR_RDF'}.any?
+  if submission_status.map{|s| s.start_with? 'ERROR_RDF'}.any?
+    jira_issue(sub) if $get_parsing_logs
+  else
     submission_status4solr(sub, submission_status) # append a SOLR count
     submission_status4annotator(sub, submission_status) # append an Annotator status
   end
   return submission_status.join(',')
 end
+
+def jira_issue(sub)
+  cron_parsing_logfile = nil
+  cron_parsing_errorsfile = nil
+  begin
+    # Locate submission repository and copy parsing log into logs/parsing_error_logs
+    cron_logpath = File.dirname(NcboCron.settings[:log_path])
+    cron_parsing_logpath = File.join(cron_logpath, 'parsing_error_logs')
+    FileUtils.mkdir_p(cron_parsing_logpath)
+    # Locate the submission repository
+    ont_acronym = sub.ontology.id.to_s.split('/').last
+    sub_repo = File.dirname(sub.uploadFilePath)
+    sub_parsing_logfile = Dir.entries(sub_repo).grep(/parsing\.log$/)
+    unless sub_parsing_logfile.nil? || sub_parsing_logfile.empty?
+      cron_parsing_logfile = File.join(cron_parsing_logpath, "#{ont_acronym}_#{sub.submissionId}_#{sub_parsing_logfile.first}")
+      sub_parsing_logfile = File.join(sub_repo, sub_parsing_logfile.first)
+      FileUtils.cp_r(sub_parsing_logfile, cron_parsing_logfile)
+    end
+    sub_parsing_errorsfile = Dir.entries(sub_repo).grep(/errors\.log$/)
+    unless sub_parsing_errorsfile.nil? || sub_parsing_errorsfile.empty?
+      cron_parsing_errorsfile = File.join(cron_parsing_logpath, "#{ont_acronym}_#{sub.submissionId}_#{sub_parsing_errorsfile.first}")
+      sub_parsing_errorsfile = File.join(sub_repo, sub_parsing_errorsfile.first)
+      FileUtils.cp_r(sub_parsing_errorsfile, cron_parsing_errorsfile)
+    end
+  rescue
+    # maybe log the exception?
+  end
+  # Add or update a JIRA issue.
+  # Search for an existing JIRA issue on this topic.
+  # https://confluence.atlassian.com/display/JIRA/Advanced+Searching#AdvancedSearching-Summary
+  ont_acronym = sub.id.split('/')[-3]
+  jira_topic = "#{ont_acronym} submission has ERROR_RDF"
+  description_text = "This issue is automatically created or updated by the ncbo_cron when #{ont_acronym} contains ERROR_RDF status."
+  comment_text = "#{LinkedData.settings.goo_host}, #{sub.id.to_s} contains ERROR_RDF status."
+  search_query = "project = 'NCBO' AND summary ~ '#{jira_topic}'"
+  search_results = Jiralicious.search(search_query)
+  issue = nil
+  if search_results.num_results > 0
+    # Update this issue with new content (assume the first match is the right one)
+    issue = search_results.issues.first
+    issue.comments.add(comment_text) # automatically saved/pushed to JIRA
+    # If issue status is closed, reopen it.
+    if issue.fields.fields_current['status']['id'].to_i > 4
+      reopen_issue = {
+        'update'=> {
+          "comment"=> [ { "add"=> { "body"=> comment_text } } ]
+        },
+        'transition'=> {
+          "id"=>"3" # reopen issue
+        }
+      }
+      # Jiralicious::Issue.update( reopen_issue, issue.jira_key )
+      jira_issue_transition_url = "#{$jira_rest_url}/issue/#{issue.jira_key}/transitions?expand=transitions.fields" 
+      response = RestClient.post jira_issue_transition_url, reopen_issue.to_json, :content_type => :json, :accept => :json
+    end
+  else
+    # Create a new JIRA issue
+    # https://github.com/sumoheavy/jira-ruby
+    # https://github.com/sumoheavy/jira-ruby/blob/master/example.rb
+    # http://stackoverflow.com/questions/18724965/how-to-create-remote-jira-issue-with-ruby-jira-gem
+    # https://confluence.atlassian.com/display/DOCSPRINT/The+Simplest+Possible+JIRA+REST+Examples
+    # http://eveningsamurai.wordpress.com/2013/08/14/jira-rest-api-example-with-ruby/
+    # https://developer.atlassian.com/display/JIRADEV/JIRA+REST+API+Example+-+Create+Issue
+    # 1. create an issue
+    issue_hash = {
+        "fields"=> {
+          "project"=> { "key"=> "NCBO" },
+          "summary" => jira_topic,
+          "description" => description_text,
+          "issuetype"=> { "name"=> "Bug" }
+       }
+    }
+    # problems with Jiralicious, see:  https://github.com/jstewart/jiralicious/issues/31
+    # issue = Jiralicious::Issue.new(issue_hash)
+    response = RestClient.post "#{$jira_rest_url}/issue", issue_hash.to_json, :content_type => :json, :accept => :json
+    # 2. get the issuekey and find the new issue
+    issue_key = JSON.parse(response)['key'] 
+    issue = Jiralicious::Issue.find(issue_key)
+    issue.comments.add(comment_text) # automatically saved/pushed to JIRA
+  end
+  unless issue.nil?
+    # 3. POST attachments to the JIRA issue using /rest/api/2/issue/{issuekey}/attachments
+    issue_attachment_url = "#{$jira_rest_url}/issue/#{issue.jira_key}/attachments"
+    unless cron_parsing_logfile.nil?
+      # Get this working with RestClient?
+      # RestClient.post( issue_attachment_url, :file => File.new(cron_parsing_logfile), headers = {'X-Atlassian-Token'=>'nocheck'} )
+      system("curl -s -o /dev/null -u #{Jiralicious.username}:#{Jiralicious.password} -X POST -H 'X-Atlassian-Token: nocheck' -F 'file=@#{cron_parsing_logfile}' #{issue_attachment_url}")
+    end
+    unless cron_parsing_errorsfile.nil?
+      # Get this working with RestClient?
+      # RestClient.post( issue_attachment_url, :file => File.new(cron_parsing_errorsfile), headers = {'X-Atlassian-Token'=>'nocheck'} )
+      system("curl -s -o /dev/null -u #{Jiralicious.username}:#{Jiralicious.password} -X POST -H 'X-Atlassian-Token: nocheck' -F 'file=@#{cron_parsing_errorsfile}' #{issue_attachment_url}")
+    end
+  end
+end
+
 
 def submission_status4annotator(sub, submission_status)
   begin

@@ -16,7 +16,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ncbo_annotator.git
-  revision: 0990d8a8e300b733b44249f78b71e9f9fda16fff
+  revision: e66f33cef4fc466bb11b78adec691b4a8f3e8839
   branch: staging
   specs:
     ncbo_annotator (0.0.1)
@@ -26,7 +26,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ontologies_linked_data.git
-  revision: 0b3a71ce5c4bc697881ba0e89f707112ce528239
+  revision: f19e3de3e42aac71caf938f8212f289aedeb82d2
   branch: staging
   specs:
     ontologies_linked_data (0.0.1)
@@ -96,10 +96,8 @@ GEM
     libxml-ruby (2.7.0)
     macaddr (1.7.1)
       systemu (~> 2.6.2)
-    mail (2.2.7)
-      activesupport (>= 2.3.6)
-      mime-types
-      treetop (>= 1.4.5)
+    mail (2.6.0)
+      mime-types (>= 1.16, < 3)
     method_source (0.8.2)
     mime-types (2.3)
     mini_portile (0.6.0)
@@ -113,7 +111,6 @@ GEM
       mini_portile (= 0.6.0)
     oauth (0.4.7)
     oj (2.9.4)
-    polyglot (0.3.5)
     pony (1.8)
       mail (>= 2.0)
     pry (0.9.12.6)
@@ -138,8 +135,6 @@ GEM
     sys-proctable (0.9.4)
     systemu (2.6.4)
     thread_safe (0.3.4)
-    treetop (1.5.3)
-      polyglot (~> 0.3)
     tzinfo (1.2.1)
       thread_safe (~> 0.1)
     uuid (2.3.7)

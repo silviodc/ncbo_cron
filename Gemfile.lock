@@ -76,44 +76,24 @@ GEM
     bcrypt (3.1.7)
     builder (3.2.2)
     coderay (1.1.0)
-    crack (0.1.8)
     cube-ruby (0.0.3)
     dante (0.2.0)
-    hashie (2.1.1)
-    httparty (0.13.1)
-      json (~> 1.8)
-      multi_xml (>= 0.5.2)
     i18n (0.6.9)
-    jiralicious (0.4.3)
-      crack (~> 0.1.8)
-      hashie (>= 1.1)
-      httparty (>= 0.10)
-      json (>= 1.6, < 1.9.0)
-      nokogiri
-      oauth
     json (1.8.1)
     json_pure (1.8.1)
     libxml-ruby (2.7.0)
     macaddr (1.7.1)
       systemu (~> 2.6.2)
-    mail (2.2.7)
-      activesupport (>= 2.3.6)
-      mime-types
-      treetop (>= 1.4.5)
+    mail (2.6.0)
+      mime-types (>= 1.16, < 3)
     method_source (0.8.2)
     mime-types (2.3)
-    mini_portile (0.6.0)
     minitest (4.7.5)
     mlanett-redis-lock (0.2.6)
       redis
     multi_json (1.10.1)
-    multi_xml (0.5.5)
     net-http-persistent (2.9.4)
-    nokogiri (1.6.2.1)
-      mini_portile (= 0.6.0)
-    oauth (0.4.7)
     oj (2.9.4)
-    polyglot (0.3.5)
     pony (1.8)
       mail (>= 2.0)
     pry (0.9.12.6)
@@ -138,9 +118,7 @@ GEM
     sys-proctable (0.9.4)
     systemu (2.6.4)
     thread_safe (0.3.4)
-    treetop (1.5.3)
-      polyglot (~> 0.3)
-    tzinfo (1.2.0)
+    tzinfo (1.2.1)
       thread_safe (~> 0.1)
     uuid (2.3.7)
       macaddr (~> 1.0)
@@ -151,7 +129,6 @@ PLATFORMS
 DEPENDENCIES
   cube-ruby
   goo!
-  jiralicious
   minitest (< 5.0)
   multi_json
   ncbo_annotator!

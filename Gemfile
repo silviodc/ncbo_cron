@@ -12,7 +12,7 @@ gem 'sys-proctable'
 
 # JIRA
 # gem 'jira-ruby'
-gem 'jiralicious'
+# gem 'jiralicious'
 
 # Monitoring
 gem 'cube-ruby', require: 'cube'

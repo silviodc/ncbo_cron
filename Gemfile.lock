@@ -16,7 +16,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ncbo_annotator.git
-  revision: 29a1cb7edad98c54fb078b5405691600220c099c
+  revision: cbc89af41d7118932a5065689d91a31f76aac7f5
   branch: staging
   specs:
     ncbo_annotator (0.0.1)
@@ -113,9 +113,9 @@ GEM
     oj (2.9.5)
     pony (1.8)
       mail (>= 2.0)
-    pry (0.9.12.6)
-      coderay (~> 1.0)
-      method_source (~> 0.8)
+    pry (0.10.0)
+      coderay (~> 1.1.0)
+      method_source (~> 0.8.1)
       slop (~> 3.4)
     rack (1.5.2)
     rack-test (0.6.2)

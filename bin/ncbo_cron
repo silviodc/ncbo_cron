@@ -50,25 +50,25 @@ opt_parser = OptionParser.new do |opts|
   opts.on("--console", "REPL for working with scheduler") do |v|
     options[:console] = true
   end
-  opts.on("--view-queue", "view queued jobs") do |v|
+  opts.on("-v", "--view-queue", "view queued jobs") do |v|
     options[:view_queue] = true
   end
-  opts.on("--add-submission ID", String, "submission id to add to the queue") do |v|
+  opts.on("-a", "--add-submission ID", String, "submission id to add to the queue") do |v|
     options[:queue_submission] = v
   end
-  opts.on("--redis-host HOST", String, "redis host (for shared locking)", "(default: #{options[:redis_host]})") do |host|
+  opts.on("-h", "--redis-host HOST", String, "redis host (for shared locking)", "(default: #{options[:redis_host]})") do |host|
     options[:redis_host] = host
   end
-  opts.on("--redis-port PORT", Integer, "redis port (for shared locking)", "(default: #{options[:redis_port]})") do |port|
+  opts.on("-p", "--redis-port PORT", Integer, "redis port (for shared locking)", "(default: #{options[:redis_port]})") do |port|
     options[:redis_port] = port
   end
-  opts.on("--log-level LEVEL", String, "set the log level (debug, info, error)", "(default: info)") do |c|
+  opts.on("-l", "--log-level LEVEL", String, "set the log level (debug, info, error)", "(default: info)") do |c|
     options[:log_level] = c.to_sym
   end
-  opts.on("--minutes MIN", Integer, "minutes between process queue checks (override seconds)") do |m|
+  opts.on("-m", "--minutes MIN", Integer, "minutes between process queue checks (override seconds)") do |m|
     options[:minutes_between] = m
   end
-  opts.on("--seconds SEC", Integer, "seconds between process queue checks") do |s|
+  opts.on("-s", "--seconds SEC", Integer, "seconds between process queue checks") do |s|
     options[:seconds_between] = s
   end
   opts.on("--disable-processing", "disable ontology processing") do |v|
@@ -89,13 +89,13 @@ opt_parser = OptionParser.new do |opts|
   opts.on("--pull-umls-url URL", "set UMLS pull location") do |v|
     options[:pull_umls_url] = v
   end
-  opts.on("--pull-cron SCHED", String, "cron schedule for ontology pull") do |c|
+  opts.on("-c", "--pull-cron SCHED", String, "cron schedule for ontology pull") do |c|
     options[:cron_schedule] = c
   end
-  opts.on("--flush-old-graphs SCHED", String, "cron schedule to delete class graphs of archive submissions") do |c|
+  opts.on("-f", "--flush-old-graphs SCHED", String, "cron schedule to delete class graphs of archive submissions") do |c|
     options[:cron_flush] = c
   end
-  opts.on("--warm-long-queries SCHED", String, "cron schedule to warmup long time running queries") do |c|
+  opts.on("-w", "--warm-long-queries SCHED", String, "cron schedule to warmup long time running queries") do |c|
     options[:cron_warmq] = c
   end
   # Display the help screen, all programs are assumed to have this option.

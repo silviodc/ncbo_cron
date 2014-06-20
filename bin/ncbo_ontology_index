@@ -162,9 +162,11 @@ begin
       logger.info("There is a total of #{remaining_ontologies} ontolog#{remaining_ontologies > 1 ? "ies" : "y"} remaining out of #{options[:ontologies].length} ontologies") if (remaining_ontologies > 0)
     end
 
-    logger.info("Optimizing index...")
-    LinkedData::Models::Class.indexOptimize()
-    logger.info("Completed optimizing index")
+    if options[:all]
+      logger.info("Optimizing index...")
+      LinkedData::Models::Class.indexOptimize()
+      logger.info("Completed optimizing index")
+    end
   end
 
   if (options[:all])

@@ -5,6 +5,7 @@ GIT
   specs:
     goo (0.0.2)
       addressable (= 2.3.5)
+      oj
       pry
       rdf (= 1.0.8)
       redis
@@ -16,7 +17,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ncbo_annotator.git
-  revision: 900d65c414dfbe70dec33421c5b3ccf71b249ec1
+  revision: 54442d43cc2f1315a77df800da1eec2d7787deda
   branch: staging
   specs:
     ncbo_annotator (0.0.1)
@@ -133,6 +134,7 @@ DEPENDENCIES
   multi_json
   ncbo_annotator!
   ncbo_cron!
+  oj
   ontologies_linked_data!
   pony
   pry

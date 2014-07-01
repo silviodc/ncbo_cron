@@ -36,8 +36,10 @@ module NcboCron
 
     # Schedulues
     @settings.cron_schedule ||= "30 */4 * * *"
+    # Pull schedule
+    @settings.pull_schedule ||= "00 18 * * *"
     # Delete class graphs of archive submissions
-    @settings.cron_flush ||= "00 23 * * 1-5"
+    @settings.cron_flush ||= "00 22 * * 2"
     # Warmup long time running queries
     @settings.cron_warmq ||= "00 */4 * * *"
 
@@ -55,7 +57,7 @@ module NcboCron
     @settings.pid_path ||= pid_path
 
     # minutes between process queue checks (override seconds)
-    @settings.minutes_between ||= nil
+    @settings.minutes_between ||= 5
     # seconds between process queue checks
     @settings.seconds_between ||= nil
 

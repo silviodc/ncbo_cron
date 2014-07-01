@@ -4,6 +4,7 @@ gemspec
 
 gem 'rake'
 gem 'pry'
+gem 'oj'
 gem 'multi_json'
 gem 'redis'
 gem 'minitest', '< 5.0'

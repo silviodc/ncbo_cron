@@ -10,8 +10,6 @@ module NcboCron
     return if @settings_run
     @settings_run = true
 
-    yield @settings if block_given?
-
     # Redis is used for two separate things in ncbo_cron:
     # 1) locating the queue for the submissions to be processed and
     # 2) managing the processing lock.
@@ -62,5 +60,8 @@ module NcboCron
     @settings.minutes_between ||= 5
     # seconds between process queue checks
     @settings.seconds_between ||= nil
+
+    # Override defaults
+    yield @settings if block_given?
   end
 end

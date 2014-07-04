@@ -2,7 +2,7 @@ require "ontologies_linked_data"
 require_relative "../lib/ncbo_cron"
 require_relative "../config/config.rb"
 
-Goo.use_cache = true # Make sure tests don't cache
+Goo.use_cache = false # Make sure tests don't cache
 
 require "test/unit"
 

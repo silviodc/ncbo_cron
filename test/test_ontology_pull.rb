@@ -28,13 +28,11 @@ class TestOntologyPull < TestCase
     end
 
     @@redis.del NcboCron::Models::OntologySubmissionParser::QUEUE_HOLDER
-    LinkedData::SampleData::Ontology.delete_ontologies_and_submissions
   end
 
   def self.after_suite
     Thread.kill(@@thread)
     @@redis.del NcboCron::Models::OntologySubmissionParser::QUEUE_HOLDER
-    LinkedData::SampleData::Ontology.delete_ontologies_and_submissions
   end
 
   def test_remote_ontology_pull()

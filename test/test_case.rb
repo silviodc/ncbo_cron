@@ -2,6 +2,8 @@ require "ontologies_linked_data"
 require_relative "../lib/ncbo_cron"
 require_relative "../config/config.rb"
 
+Goo.use_cache = false # Make sure tests don't cache
+
 require "test/unit"
 
 # Check to make sure you want to run if not pointed at localhost

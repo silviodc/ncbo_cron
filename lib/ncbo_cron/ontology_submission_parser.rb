@@ -187,6 +187,11 @@ module NcboCron
               unless sub.archived?
                 old_sub.bring_remaining
                 old_sub.add_submission_status(status_archived)
+
+                options = { process_rdf: false, index_search: false, index_commit: false, 
+                            run_metrics: false, reasoning: false, archive: true }
+                old_sub.process_submission(logger, options)
+                
                 old_sub.save
               end
             end

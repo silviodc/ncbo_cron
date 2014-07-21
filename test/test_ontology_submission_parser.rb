@@ -140,7 +140,7 @@ class TestOntologySubmissionParser < TestCase
     o1 = @@ontologies[0]
     o1.delete
     zombies = parser.zombie_classes_graphs
-    assert zombies.length ==  1
+    assert_equal 1, zombies.length
     assert zombies.first["/TEST-ONT-0/submissions/2"]
   end
 

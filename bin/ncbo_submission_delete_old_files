@@ -1,0 +1,39 @@
+#!/usr/bin/env ruby
+
+# Exit cleanly from an early interrupt.
+Signal.trap("INT") { exit 1 }
+
+# Setup the bundled gems in our environment.
+require 'bundler/setup'
+
+# Configure the process for the current cron configuration.
+require_relative '../lib/ncbo_cron'
+config_exists = File.exist?(File.expand_path('../../config/config.rb', __FILE__))
+abort("Please create a config/config.rb file using the config/config.rb.sample as a template") unless config_exists
+require_relative '../config/config'
+
+FILES_TO_DELETE = ['labels.ttl', 'mappings.ttl', 'obsolete.ttl', 'owlapi.xrdf']
+
+submissions = LinkedData::Models::OntologySubmission.all
+print "\nNumber of submissions to process: #{submissions.count}.\n"
+
+submissions.each do |sub|
+	sub.bring(:submissionStatus)
+	if sub.archived?
+		# Get the directory for this submission.
+		sub.bring(:submissionId, ontology: [:acronym])
+	    path_to_repo = sub.data_folder
+
+	    # Files to delete for this submission.
+	    submission_files = FILES_TO_DELETE.map { |f| File.join(path_to_repo, f) }.push(sub.csv_path)
+	    
+	    # Don't do this yet...
+	    # FileUtils.rm(submission_files, force: true)
+
+	    # Instead, print info about what will be deleted.
+	   	print "\nFiles to delete for ontology '#{sub.ontology.acronym}' with submission ID '#{sub.submissionId}':\n\n"
+	   	submission_files.each do |f|
+	   		puts f
+	   	end
+	end
+end

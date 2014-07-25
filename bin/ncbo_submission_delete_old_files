@@ -21,11 +21,13 @@ submissions.each do |sub|
 	sub.bring(:submissionStatus)
 	if sub.archived?
 		# Get the directory for this submission.
-		sub.bring(:submissionId, ontology: [:acronym])
+		sub.bring(:submissionId, :uploadFilePath, ontology: [:acronym])
 	    path_to_repo = sub.data_folder
 
 	    # Files to delete for this submission.
-	    submission_files = FILES_TO_DELETE.map { |f| File.join(path_to_repo, f) }.push(sub.csv_path)
+	    submission_files = FILES_TO_DELETE.map { |f| File.join(path_to_repo, f) }
+	    submission_files.push(sub.csv_path)
+	    submission_files.push(sub.uploadFilePath + '_parsing.log')
 
 	    FileUtils.rm(submission_files, force: true)
 	   	print "Deleting old submission files for ontology '#{sub.ontology.acronym}' with submission ID '#{sub.submissionId}'.\n\n"

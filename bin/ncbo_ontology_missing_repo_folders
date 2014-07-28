@@ -1,0 +1,40 @@
+#!/usr/bin/env ruby
+
+# Exit cleanly from an early interrupt.
+Signal.trap("INT") { exit 1 }
+
+# Setup the bundled gems in our environment.
+require 'bundler/setup'
+
+# Configure the process for the current cron configuration.
+require_relative '../lib/ncbo_cron'
+config_exists = File.exist?(File.expand_path('../../config/config.rb', __FILE__))
+abort("Please create a config/config.rb file using the config/config.rb.sample as a template") unless config_exists
+require_relative '../config/config'
+
+logfile = 'missing_repo_folders.log'
+if File.file?(logfile); File.delete('missing_repo_folders.log'); end
+logger = Logger.new('missing_repo_folders.log')
+
+onts = LinkedData::Models::Ontology.all
+onts.each { |ont| ont.bring(:acronym) }
+onts.sort! { |a,b| a.acronym <=> b.acronym }
+
+num_missing_folders = 0
+
+onts.each do |ont|
+	sub = ont.latest_submission
+	if not sub.nil?
+		sub.bring(ontology: [:acronym])
+		if not Dir.exist?(sub.data_folder)
+			msg = "Missing repo folder for '#{ont.acronym}' ontology: #{sub.data_folder}\n" 
+			puts msg
+			logger.info(msg) 
+			num_missing_folders += 1
+		end
+	end
+end
+
+logger.info("Total number of ontologies: #{onts.count}.")
+logger.info("Total number of missing repo folders: #{num_missing_folders}.")
+

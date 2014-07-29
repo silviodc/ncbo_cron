@@ -199,7 +199,7 @@ module NcboCron
 
           process_annotator(logger, sub) if actions[:process_annotator]
 
-          # Update the most recent 5 submissions with ontology diffs
+          logger.debug "Calculating diffs for 5 most recent submissions"
           submissions = LinkedData::Models::OntologySubmission
             .where(ontology: sub.ontology)
             .include(:submissionId)
@@ -209,6 +209,7 @@ module NcboCron
           recent_submissions = submissions.sort { |a,b| b.submissionId <=> a.submissionId }[0..5]
           recent_submissions.each_with_index do |this_sub, i|
             if this_sub.diffFilePath.nil?
+              logger.debug "Calculating diff between #{recent_submissions[i].submissionId} and #{recent_submissions[i+1].submissionId}"
               begin
                 # Get the next submission, should be an older version.
                 that_sub = recent_submissions[i+1]

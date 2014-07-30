@@ -5,10 +5,21 @@ Rake::TestTask.new do |t|
   t.test_files = FileList['test/**/test*.rb']
 end
 
-# EX: Adding sub-tasks to rake
-# Rake::TestTask.new do |t|
-#   t.libs = []
-#   t.name = "test:models"
-#   t.test_files = FileList['test/models/test*.rb']
-# end
+def clear_cache
+  require 'ontologies_linked_data'
+  require 'ncbo_annotator'
+  require 'ncbo_cron'
+  require 'redis'
+  require_relative 'config/config'
+  LinkedData::HTTPCache.invalidate_all
+  redis = Redis.new(host: LinkedData.settings.goo_redis_host, port: LinkedData.settings.goo_redis_port, timeout: 30)
+  redis.flushdb
+  `rm -rf cache/`
+end
 
+namespace :cache do
+  desc "Clear HTTP cache (redis and Rack::Cache)"
+  task :clear do
+    clear_cache
+  end
+end

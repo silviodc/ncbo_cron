@@ -1,7 +1,7 @@
 GIT
   remote: git://github.com/ncbo/goo.git
-  revision: f2968d4b5202462fdf1f7d190eaac69c60981e5e
-  branch: master
+  revision: f675ef0641f594a9599ef915774afe24fbcd63de
+  branch: staging
   specs:
     goo (0.0.2)
       addressable (= 2.3.5)
@@ -16,8 +16,8 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ncbo_annotator.git
-  revision: 4de0dc7022ea423795cd94e24c55f1d76c324617
-  branch: master
+  revision: 1395e8ccb7e2f8307fcfb3e573d0f7472aa9508a
+  branch: staging
   specs:
     ncbo_annotator (0.0.1)
       goo
@@ -26,8 +26,8 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ontologies_linked_data.git
-  revision: a2e5802100585361e0091ea024a810762e770da5
-  branch: master
+  revision: e114e3cae4c3e30f250d0f9c6c71750f74c8ad37
+  branch: staging
   specs:
     ontologies_linked_data (0.0.1)
       activesupport
@@ -78,7 +78,7 @@ GEM
     coderay (1.1.0)
     cube-ruby (0.0.3)
     dante (0.2.0)
-    i18n (0.6.9)
+    i18n (0.6.11)
     json (1.8.1)
     json_pure (1.8.1)
     libxml-ruby (2.7.0)
@@ -93,8 +93,9 @@ GEM
       redis
     multi_json (1.10.1)
     net-http-persistent (2.9.4)
-    oj (2.9.8)
-    pony (1.9)
+    netrc (0.7.7)
+    oj (2.9.9)
+    pony (1.10)
       mail (>= 2.0)
     pry (0.10.0)
       coderay (~> 1.1.0)
@@ -107,14 +108,15 @@ GEM
     rdf (1.0.8)
       addressable (>= 2.2)
     redis (3.1.0)
-    rest-client (1.6.7)
-      mime-types (>= 1.16)
+    rest-client (1.7.2)
+      mime-types (>= 1.16, < 3.0)
+      netrc (~> 0.7)
     rsolr (1.0.10)
       builder (>= 2.1.2)
     rubyzip (1.1.6)
     rufus-scheduler (2.0.24)
       tzinfo (>= 0.3.22)
-    slop (3.5.0)
+    slop (3.6.0)
     sys-proctable (0.9.4)
     systemu (2.6.4)
     thread_safe (0.3.4)

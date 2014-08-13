@@ -1,0 +1,42 @@
+#!/usr/bin/env ruby
+
+# Exit cleanly from an early interrupt.
+Signal.trap("INT") { exit 1 }
+
+# Setup the bundled gems in our environment.
+require 'bundler/setup'
+
+# Configure the process for the current cron configuration.
+require_relative '../lib/ncbo_cron'
+config_exists = File.exist?(File.expand_path('../../config/config.rb', __FILE__))
+abort("Please create a config/config.rb file using the config/config.rb.sample as a template") unless config_exists
+require_relative '../config/config'
+
+logfile = 'archive_old_submissions.log'
+if File.file?(logfile); File.delete(logfile); end
+logger = Logger.new(logfile)
+
+onts = LinkedData::Models::Ontology.all
+onts.each { |ont| ont.bring(:acronym, :submissions) }
+onts.sort! { |a,b| a.acronym <=> b.acronym }
+
+onts.each do |ont|
+  latest_sub = ont.latest_submission
+  if not latest_sub.nil?
+    id = latest_sub.submissionId
+    subs = ont.submissions
+    old_subs = subs.reject { |sub| sub.submissionId >= id }
+    old_subs.sort! { |a,b| a.submissionId <=> b.submissionId }
+    old_subs.each do |sub|
+      if not sub.archived?
+        msg = "#{ont.acronym}: found un-archived old submission with ID #{sub.submissionId}."
+        puts msg
+        logger.info msg
+        options = { process_rdf: false, index_search: false, index_commit: false, 
+          run_metrics: false, reasoning: false, archive: true }
+        sub.process_submission(logger, options)
+      end
+    end
+  end
+end
+

@@ -12,7 +12,7 @@ config_exists = File.exist?(File.expand_path('../../config/config.rb', __FILE__)
 abort("Please create a config/config.rb file using the config/config.rb.sample as a template") unless config_exists
 require_relative '../config/config'
 
-FILES_TO_DELETE = ['labels.ttl', 'mappings.ttl', 'obsolete.ttl', 'owlapi.xrdf']
+FILES_TO_DELETE = ['labels.ttl', 'mappings.ttl', 'obsolete.ttl', 'owlapi.xrdf', 'errors.log']
 
 submissions = LinkedData::Models::OntologySubmission.all
 print "\nNumber of submissions to process: #{submissions.count}.\n"
@@ -22,13 +22,10 @@ submissions.each do |sub|
 	if sub.archived?
 		# Get the directory for this submission.
 		sub.bring(:submissionId, :uploadFilePath, ontology: [:acronym])
-	    repo_path = sub.data_folder
-	    upload_path = sub.uploadFilePath
 
 	    # Files to delete for this submission.
-	    submission_files = FILES_TO_DELETE.map { |f| File.join(repo_path, f) }
-	    submission_files.push(sub.csv_path)
-	    submission_files.push(upload_path + '_parsing.log') unless upload_path.nil?
+	    submission_files = FILES_TO_DELETE.map { |f| File.join(sub.data_folder, f) }
+	    submission_files.push(sub.csv_path, sub.parsing_log_path)
 
 	    FileUtils.rm(submission_files, force: true)
 	   	print "Deleting old submission files for ontology '#{sub.ontology.acronym}' with submission ID '#{sub.submissionId}'.\n\n"

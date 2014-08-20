@@ -155,7 +155,7 @@ module NcboCron
         sub = LinkedData::Models::OntologySubmission.find(RDF::IRI.new(submissionId)).first
 
         sub.bring_remaining; sub.ontology.bring(:acronym)
-        log_path = "#{sub.uploadFilePath}_parsing.log"
+        log_path = sub.parsing_log_path
         logger.info "Logging parsing output to #{log_path}"
         logger = Logger.new(log_path)
         logger.debug "Starting parsing for #{submissionId}\n\n\n\n"

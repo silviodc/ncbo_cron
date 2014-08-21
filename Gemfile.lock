@@ -16,7 +16,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ncbo_annotator.git
-  revision: 19342fcbe6c0b7b9ea9d3a24ecab4940c9d0c41f
+  revision: 6a61244bb86877a5c730c4e5ae1291560d11cdd6
   branch: staging
   specs:
     ncbo_annotator (0.0.1)
@@ -123,7 +123,7 @@ GEM
     mysql2 (0.3.16)
     net-http-persistent (2.9.4)
     netrc (0.7.7)
-    oj (2.10.1)
+    oj (2.10.2)
     pony (1.10)
       mail (>= 2.0)
     pry (0.10.1)

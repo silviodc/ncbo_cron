@@ -16,7 +16,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ncbo_annotator.git
-  revision: f9c1f7e7d38ec11e352f77cfd720028a5c2a4165
+  revision: 0669e90eb02d974b9f2b1ffb6154dfd895885574
   branch: staging
   specs:
     ncbo_annotator (0.0.1)
@@ -26,7 +26,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ontologies_linked_data.git
-  revision: 3d8ebfe1e202d130d625f653a20b9d3f0b90487c
+  revision: f9fa5c9ec322248ead81f8f93c0bab1fb4b030bc
   branch: staging
   specs:
     ontologies_linked_data (0.0.1)
@@ -36,12 +36,26 @@ GIT
       json
       libxml-ruby
       multi_json
+      ncbo_resource_index
       oj
       pony
       rack
       rack-test
       rsolr
       rubyzip
+
+GIT
+  remote: git://github.com/ncbo/resource_index.git
+  revision: ad24c871c9663b8bfa8d37d29bd8d99bc4d74f3f
+  specs:
+    ncbo_resource_index (0.0.1)
+      elasticsearch
+      mysql2
+      pony
+      ref
+      ruby-xxHash
+      sequel
+      typhoeus
 
 GIT
   remote: git://github.com/ncbo/sparql-client.git
@@ -78,6 +92,19 @@ GEM
     coderay (1.1.0)
     cube-ruby (0.0.3)
     dante (0.2.0)
+    elasticsearch (1.0.4)
+      elasticsearch-api (= 1.0.4)
+      elasticsearch-transport (= 1.0.4)
+    elasticsearch-api (1.0.4)
+      multi_json
+    elasticsearch-transport (1.0.4)
+      faraday
+      multi_json
+    ethon (0.7.1)
+      ffi (>= 1.3.0)
+    faraday (0.9.0)
+      multipart-post (>= 1.2, < 3)
+    ffi (1.9.3)
     i18n (0.6.11)
     json (1.8.1)
     json_pure (1.8.1)
@@ -92,12 +119,14 @@ GEM
     mlanett-redis-lock (0.2.6)
       redis
     multi_json (1.10.1)
+    multipart-post (2.0.0)
+    mysql2 (0.3.16)
     net-http-persistent (2.9.4)
     netrc (0.7.7)
-    oj (2.9.9)
+    oj (2.10.2)
     pony (1.10)
       mail (>= 2.0)
-    pry (0.10.0)
+    pry (0.10.1)
       coderay (~> 1.1.0)
       method_source (~> 0.8.1)
       slop (~> 3.4)
@@ -108,19 +137,24 @@ GEM
     rdf (1.0.8)
       addressable (>= 2.2)
     redis (3.1.0)
+    ref (1.0.5)
     rest-client (1.7.2)
       mime-types (>= 1.16, < 3.0)
       netrc (~> 0.7)
     rsolr (1.0.10)
       builder (>= 2.1.2)
+    ruby-xxHash (0.1.1)
     rubyzip (1.1.6)
     rufus-scheduler (2.0.24)
       tzinfo (>= 0.3.22)
-    slop (3.5.0)
+    sequel (4.13.0)
+    slop (3.6.0)
     sys-proctable (0.9.4)
     systemu (2.6.4)
     thread_safe (0.3.4)
-    tzinfo (1.2.1)
+    typhoeus (0.6.9)
+      ethon (>= 0.7.1)
+    tzinfo (1.2.2)
       thread_safe (~> 0.1)
     uuid (2.3.7)
       macaddr (~> 1.0)
@@ -135,6 +169,7 @@ DEPENDENCIES
   multi_json
   ncbo_annotator!
   ncbo_cron!
+  ncbo_resource_index!
   oj
   ontologies_linked_data!
   pony

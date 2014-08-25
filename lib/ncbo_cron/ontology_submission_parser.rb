@@ -151,10 +151,11 @@ module NcboCron
       private
 
       def process_queue_submission(logger, submissionId, actions={})
+        t0 = Time.now
         sub = LinkedData::Models::OntologySubmission.find(RDF::IRI.new(submissionId)).first
 
         sub.bring_remaining; sub.ontology.bring(:acronym)
-        log_path = "#{sub.uploadFilePath}_parsing.log"
+        log_path = sub.parsing_log_path
         logger.info "Logging parsing output to #{log_path}"
         logger = Logger.new(log_path)
         logger.debug "Starting parsing for #{submissionId}\n\n\n\n"
@@ -187,6 +188,11 @@ module NcboCron
               unless sub.archived?
                 old_sub.bring_remaining
                 old_sub.add_submission_status(status_archived)
+
+                options = { process_rdf: false, index_search: false, index_commit: false,
+                            run_metrics: false, reasoning: false, archive: true }
+                old_sub.process_submission(logger, options)
+
                 old_sub.save
               end
             end
@@ -194,7 +200,7 @@ module NcboCron
 
           process_annotator(logger, sub) if actions[:process_annotator]
 
-          # Update the most recent 5 submissions with ontology diffs
+          logger.debug "Calculating diffs for 5 most recent submissions"
           submissions = LinkedData::Models::OntologySubmission
             .where(ontology: sub.ontology)
             .include(:submissionId)
@@ -207,13 +213,19 @@ module NcboCron
               begin
                 # Get the next submission, should be an older version.
                 that_sub = recent_submissions[i+1]
-                this_sub.diff(logger, that_sub) unless that_sub.nil?
+                if not that_sub.nil?
+                  logger.debug "Calculating diff between #{recent_submissions[i].submissionId} 
+                                and #{recent_submissions[i+1].submissionId}"
+                  this_sub.diff(logger, that_sub)
+                end
               rescue
                 next
               end
             end
           end
         end
+
+        logger.debug "Completed parsing in #{(Time.now - t0).to_f.round(2)}s"
       end
 
       def process_annotator(logger, sub)

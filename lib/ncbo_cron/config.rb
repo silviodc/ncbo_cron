@@ -41,7 +41,7 @@ module NcboCron
     # Delete class graphs of archive submissions
     @settings.cron_flush ||= "00 22 * * 2"
     # Warmup long time running queries
-    @settings.cron_warmq ||= "00 */4 * * *"
+    @settings.cron_warmq ||= "00 */3 * * *"
 
     @settings.log_level ||= :info
     unless (@settings.log_path && File.exists?(@settings.log_path))

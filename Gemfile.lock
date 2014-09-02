@@ -16,7 +16,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ncbo_annotator.git
-  revision: cee7966aa88f90eb569d67864d26824a76646c63
+  revision: 5506f2241174f0543824c48f82588e38cf07c24e
   branch: staging
   specs:
     ncbo_annotator (0.0.1)
@@ -26,7 +26,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ontologies_linked_data.git
-  revision: b4e3f559573758e959bd4e55b0ef321ae69e1c78
+  revision: 81367452b94a846f9f6f6e68909eb15a8bed7ada
   branch: staging
   specs:
     ontologies_linked_data (0.0.1)
@@ -46,7 +46,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/resource_index.git
-  revision: fac13ae5059d38fefa266de5f92a2d6382fbdc69
+  revision: 8580fafedcfb34de9ad8e83395f2f517aaf5a0e7
   specs:
     ncbo_resource_index (0.0.1)
       elasticsearch
@@ -147,7 +147,7 @@ GEM
     rubyzip (1.1.6)
     rufus-scheduler (2.0.24)
       tzinfo (>= 0.3.22)
-    sequel (4.13.0)
+    sequel (4.14.0)
     slop (3.6.0)
     sys-proctable (0.9.4)
     systemu (2.6.4)

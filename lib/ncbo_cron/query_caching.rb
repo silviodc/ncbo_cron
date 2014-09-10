@@ -35,21 +35,23 @@ module NcboCron
       def run
         @logger.info("running counts per ontology")
         @logger.flush()
-        LinkedData::Mappings.mapping_counts_per_ontology
+        LinkedData::Mappings.mapping_counts(enable_debug=true,logger=@logger,
+                                            reload_cache=true)
         @logger.info("done")
         @logger.flush()
         iterations = 0
-        LinkedData::Models::Ontology.where.include(:acronym).all.each do |ont|
-          @logger.info("running counts ontology #{ont.id.to_s}")
-          @logger.flush()
-          LinkedData::Mappings.mapping_counts_for_ontology(ont)
-          @logger.info("done")
-          @logger.flush()
-          iterations += 1
-        end
-        @logger.info("running first page of each ontology")
+        @logger.info("running first page classes and mappings of each ontology")
         retrieve_latest_submissions.each do |acr,sub|
-          @logger.info("running first page for ontology #{sub.id.to_s}")
+          @logger.info("running mapping counts #{sub.id.to_s}")
+          @logger.flush()
+          LinkedData::Mappings
+                    .mapping_ontologies_count(sub,nil,reload_cache=true)
+          @logger.info("running first page mappings #{sub.id.to_s}")
+          @logger.flush()
+          mappings = LinkedData::Mappings
+                    .mappings_ontologies(sub,nil,1,100,nil,reload_cache=true)
+          @logger.info("done #{mappings.length}")
+          @logger.info("running first page classes #{sub.id.to_s}")
           @logger.flush()
           clss = LinkedData::Models::Class.where.in(sub).page(1,100).all
           @logger.info("done #{clss.length}")

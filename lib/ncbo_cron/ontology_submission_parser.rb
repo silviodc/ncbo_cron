@@ -155,7 +155,7 @@ module NcboCron
         sub = LinkedData::Models::OntologySubmission.find(RDF::IRI.new(submissionId)).first
 
         sub.bring_remaining; sub.ontology.bring(:acronym)
-        log_path = "#{sub.uploadFilePath}_parsing.log"
+        log_path = sub.parsing_log_path
         logger.info "Logging parsing output to #{log_path}"
         logger = Logger.new(log_path)
         logger.debug "Starting parsing for #{submissionId}\n\n\n\n"
@@ -210,11 +210,14 @@ module NcboCron
           recent_submissions = submissions.sort { |a,b| b.submissionId <=> a.submissionId }[0..5]
           recent_submissions.each_with_index do |this_sub, i|
             if this_sub.diffFilePath.nil?
-              logger.debug "Calculating diff between #{recent_submissions[i].submissionId} and #{recent_submissions[i+1].submissionId}"
               begin
                 # Get the next submission, should be an older version.
                 that_sub = recent_submissions[i+1]
-                this_sub.diff(logger, that_sub) unless that_sub.nil?
+                if not that_sub.nil?
+                  logger.debug "Calculating diff between #{recent_submissions[i].submissionId} 
+                                and #{recent_submissions[i+1].submissionId}"
+                  this_sub.diff(logger, that_sub)
+                end
               rescue
                 next
               end

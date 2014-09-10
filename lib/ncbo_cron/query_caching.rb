@@ -35,7 +35,8 @@ module NcboCron
       def run
         @logger.info("running counts per ontology")
         @logger.flush()
-        LinkedData::Mappings.mapping_counts(enable_debug=true,logger=@logger)
+        LinkedData::Mappings.mapping_counts(enable_debug=true,logger=@logger,
+                                            reload_cache=true)
         @logger.info("done")
         @logger.flush()
         iterations = 0

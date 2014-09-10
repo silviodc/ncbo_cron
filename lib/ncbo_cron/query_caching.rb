@@ -43,10 +43,12 @@ module NcboCron
         retrieve_latest_submissions.each do |acr,sub|
           @logger.info("running mapping counts #{sub.id.to_s}")
           @logger.flush()
-          LinkedData::Mappings.mapping_ontologies_count(sub,nil)
+          LinkedData::Mappings
+                    .mapping_ontologies_count(sub,nil,reload_cache=true)
           @logger.info("running first page mappings #{sub.id.to_s}")
           @logger.flush()
-          mappings = LinkedData::Mappings.mappings_ontologies(sub,nil,1,100)
+          mappings = LinkedData::Mappings
+                    .mappings_ontologies(sub,nil,1,100,nil,reload_cache=true)
           @logger.info("done #{mappings.length}")
           @logger.info("running first page classes #{sub.id.to_s}")
           @logger.flush()

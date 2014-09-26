@@ -7,6 +7,9 @@ module NcboCron
 
     class OntologyPull
 
+      class RemoteFileException < StandardError
+      end
+
       def initialize()
       end
 
@@ -57,6 +60,14 @@ module NcboCron
                 logger.info "New file found for #{ont.acronym}\nold: #{md5local}\nnew: #{md5remote}"
                 logger.flush()
                 new_submissions << create_submission(ont, last, file, filename, logger)
+              end
+            else
+              begin
+                raise RemoteFileException
+              rescue RemoteFileException
+                logger.info "RemoteFileException: No submission file at pull location #{last.pullLocation.to_s} for ontology #{ont.acronym}."
+                logger.flush
+                LinkedData::Utils::Notifications.remote_ontology_pull(last)
               end
             end
           rescue Exception => e

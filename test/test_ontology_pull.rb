@@ -1,7 +1,10 @@
 require_relative 'test_case'
 require 'rack'
+require 'webrick'
+require 'email_spec'
 
 class TestOntologyPull < TestCase
+  include EmailSpec::Helpers  
 
   def self.before_suite
     ont_path = File.expand_path("../data/ontology_files/BRO_v3.2.owl", __FILE__)
@@ -68,6 +71,71 @@ class TestOntologyPull < TestCase
     assert_equal 2, ont.submissions.length
     pull.do_remote_ontology_pull()
     assert_equal 2, ont.submissions.length
+  end
+
+  def test_pull_error_notification
+    server_port = Random.rand(55000..65535)
+
+    begin
+      thread = Thread.new do
+        server = WEBrick::HTTPServer.new(Port: server_port)
+        server.mount_proc '/' do |req, res|
+          res.body = 'Hello, world!'
+        end
+        begin
+          server.start
+        ensure
+          server.shutdown
+        end
+      end
+      assert_equal true, thread.alive?
+
+      ont_count, acronyms, ontologies = LinkedData::SampleData::Ontology.create_ontologies_and_submissions(ont_count: 1, submission_count: 1, process_submission: false)
+      ont = LinkedData::Models::Ontology.find(ontologies[0].id).include(:submissions).first
+      ont.bring_remaining
+      assert ont.valid?, "Invalid ontology: #{ont.errors}"
+      assert_equal 1, ont.submissions.length, "Incorrect number of submissions for #{ont.acronym}"
+      ont.save
+
+      sub = ont.submissions.first
+      sub.bring_remaining
+      sub.pullLocation = RDF::IRI.new('http://localhost:' + server_port.to_s)
+      assert sub.valid?, "Invalid submission: #{sub.errors}"
+      sub.save
+    ensure
+      thread.kill
+      sleep 3
+      assert_equal false, thread.alive?
+    end
+
+    begin
+      thread = Thread.new do
+        # Restart the web server with a 404 response status, which renders 
+        # the pullLocation of the ontology submission in this test invalid.
+        server = WEBrick::HTTPServer.new(Port: server_port)
+        server.mount_proc '/' do |req, res|
+          res.status = 404
+        end
+        begin
+          server.start
+        ensure
+          server.shutdown
+        end
+      end
+      assert_equal true, thread.alive?  
+
+      pull = NcboCron::Models::OntologyPull.new
+      pull.do_remote_ontology_pull
+
+      assert last_email_sent.subject.include? "[BioPortal] Load from URL failure for #{ont.name}"
+      user = ont.administeredBy[0]
+      user.bring(:email)
+      assert (last_email_sent.to.first.include? user.email) || (last_email_sent.header['Overridden-Sender'].value.include? user.email) 
+    ensure
+      thread.kill
+      sleep 3
+      assert_equal false, thread.alive?
+    end
   end
 
   private

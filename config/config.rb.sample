@@ -24,6 +24,15 @@ NcboCron.config do |config|
   config.redis_host  ||= "localhost"
   config.redis_port  ||= 6379
   config.search_index_all_url = "http://localhost:8983/solr/core2"
+
+  config.enable_notifications    = true
+  config.email_sender            = "sender@domain.com" # Default sender for emails
+  config.email_override          = "test@domain.com" # By default, all email gets sent here.  Disable with email_override_disable.
+  config.smtp_host               = "smtp-unencrypted.stanford.edu"
+  config.smtp_user               = nil
+  config.smtp_password           = nil
+  config.smtp_auth_type          = :none
+  config.smtp_domain             = "localhost.localhost"
 end
 
 Goo.use_cache = true

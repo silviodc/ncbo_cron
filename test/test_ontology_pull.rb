@@ -138,6 +138,27 @@ class TestOntologyPull < TestCase
     end
   end
 
+  def test_no_pull_location
+    ont_count, acronyms, ontologies = LinkedData::SampleData::Ontology.create_ontologies_and_submissions(ont_count: 1, submission_count: 1, process_submission: false)
+    ont = LinkedData::Models::Ontology.find(ontologies[0].id).include(:submissions).first
+    ont.bring_remaining
+    assert ont.valid?, "Invalid ontology: #{ont.errors}"
+    assert_equal 1, ont.submissions.length, "Incorrect number of submissions for #{ont.acronym}"
+    ont.save
+
+    sub = ont.submissions.first
+    sub.bring_remaining
+    assert sub.valid?, "Invalid submission: #{sub.errors}"
+    assert sub.pullLocation.nil?
+    sub.save
+
+    # Check that we don't attempt to pull ontologies with no pull locations.
+    reset_mailer
+    pull = NcboCron::Models::OntologyPull.new
+    pull.do_remote_ontology_pull
+    assert Pony.deliveries.empty?
+  end
+
   private
 
   def init_ontologies(submission_count)

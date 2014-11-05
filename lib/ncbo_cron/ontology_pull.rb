@@ -33,6 +33,7 @@ module NcboCron
               next
             end
             last.bring(:pullLocation) if last.bring?(:pullLocation)
+            next if last.pullLocation.nil?
             last.bring(:uploadFilePath) if last.bring?(:uploadFilePath)
 
             if (last.hasOntologyLanguage.umls? && umls_download_url)

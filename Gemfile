@@ -24,3 +24,7 @@ gem 'sparql-client', github: 'ncbo/sparql-client', branch: 'master'
 gem 'ontologies_linked_data', github: 'ncbo/ontologies_linked_data', branch: 'master'
 gem 'ncbo_annotator', github: 'ncbo/ncbo_annotator', branch: 'master'
 gem 'ncbo_resource_index', github: 'ncbo/resource_index'
+
+# Testing
+gem 'email_spec', :group => :test
+

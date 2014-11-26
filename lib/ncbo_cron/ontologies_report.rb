@@ -47,10 +47,15 @@ module NcboCron
         end
         report[:hasSubmissions] = :ok
         latest_ready = ont.latest_submission
+        if latest_ready.nil?
+          report[:hasReadySubmission] = :ko
+          return report
+        end
+        report[:hasReadySubmission] = :ok
         if latest_any.id.to_s != latest_ready.id.to_s
-          report[:latestReady] = :ko
+          report[:latestSubmissionIsReady] = :ko
         else
-          report[:latestReady] = :ok
+          report[:latestSubmissionIsReady] = :ok
         end
 
         #rest of the tests run for latest_ready

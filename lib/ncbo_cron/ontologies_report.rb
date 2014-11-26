@@ -19,7 +19,7 @@ module NcboCron
           @logger.info("DONE")
         end
 
-        File.open(@saveto, 'w') { |file| file.write(JSON.dump(report)) }
+        File.open(@saveto, 'w') { |file| file.write(JSON.pretty_generate(report)) }
       end
 
       def sanity_report(ont)

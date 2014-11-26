@@ -112,16 +112,14 @@ module NcboCron
           end
         end
 
-        report[:metrics] = []
+        report[:metrics] = :ok 
         metrics = sub.metrics
         if metrics.nil?
-          report[:metrics] << :object_ko
+          report[:metrics] = :object_ko
         else
           metrics.bring_remaining()
           if metrics.classes + metrics.properties < 10
             report[:metrics] = :data_ko
-          else
-            report[:metrics] << :data_ok
           end
         end
         if first_page_classes.length > 0

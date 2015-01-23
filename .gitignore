@@ -2,6 +2,7 @@
 .idea/
 config/config.rb
 config/config_*.rb
+config/*.p12
 projectFilesBackup/
 .ruby-version
 repo*

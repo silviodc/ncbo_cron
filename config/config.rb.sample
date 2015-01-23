@@ -34,6 +34,15 @@ NcboCron.config do |config|
   config.redis_host  ||= "localhost"
   config.redis_port  ||= 6379
   config.search_index_all_url = "http://localhost:8983/solr/core2"
+
+  # Google Analytics config
+  config.analytics_service_account_email_address = "123456789999-sikipho0wk8q0atflrmw62dj4kpwoj3c@developer.gserviceaccount.com"
+  config.analytics_path_to_key_file              = "config/bioportal-analytics.p12"
+  config.analytics_profile_id                    = "ga:1234567"
+  config.analytics_app_name                      = "BioPortal"
+  config.analytics_app_version                   = "1.0.0"
+  config.analytics_start_date                    = "2013-10-01"
+  config.analytics_filter_str                    = "ga:networkLocation!@stanford;ga:networkLocation!@amazon"
 end
 
 Goo.use_cache = true

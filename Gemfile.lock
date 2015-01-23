@@ -16,7 +16,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ncbo_annotator.git
-  revision: d30beeac6aa4f2da37570f761a042029e0eec26a
+  revision: 275c4deb81d95ea35ec3ec8741b59f9997227295
   branch: staging
   specs:
     ncbo_annotator (0.0.1)
@@ -26,7 +26,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ontologies_linked_data.git
-  revision: da3aa165da110f9e622bd1813cf38017cfca2a46
+  revision: 92637dd2a94e47fd3bba0c8ccad3852d40c11f16
   branch: staging
   specs:
     ontologies_linked_data (0.0.1)
@@ -46,7 +46,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/resource_index.git
-  revision: 5607a1a76cc02c4ffc668044f26577467588d984
+  revision: ae2706c1c3975e888aff649414d604ba3898a489
   specs:
     ncbo_resource_index (0.0.1)
       elasticsearch
@@ -87,6 +87,10 @@ GEM
       i18n (~> 0.6, >= 0.6.4)
       multi_json (~> 1.0)
     addressable (2.3.5)
+    autoparse (0.3.3)
+      addressable (>= 2.3.1)
+      extlib (>= 0.9.15)
+      multi_json (>= 1.0.0)
     bcrypt (3.1.9)
     builder (3.2.2)
     coderay (1.1.0)
@@ -103,17 +107,29 @@ GEM
     email_spec (1.6.0)
       launchy (~> 2.1)
       mail (~> 2.2)
-    ethon (0.7.1)
+    ethon (0.7.2)
       ffi (>= 1.3.0)
-    faraday (0.9.0)
+    extlib (0.9.16)
+    faraday (0.9.1)
       multipart-post (>= 1.2, < 3)
     ffi (1.9.6)
-    i18n (0.6.11)
-    json (1.8.1)
-    json_pure (1.8.1)
+    google-api-client (0.8.2)
+      activesupport (>= 3.2)
+      addressable (~> 2.3)
+      autoparse (~> 0.3)
+      extlib (~> 0.9)
+      faraday (~> 0.9)
+      launchy (~> 2.4)
+      multi_json (~> 1.10)
+      retriable (~> 1.4)
+      signet (~> 0.6)
+    i18n (0.7.0)
+    json (1.8.2)
+    json_pure (1.8.2)
+    jwt (1.2.0)
     launchy (2.4.3)
       addressable (~> 2.3)
-    libxml-ruby (2.7.0)
+    libxml-ruby (2.8.0)
     macaddr (1.7.1)
       systemu (~> 2.6.2)
     mail (2.6.3)
@@ -127,16 +143,16 @@ GEM
     multipart-post (2.0.0)
     mysql2 (0.3.17)
     net-http-persistent (2.9.4)
-    netrc (0.10.1)
-    oj (2.11.1)
+    netrc (0.10.2)
+    oj (2.11.4)
     pony (1.11)
       mail (>= 2.0)
     pry (0.10.1)
       coderay (~> 1.1.0)
       method_source (~> 0.8.1)
       slop (~> 3.4)
-    rack (1.5.2)
-    rack-test (0.6.2)
+    rack (1.6.0)
+    rack-test (0.6.3)
       rack (>= 1.0)
     rake (10.4.2)
     rdf (1.0.8)
@@ -146,18 +162,25 @@ GEM
     rest-client (1.7.2)
       mime-types (>= 1.16, < 3.0)
       netrc (~> 0.7)
+    retriable (1.4.1)
     rsolr (1.0.10)
       builder (>= 2.1.2)
     ruby-xxHash (0.3.0)
     rubyzip (1.1.6)
     rufus-scheduler (2.0.24)
       tzinfo (>= 0.3.22)
-    sequel (4.17.0)
+    sequel (4.18.0)
+    signet (0.6.0)
+      addressable (~> 2.3)
+      extlib (~> 0.9)
+      faraday (~> 0.9)
+      jwt (~> 1.0)
+      multi_json (~> 1.10)
     slop (3.6.0)
     sys-proctable (0.9.4)
     systemu (2.6.4)
     thread_safe (0.3.4)
-    typhoeus (0.6.9)
+    typhoeus (0.7.0)
       ethon (>= 0.7.1)
     tzinfo (1.2.2)
       thread_safe (~> 0.1)
@@ -171,6 +194,7 @@ DEPENDENCIES
   cube-ruby
   email_spec
   goo!
+  google-api-client
   minitest (< 5.0)
   multi_json
   ncbo_annotator!

@@ -72,6 +72,9 @@ module NcboCron
           end
         end
 
+        @logger.info "Completed ontology analytics refresh..."
+        @logger.flush
+
         aggregated_results
       end
 

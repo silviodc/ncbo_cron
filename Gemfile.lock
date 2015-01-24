@@ -26,7 +26,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ontologies_linked_data.git
-  revision: 92637dd2a94e47fd3bba0c8ccad3852d40c11f16
+  revision: 90b565af14877c2e5d479fec9f295259fc7c7dce
   branch: staging
   specs:
     ontologies_linked_data (0.0.1)
@@ -46,7 +46,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/resource_index.git
-  revision: ae2706c1c3975e888aff649414d604ba3898a489
+  revision: a3735ff490c10a1092d346cc6382c9542112d1cb
   specs:
     ncbo_resource_index (0.0.1)
       elasticsearch
@@ -126,7 +126,7 @@ GEM
     i18n (0.7.0)
     json (1.8.2)
     json_pure (1.8.2)
-    jwt (1.2.0)
+    jwt (1.2.1)
     launchy (2.4.3)
       addressable (~> 2.3)
     libxml-ruby (2.8.0)

@@ -73,6 +73,7 @@ PATH
     ncbo_cron (0.0.1)
       dante
       goo
+      google-api-client
       mlanett-redis-lock
       multi_json
       ncbo_annotator
@@ -194,7 +195,6 @@ DEPENDENCIES
   cube-ruby
   email_spec
   goo!
-  google-api-client
   minitest (< 5.0)
   multi_json
   ncbo_annotator!

@@ -18,9 +18,6 @@ gem 'sys-proctable'
 # Monitoring
 gem 'cube-ruby', require: 'cube'
 
-# Google Analytics
-gem 'google-api-client'
-
 # NCBO gems (can be from a local dev path or from rubygems/git)
 gem 'goo', github: 'ncbo/goo', branch: 'staging'
 gem 'sparql-client', github: 'ncbo/sparql-client', branch: 'staging'

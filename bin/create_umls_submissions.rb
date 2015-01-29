@@ -62,4 +62,3 @@ new_submissions.each_key do |acr|
   pull.create_submission(ont,sub,file,filename,logger=nil,add_to_pull=false)
   puts "Created new submission for #{acr}"
 end
-binding.pry

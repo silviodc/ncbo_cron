@@ -80,7 +80,7 @@ module NcboCron
         new_submissions
       end
 
-      def create_submission(ont, sub, file, filename, logger=nil)
+      def create_submission(ont, sub, file, filename, logger=nil, add_to_pull=true)
         logger ||= Kernel.const_defined?("LOGGER") ? Kernel.const_get("LOGGER") : Logger.new(STDOUT)
         new_sub = LinkedData::Models::OntologySubmission.new
 
@@ -101,12 +101,14 @@ module NcboCron
 
         if new_sub.valid?
           new_sub.save()
-          submission_queue = NcboCron::Models::OntologySubmissionParser.new
-          submission_queue.queue_submission(new_sub, {all: true})
-          logger.info("OntologyPull created a new submission (#{submission_id}) for ontology #{ont.acronym}")
-        else
-          logger.error("Unable to create a new submission in OntologyPull: #{new_sub.errors}")
-          logger.flush()
+          if add_to_pull
+            submission_queue = NcboCron::Models::OntologySubmissionParser.new
+            submission_queue.queue_submission(new_sub, {all: true})
+            logger.info("OntologyPull created a new submission (#{submission_id}) for ontology #{ont.acronym}")
+          else
+            logger.error("Unable to create a new submission in OntologyPull: #{new_sub.errors}")
+            logger.flush()
+          end
         end
 
         new_sub

@@ -98,6 +98,10 @@ module NcboCron
         new_sub.released = DateTime.now
         new_sub.missingImports = nil
         new_sub.metrics = nil
+        #TODO this can be remove after the pull locations are deleted
+        if not file["umls2rdf"].nil?
+          new_sub.pullLocation = nil
+        end
 
         if new_sub.valid?
           new_sub.save()
@@ -105,10 +109,10 @@ module NcboCron
             submission_queue = NcboCron::Models::OntologySubmissionParser.new
             submission_queue.queue_submission(new_sub, {all: true})
             logger.info("OntologyPull created a new submission (#{submission_id}) for ontology #{ont.acronym}")
-          else
-            logger.error("Unable to create a new submission in OntologyPull: #{new_sub.errors}")
-            logger.flush()
           end
+        else
+          logger.error("Unable to create a new submission in OntologyPull: #{new_sub.errors}")
+          logger.flush()
         end
 
         new_sub

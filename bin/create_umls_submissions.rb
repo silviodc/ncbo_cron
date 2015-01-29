@@ -20,7 +20,7 @@ elsif LinkedData.settings.goo_host.include? "prod"
 end
 puts "Running on #{platform} platform"
 
-umls_files_path = "/Users/manuelso/work/stanford/bioportal/umls2rdf/output/"
+umls_files_path = "/srv/ncbo/share/scratch/umls2rdf/output"
 umls_files = Dir.glob(File.join(umls_files_path, "*.ttl"))
 file_index = {}
 umls_files.each do |x|

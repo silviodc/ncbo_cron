@@ -68,7 +68,7 @@ module NcboCron
               Kernel.exit!
             end
           end
-          logger.debug("#{job_name} -- running in pid #{pid}")
+          logger.debug("#{job_name} -- running in pid #{pid}"); logger.flush
           Process.wait(pid)
         end
       end

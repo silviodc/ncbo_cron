@@ -22,6 +22,7 @@ puts "Running on #{platform} platform"
 
 umls_files_path = "/srv/ncbo/share/scratch/umls2rdf/output"
 umls_files = Dir.glob(File.join(umls_files_path, "*.ttl"))
+new_version = "2014AB"
 file_index = {}
 umls_files.each do |x|
   if not x["semantictypes"].nil?
@@ -59,6 +60,7 @@ pull = NcboCron::Models::OntologyPull.new
 new_submissions.each_key do |acr|
   ont, sub, file = new_submissions[acr]
   filename = file.split("/")[-1]
-  pull.create_submission(ont,sub,file,filename,logger=nil,add_to_pull=false)
+  pull.create_submission(ont,sub,file,filename,logger=nil,
+                         add_to_pull=false,new_version)
   puts "Created new submission for #{acr}"
 end

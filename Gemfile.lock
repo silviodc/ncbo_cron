@@ -181,7 +181,7 @@ GEM
     sys-proctable (0.9.4)
     systemu (2.6.4)
     thread_safe (0.3.4)
-    typhoeus (0.7.0)
+    typhoeus (0.7.1)
       ethon (>= 0.7.1)
     tzinfo (1.2.2)
       thread_safe (~> 0.1)

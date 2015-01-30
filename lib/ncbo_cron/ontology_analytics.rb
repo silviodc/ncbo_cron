@@ -15,7 +15,7 @@ module NcboCron
       def run
         redis = Redis.new(:host => NcboCron.settings.redis_host, :port => NcboCron.settings.redis_port)
         ontology_analytics = fetch_ontology_analytics
-        redis.set(ONTOLOGY_ANALYTICS_REDIS_FIELD, ontology_analytics)
+        redis.set(ONTOLOGY_ANALYTICS_REDIS_FIELD, ontology_analytics.to_json)
       end
 
       def fetch_ontology_analytics

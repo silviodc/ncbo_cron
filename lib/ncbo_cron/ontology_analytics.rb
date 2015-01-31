@@ -22,6 +22,7 @@ module NcboCron
         google_client = authenticate_google
         api_method = google_client.discovered_api('analytics', 'v3').data.ga.get
         aggregated_results = Hash.new
+        start_year = Date.parse(NcboCron.settings.analytics_start_date).year || 2013
         ont_acronyms = LinkedData::Models::Ontology.where.include(:acronym).all.map {|o| o.acronym}
         # ont_acronyms = ["NCIT", "ONTOMA", "CMPO", "AEO", "SNOMEDCT"]
 
@@ -69,10 +70,10 @@ module NcboCron
             end
 
             if (num_results == 0 || num_results < max_results)
+              # fill up non existent years
+              (start_year..Date.today.year).each { |y| aggregated_results[acronym][y] = Hash.new unless aggregated_results[acronym].has_key?(y) }
               # fill up non existent months with zeros
-              (1..12).each do |n|
-                aggregated_results[acronym].values.each {|v| v[n] = 0 unless v.has_key?(n)}
-              end
+              (1..12).each { |n| aggregated_results[acronym].values.each { |v| v[n] = 0 unless v.has_key?(n) } }
               break
             end
           end

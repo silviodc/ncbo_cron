@@ -68,7 +68,13 @@ module NcboCron
               end
             end
 
-            break if num_results < max_results
+            if (num_results == 0 || num_results < max_results)
+              # fill up non existent months with zeros
+              (1..12).each do |n|
+                aggregated_results[acronym].values.each {|v| v[n] = 0 unless v.has_key?(n)}
+              end
+              break
+            end
           end
         end
 

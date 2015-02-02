@@ -71,7 +71,10 @@ module NcboCron
 
             if (num_results == 0 || num_results < max_results)
               # fill up non existent years
-              (start_year..Date.today.year).each { |y| aggregated_results[acronym][y] = Hash.new unless aggregated_results[acronym].has_key?(y) }
+              (start_year..Date.today.year).each do |y|
+                aggregated_results[acronym] = Hash.new if aggregated_results[acronym].nil?
+                aggregated_results[acronym][y] = Hash.new unless aggregated_results[acronym].has_key?(y)
+              end
               # fill up non existent months with zeros
               (1..12).each { |n| aggregated_results[acronym].values.each { |v| v[n] = 0 unless v.has_key?(n) } }
               break

@@ -39,7 +39,7 @@ module NcboCron
               'end-date'    => Date.today.to_s,
               'dimensions'  => 'ga:pagePath,ga:year,ga:month',
               'metrics'     => 'ga:pageviews',
-              'filters'     => "ga:pagePath=~^/ontologies/#{acronym}*;#{NcboCron.settings.analytics_filter_str}",
+              'filters'     => "ga:pagePath=~^(\\/ontologies\\/#{acronym})(\\/?\\?{0}|\\/?\\?{1}.*)$;#{NcboCron.settings.analytics_filter_str}",
               'start-index' => start_index,
               'max-results' => max_results
             })
@@ -69,7 +69,7 @@ module NcboCron
               end
             end
 
-            if (num_results == 0 || num_results < max_results)
+            if (num_results < max_results)
               # fill up non existent years
               (start_year..Date.today.year).each do |y|
                 aggregated_results[acronym] = Hash.new if aggregated_results[acronym].nil?
@@ -113,14 +113,14 @@ end
 # require 'goo'
 # require 'ncbo_cron'
 # LinkedData.config do |config|
-#   config.goo_host          = "localhost"
-#   config.goo_port          = 8080
+#   config.goo_host = "localhost"
+#   config.goo_port = 8080
 # end
 # NcboCron.config do |config|
 #   config.redis_host = "localhost"
 #   config.redis_port = 6379
 #
-#   Google Analytics config
+#   # Google Analytics config
 #   config.analytics_service_account_email_address = "123456789999-sikipho0wk8q0atflrmw62dj4kpwoj3c@developer.gserviceaccount.com"
 #   config.analytics_path_to_key_file              = "config/bioportal-analytics.p12"
 #   config.analytics_profile_id                    = "ga:1234567"

@@ -25,11 +25,12 @@ module NcboCron
     @settings.queue_submission ||= nil
     # view queued jobs
     @settings.view_queue ||= false
-
     @settings.enable_processing ||= true
     @settings.enable_pull ||= true
     @settings.enable_flush ||= true
     @settings.enable_warmq ||= true
+    # enable ontology analytics
+    @settings.enable_ontology_analytics ||= false
     # UMLS auto-pull
     @settings.pull_umls_url ||= ""
     @settings.enable_pull_umls ||= false
@@ -42,6 +43,9 @@ module NcboCron
     @settings.cron_flush ||= "00 22 * * 2"
     # Warmup long time running queries
     @settings.cron_warmq ||= "00 */3 * * *"
+    # Ontology analytics refresh schedule
+    # 15 0 * * 1 - run once a week on Monday at 12:15AM
+    @settings.cron_ontology_analytics ||= "15 0 * * 1"
 
     @settings.log_level ||= :info
     unless (@settings.log_path && File.exists?(@settings.log_path))

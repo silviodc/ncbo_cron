@@ -102,10 +102,6 @@ module NcboCron
         new_sub.released = DateTime.now
         new_sub.missingImports = nil
         new_sub.metrics = nil
-        #TODO this can be remove after the pull locations are deleted
-        if not file["umls2rdf"].nil?
-          new_sub.pullLocation = nil
-        end
 
         if new_sub.valid?
           new_sub.save()

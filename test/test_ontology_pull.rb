@@ -4,22 +4,25 @@ require 'webrick'
 require 'email_spec'
 
 class TestOntologyPull < TestCase
-  include EmailSpec::Helpers  
+  include EmailSpec::Helpers
 
   def self.before_suite
     ont_path = File.expand_path("../data/ontology_files/BRO_v3.2.owl", __FILE__)
     file = File.new(ont_path)
-    port = 4567
-    @@url = "http://localhost:#{port}/"
+    @@port = Random.rand(55000..65535) # http://en.wikipedia.org/wiki/List_of_TCP_and_UDP_port_numbers#Dynamic.2C_private_or_ephemeral_ports
+    @@url = "http://localhost:#{@@port}/"
     @@thread = Thread.new do
-      Rack::Server.start(
-          app: lambda do |e|
-            contents = file.read
-            file.rewind
-            [200, {'Content-Type' => 'text/plain'}, [contents]]
-          end,
-          Port: port
-      )
+      server = WEBrick::HTTPServer.new(Port: @@port)
+      server.mount_proc '/' do |req, res|
+        contents = file.read
+        file.rewind
+        res.body = contents
+      end
+      begin
+        server.start
+      ensure
+        server.shutdown
+      end
     end
 
     @@redis = Redis.new(:host => NcboCron.settings.redis_host, :port => NcboCron.settings.redis_port)
@@ -110,7 +113,7 @@ class TestOntologyPull < TestCase
 
     begin
       thread = Thread.new do
-        # Restart the web server with a 404 response status, which renders 
+        # Restart the web server with a 404 response status, which renders
         # the pullLocation of the ontology submission in this test invalid.
         server = WEBrick::HTTPServer.new(Port: server_port)
         server.mount_proc '/' do |req, res|
@@ -122,7 +125,7 @@ class TestOntologyPull < TestCase
           server.shutdown
         end
       end
-      assert_equal true, thread.alive?  
+      assert_equal true, thread.alive?
 
       pull = NcboCron::Models::OntologyPull.new
       pull.do_remote_ontology_pull
@@ -130,7 +133,7 @@ class TestOntologyPull < TestCase
       assert last_email_sent.subject.include? "[BioPortal] Load from URL failure for #{ont.name}"
       user = ont.administeredBy[0]
       user.bring(:email)
-      assert (last_email_sent.to.first.include? user.email) || (last_email_sent.header['Overridden-Sender'].value.include? user.email) 
+      assert (last_email_sent.to.first.include? user.email) || (last_email_sent.header['Overridden-Sender'].value.include? user.email)
     ensure
       thread.kill
       sleep 3
@@ -167,7 +170,7 @@ class TestOntologyPull < TestCase
     ontologies[0].submissions.each do |sub|
       sub.bring_remaining()
       sub.pullLocation = RDF::IRI.new(@@url)
-      sub.save()
+      sub.save() rescue binding.pry
     end
     return ontologies
   end

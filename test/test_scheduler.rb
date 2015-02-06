@@ -6,17 +6,20 @@ require_relative '../lib/ncbo_cron'
 class TestScheduler < MiniTest::Unit::TestCase
   def test_scheduler
     begin
+      logger = Logger.new($stdout)
+      logger.level = Logger::ERROR
       options = {
         job_name: "test_scheduled_job",
         seconds_between: 1,
         redis_host: NcboCron.settings.redis_host,
-        redis_port: NcboCron.settings.redis_port
+        redis_port: NcboCron.settings.redis_port,
+        logger: logger
       }
 
       # Create a simple TCPServer to listen from the fork
       require 'socket'
       listen_string = ""
-      port = 21212
+      port = Random.rand(55000..65535) # http://en.wikipedia.org/wiki/List_of_TCP_and_UDP_port_numbers#Dynamic.2C_private_or_ephemeral_ports
       socket_server = Thread.new do
         server = TCPServer.new(port)
         loop {
@@ -66,7 +69,7 @@ class TestScheduler < MiniTest::Unit::TestCase
       # Create a simple TCPServer to listen from the fork
       require 'socket'
       listen_string = ""
-      port = 12121
+      port = Random.rand(55000..65535) # http://en.wikipedia.org/wiki/List_of_TCP_and_UDP_port_numbers#Dynamic.2C_private_or_ephemeral_ports
       socket_server = Thread.new do
         server = TCPServer.new(port)
         loop {

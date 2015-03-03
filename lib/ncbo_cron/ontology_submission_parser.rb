@@ -118,6 +118,7 @@ module NcboCron
               if LinkedData::Models::Class.where.in(sub).count > 1
                 if sub.archived?
                   logger.info "Deleting graph #{sub.id.to_s} ..." ; logger.flush
+                  sleep(5)
                   t0 = Time.now
                   sub.delete_classes_graph
                   logger.info "Graph #{sub.id.to_s} deleted in #{Time.now-t0} sec."; logger.flush
@@ -125,6 +126,7 @@ module NcboCron
                 else
                   if sub.id.to_s != last_ready.id.to_s
                     sub.bring_remaining
+                    sleep(5)
                     logger.info "DELETE #{sub.id.to_s}"; logger.flush
                     sub.delete_classes_graph
                     logger.info "DELETE setting to archive #{sub.id.to_s}"; logger.flush
@@ -214,7 +216,7 @@ module NcboCron
                 # Get the next submission, should be an older version.
                 that_sub = recent_submissions[i+1]
                 if not that_sub.nil?
-                  logger.debug "Calculating diff between #{recent_submissions[i].submissionId} 
+                  logger.debug "Calculating diff between #{recent_submissions[i].submissionId}
                                 and #{recent_submissions[i+1].submissionId}"
                   this_sub.diff(logger, that_sub)
                 end

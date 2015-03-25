@@ -33,14 +33,17 @@ module NcboCron
         ont.bring_remaining()
         ont.bring(:submissions)
         submissions = ont.submissions
+        problem = 0
 
         #first see if is summary only and if it has submissions
         if ont.summaryOnly
           if !submissions.nil? && submissions.length > 0
             report[:summaryOnly] = :ko_summary_only_with_submissions
+            problem = 1
           else
             report[:summaryOnly] = :ok
           end
+          report[:problem] = problem
           return report
         end
 
@@ -49,17 +52,20 @@ module NcboCron
         if latest_any.nil?
           report[:hasSubmissions] = :ko
           #no submissions then the other tests cannot run
+          report[:problem] = 1
           return report
         end
         report[:hasSubmissions] = :ok
         latest_ready = ont.latest_submission
         if latest_ready.nil?
           report[:hasReadySubmission] = :ko
+          report[:problem] = 1
           return report
         end
         report[:hasReadySubmission] = :ok
         if latest_any.id.to_s != latest_ready.id.to_s
           report[:latestSubmissionIsReady] = :ko
+          problem = 1
         else
           report[:latestSubmissionIsReady] = :ok
         end
@@ -81,6 +87,7 @@ module NcboCron
         sub.submissionStatus.each do |st|
           if st.error?
             report[:error_status] << st.id.to_s.split("/")[-1]
+            problem = 1
           end
         end
 
@@ -95,6 +102,7 @@ module NcboCron
           end
           if !found
             report[:missing_status] << ok.id.to_s.split("/")[-1]
+            problem = 1
           end
         end
 
@@ -103,6 +111,7 @@ module NcboCron
                               .include(:prefLabel, :synonym).page(1,10).all
         if first_page_classes.length == 0 
           report[:classes] = :panic
+          problem = 1
         else
           report[:classes] = :ok
         end
@@ -114,6 +123,7 @@ module NcboCron
             report[:roots] = :ok
           else
             report[:roots] = :ko
+            problem = 1
           end
         end
 
@@ -122,10 +132,12 @@ module NcboCron
         metrics = sub.metrics
         if metrics.nil?
           report[:metrics] = :object_ko
+          problem = 1
         else
           metrics.bring_remaining()
           if metrics.classes + metrics.properties < 10
             report[:metrics] = :data_ko
+            problem = 1
           end
         end
 
@@ -137,6 +149,7 @@ module NcboCron
             report[:annotator] = :ok
           else
             report[:annotator] = :ko
+            problem = 1
           end
 
           search_query = first_page_classes.first.prefLabel
@@ -145,8 +158,10 @@ module NcboCron
             report[:search] = :ok
           else
             report[:search] = :ko
+            problem = 1
           end
         end
+        report[:problem] = problem
 
         return report
       end

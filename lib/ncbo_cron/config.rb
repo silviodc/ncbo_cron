@@ -30,7 +30,9 @@ module NcboCron
     @settings.enable_flush ||= true
     @settings.enable_warmq ||= true
     # enable ontology analytics
-    @settings.enable_ontology_analytics ||= false
+    @settings.enable_ontology_analytics ||= true
+    # enable ontologies report
+    @settings.enable_ontologies_report ||= true
     # UMLS auto-pull
     @settings.pull_umls_url ||= ""
     @settings.enable_pull_umls ||= false
@@ -46,6 +48,11 @@ module NcboCron
     # Ontology analytics refresh schedule
     # 15 0 * * 1 - run once a week on Monday at 12:15AM
     @settings.cron_ontology_analytics ||= "15 0 * * 1"
+    # Ontologies report generation schedule
+    # 30 1 * * * - run daily at 1:30AM
+    @settings.cron_ontologies_report ||= "30 1 * * *"
+    # Ontologies Report file location
+    @settings.ontologies_report_file = "../../reports/ontologies_report.json"
 
     @settings.log_level ||= :info
     unless (@settings.log_path && File.exists?(@settings.log_path))

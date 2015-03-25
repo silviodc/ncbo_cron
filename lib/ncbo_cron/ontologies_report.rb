@@ -1,25 +1,31 @@
+require 'benchmark'
+
 module NcboCron
   module Models
     class OntologiesReport
-      def initialize(logger,saveto)
+      def initialize(logger, saveto)
         @logger = logger
         @saveto = saveto
       end
 
       def run
-        @logger.info("running report...\n")
+        @logger.info("Running ontologies report...\n")
         ontologies = LinkedData::Models::Ontology.where.include(:acronym).all
+        # ontologies_to_indclude = ["AERO", "SBO", "EHDAA", "CCO", "ONLIRA", "VT", "ZEA", "SMASH", "PLIO", "OGI", "CO"]
+        # ontologies.select! { |ont| ontologies_to_indclude.include?(ont.acronym) }
         report = {}
         count = 0
         ontologies.each do |ont|
           count += 1
-          @logger.info(" #{count}/#{ontologies.length} ontology #{ont.acronym} ... ")
-          @logger.flush()
-          report[ont.acronym] = sanity_report(ont)
-          @logger.info("DONE")
+          @logger.info("Processing report for #{ont.acronym} - #{count} of #{ontologies.length} ontologies."); @logger.flush
+          time = Benchmark.realtime do
+            report[ont.acronym] = sanity_report(ont)
+          end
+          @logger.info("Finished report for #{ont.acronym} in #{time} sec."); @logger.flush
         end
 
         File.open(@saveto, 'w') { |file| file.write(JSON.pretty_generate(report)) }
+        @logger.info("Finished generating ontologies report...\n"); @logger.flush
       end
 
       def sanity_report(ont)
@@ -101,7 +107,6 @@ module NcboCron
           report[:classes] = :ok
         end
 
-
         if sub.ontology.flat
           report[:roots] = :na
         else
@@ -112,6 +117,7 @@ module NcboCron
           end
         end
 
+        # check if metrics has been generated
         report[:metrics] = :ok 
         metrics = sub.metrics
         if metrics.nil?
@@ -122,11 +128,11 @@ module NcboCron
             report[:metrics] = :data_ko
           end
         end
+
         if first_page_classes.length > 0
           text_ann = first_page_classes.map { |c| c.prefLabel }.join(" | ")
           ann = Annotator::Models::NcboAnnotator.new(@logger)
-          ann_response = ann.annotate(text_ann,
-                                      { ontologies: [ ont.acronym ] })
+          ann_response = ann.annotate(text_ann, { ontologies: [ ont.acronym ] })
           if ann_response.length > 10
             report[:annotator] = :ok
           else
@@ -134,16 +140,17 @@ module NcboCron
           end
 
           search_query = first_page_classes.first.prefLabel
-          resp = LinkedData::Models::Class.search(
-                    search_query,query_params(ont.acronym))
+          resp = LinkedData::Models::Class.search(search_query,query_params(ont.acronym))
           if resp["response"]["numFound"] > 0
             report[:search] = :ok
           else
             report[:search] = :ko
           end
         end
+
         return report
       end
+
       def query_params(acronym)
         return {"defType"=>"edismax",
          "stopwords"=>"true",
@@ -166,3 +173,5 @@ module NcboCron
     end
   end
 end
+
+# ./bin/ncbo_cron --disable-processing true --disable-pull true --disable-flush true --disable-warmq true --disable-ontology-analytics true --ontologies-report '22 * * * *'

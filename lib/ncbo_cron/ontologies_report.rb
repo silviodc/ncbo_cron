@@ -25,7 +25,7 @@ module NcboCron
         end
 
         File.open(@saveto, 'w') { |file| file.write(JSON.pretty_generate(report)) }
-        @logger.info("Finished generating ontologies report...\n"); @logger.flush
+        @logger.info("Finished generating ontologies report. Wrote report data to #{@saveto}.\n"); @logger.flush
       end
 
       def sanity_report(ont)

@@ -307,14 +307,14 @@ runner.execute do |opts|
       ontologies_report_options[:scheduler_type] = :cron
       ontologies_report_options[:cron_schedule] = ontologies_report_options[:cron_ontologies_report]
       logger.info "Setting up ontologies report generation job with #{ontologies_report_options[:cron_ontologies_report]}"
-      logger.info "Writing ontologies report into #{ontologies_report_options[:ontologies_report_file]}"; logger.flush
+      logger.info "Writing ontologies report into #{ontologies_report_options[:ontology_report_path]}"; logger.flush
       ontologies_report_log_path = File.join(log_path, "#{log_filename_noExt}-ontologies-report.log")
       ontologies_report_logger = Logger.new(ontologies_report_log_path)
       NcboCron::Scheduler.scheduled_locking_job(ontologies_report_options) do
         logger.info "Starting ontologies report generation"; logger.flush
         logger.info "Logging ontologies report generation details to #{ontologies_report_log_path}"; logger.flush
         t0 = Time.now
-        NcboCron::Models::OntologiesReport.new(ontologies_report_logger, ontologies_report_options[:ontologies_report_file]).run
+        NcboCron::Models::OntologiesReport.new(ontologies_report_logger, ontologies_report_options[:ontology_report_path]).run
         logger.info "Ontologies report generation job completed in #{Time.now - t0} sec."; logger.flush
         logger.info "Finished ontologies report generation"; logger.flush
       end

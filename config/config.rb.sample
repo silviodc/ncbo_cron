@@ -35,6 +35,9 @@ NcboCron.config do |config|
   config.redis_port  ||= 6379
   config.search_index_all_url = "http://localhost:8983/solr/core2"
 
+  # Ontologies Report config
+  config.ontology_report_path = "./test/reports/ontologies_report.json"
+
   # Google Analytics config
   config.analytics_service_account_email_address = "123456789999-sikipho0wk8q0atflrmw62dj4kpwoj3c@developer.gserviceaccount.com"
   config.analytics_path_to_key_file              = "config/bioportal-analytics.p12"

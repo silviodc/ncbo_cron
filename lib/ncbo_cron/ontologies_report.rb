@@ -48,7 +48,7 @@ module NcboCron
       end
 
       def sanity_report(ont)
-        report = {error: false}
+        report = {problem: false}
         ont.bring_remaining()
         ont.bring(:submissions)
         submissions = ont.submissions
@@ -144,7 +144,7 @@ module NcboCron
       end
 
       def add_error_code(report, code, status=nil)
-        report[:error] = false unless report.has_key? :error
+        report[:problem] = false unless report.has_key? :problem
         if ERROR_CODES.has_key? code
           if ERROR_CODES[code].kind_of?(Array)
             unless status.nil?
@@ -154,7 +154,7 @@ module NcboCron
           else
             report[code] = ERROR_CODES[code]
           end
-          report[:error] = true if code.to_s.start_with? "err"
+          report[:problem] = true if code.to_s.start_with? "err"
         end
       end
 

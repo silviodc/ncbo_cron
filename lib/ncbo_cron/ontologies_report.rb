@@ -1,8 +1,27 @@
+require 'logger'
 require 'benchmark'
 
 module NcboCron
   module Models
     class OntologiesReport
+
+      ERROR_CODES = {
+          summaryOnly:                         "Ontology is summary-only",
+          flat:                                "This ontology is designated as 'flat'",
+          errSummaryOnlyWithSubmissions:       "Ontology has submissions but it is set to summary-only",
+          errNoSubmissions:                    "Ontology has no submissions",
+          errNoReadySubmission:                "Ontology has no submissions in a ready state",
+          errNoLatestReadySubmission:          "The latest submission of this ontology is not in a ready state",
+          errNoClassesLatestSubmission:        "The latest submission of this ontology has no classes",
+          errNoRootsLatestSubmission:          "The latest submission of this ontology has no roots",
+          errNoMetricsLatestSubmission:        "The latest submission of this ontology contains no metrics",
+          errIncorrectMetricsLatestSubmission: "The latest submission of this ontology contains incorrect metrics",
+          errNoAnnotator:                      "Annotator returns no results for this ontology",
+          errNoSearch:                         "Search returns no results for this ontology",
+          errErrorStatus:                      [],
+          errMissingStatus:                    []
+      }
+
       def initialize(logger, saveto)
         @logger = logger
         @saveto = saveto
@@ -11,7 +30,7 @@ module NcboCron
       def run
         @logger.info("Running ontologies report...\n")
         ontologies = LinkedData::Models::Ontology.where.include(:acronym).all
-        # ontologies_to_indclude = ["AERO", "SBO", "EHDAA", "CCO", "ONLIRA", "VT", "ZEA", "SMASH", "PLIO", "OGI", "CO"]
+        # ontologies_to_indclude = ["AERO", "SBO", "EHDAA", "CCO", "ONLIRA", "VT", "ZEA", "SMASH", "PLIO", "OGI", "CO", "NCIT", "GO"]
         # ontologies.select! { |ont| ontologies_to_indclude.include?(ont.acronym) }
         report = {}
         count = 0
@@ -29,69 +48,54 @@ module NcboCron
       end
 
       def sanity_report(ont)
-        report = {}
+        report = {error: false}
         ont.bring_remaining()
         ont.bring(:submissions)
         submissions = ont.submissions
-        problem = 0
 
-        #first see if is summary only and if it has submissions
+        # first see if is summary only and if it has submissions
         if ont.summaryOnly
           if !submissions.nil? && submissions.length > 0
-            report[:summaryOnly] = :ko_summary_only_with_submissions
-            problem = 1
+            add_error_code(report, :errSummaryOnlyWithSubmissions)
           else
-            report[:summaryOnly] = :ok
+            add_error_code(report, :summaryOnly)
           end
-          report[:problem] = problem
           return report
         end
 
-        #check if latest submission is the one ready
+        # check if latest submission is the one ready
         latest_any = ont.latest_submission(status: :any)
         if latest_any.nil?
-          report[:hasSubmissions] = :ko
-          #no submissions then the other tests cannot run
-          report[:problem] = 1
+          # no submissions, cannot continue
+          add_error_code(report, :errNoSubmissions)
           return report
         end
-        report[:hasSubmissions] = :ok
+
         latest_ready = ont.latest_submission
         if latest_ready.nil?
-          report[:hasReadySubmission] = :ko
-          report[:problem] = 1
+          # no ready submission exists, cannot continue
+          add_error_code(report, :errNoReadySubmission)
           return report
         end
-        report[:hasReadySubmission] = :ok
-        if latest_any.id.to_s != latest_ready.id.to_s
-          report[:latestSubmissionIsReady] = :ko
-          problem = 1
-        else
-          report[:latestSubmissionIsReady] = :ok
-        end
 
-        #rest of the tests run for latest_ready
+        add_error_code(report, :errNoLatestReadySubmission) if latest_any.id.to_s != latest_ready.id.to_s
+
+        # rest of the tests run for latest_ready
         sub = latest_ready
-
         sub.bring_remaining()
         sub.ontology.bring_remaining()
         sub.bring(:metrics)
 
+        # add error statuses
+        sub.submissionStatus.each { |st| add_error_code(report, :errErrorStatus, st.id.to_s.split("/")[-1]) if st.error? }
+
+        # add missing statuses
         statuses = LinkedData::Models::SubmissionStatus.where.all
         statuses.select! { |st| !st.error? }
         statuses.select! { |st| st.id.to_s["DIFF"].nil? }
         statuses.select! { |st| st.id.to_s["ARCHIVED"].nil? }
         statuses.select! { |st| st.id.to_s["RDF_LABELS"].nil? }
 
-        report[:error_status] = []
-        sub.submissionStatus.each do |st|
-          if st.error?
-            report[:error_status] << st.id.to_s.split("/")[-1]
-            problem = 1
-          end
-        end
-
-        report[:missing_status] = []
         statuses.each do |ok|
           found = false
           sub.submissionStatus.each do |st|
@@ -100,70 +104,58 @@ module NcboCron
               break
             end
           end
-          if !found
-            report[:missing_status] << ok.id.to_s.split("/")[-1]
-            problem = 1
-          end
+          add_error_code(report, :errMissingStatus, ok.id.to_s.split("/")[-1]) unless found
         end
 
-        #classes, roots
-        first_page_classes = LinkedData::Models::Class.in(sub)
-                              .include(:prefLabel, :synonym).page(1,10).all
-        if first_page_classes.length == 0 
-          report[:classes] = :panic
-          problem = 1
-        else
-          report[:classes] = :ok
-        end
-
+        # check if classes exist
+        first_page_classes = LinkedData::Models::Class.in(sub).include(:prefLabel, :synonym).page(1, 10).all
+        add_error_code(report, :errNoClassesLatestSubmission) if first_page_classes.length == 0
+        # check whether ontology has been designated as "flat" or root classes exist
         if sub.ontology.flat
-          report[:roots] = :na
+          add_error_code(report, :flat)
         else
-          if sub.roots().length > 0
-            report[:roots] = :ok
-          else
-            report[:roots] = :ko
-            problem = 1
-          end
+          add_error_code(report, :errNoRootsLatestSubmission) unless sub.roots().length > 0
         end
 
         # check if metrics has been generated
-        report[:metrics] = :ok 
         metrics = sub.metrics
         if metrics.nil?
-          report[:metrics] = :object_ko
-          problem = 1
+          add_error_code(report, :errNoMetricsLatestSubmission)
         else
           metrics.bring_remaining()
           if metrics.classes + metrics.properties < 10
-            report[:metrics] = :data_ko
-            problem = 1
+            add_error_code(report, :errIncorrectMetricsLatestSubmission)
           end
         end
 
         if first_page_classes.length > 0
+          # check for Annotator calls
           text_ann = first_page_classes.map { |c| c.prefLabel }.join(" | ")
           ann = Annotator::Models::NcboAnnotator.new(@logger)
           ann_response = ann.annotate(text_ann, { ontologies: [ ont.acronym ] })
-          if ann_response.length > 10
-            report[:annotator] = :ok
-          else
-            report[:annotator] = :ko
-            problem = 1
-          end
-
+          add_error_code(report, :errNoAnnotator) unless ann_response.length > 10
+          # check for Search calls
           search_query = first_page_classes.first.prefLabel
           resp = LinkedData::Models::Class.search(search_query,query_params(ont.acronym))
-          if resp["response"]["numFound"] > 0
-            report[:search] = :ok
-          else
-            report[:search] = :ko
-            problem = 1
-          end
+          add_error_code(report, :errNoSearch) unless resp["response"]["numFound"] > 0
         end
-        report[:problem] = problem
 
         return report
+      end
+
+      def add_error_code(report, code, status=nil)
+        report[:error] = false unless report.has_key? :error
+        if ERROR_CODES.has_key? code
+          if ERROR_CODES[code].kind_of?(Array)
+            unless status.nil?
+              report[code] = [] unless report.has_key? code
+              report[code] << status
+            end
+          else
+            report[code] = ERROR_CODES[code]
+          end
+          report[:error] = true if code.to_s.start_with? "err"
+        end
       end
 
       def query_params(acronym)
@@ -189,4 +181,14 @@ module NcboCron
   end
 end
 
+# require 'ontologies_linked_data'
+# require 'goo'
+# require 'ncbo_annotator'
+# require 'ncbo_cron/config'
+# require_relative '../../config/config'
+#
+# ontologies_report_path = File.join("logs", "ontologies-report.log")
+# ontologies_report_logger = Logger.new(ontologies_report_path)
+# save_report_path = "../test/reports/ontologies_report.json"
+# NcboCron::Models::OntologiesReport.new(ontologies_report_logger, save_report_path).run
 # ./bin/ncbo_cron --disable-processing true --disable-pull true --disable-flush true --disable-warmq true --disable-ontology-analytics true --ontologies-report '22 * * * *'

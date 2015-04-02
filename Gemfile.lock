@@ -1,6 +1,6 @@
 GIT
   remote: git://github.com/ncbo/goo.git
-  revision: f8f559eca8c6b9831a1d97779889083c1142be06
+  revision: accd0f2b186aa1cf286ee10c497fec78fb2d17ce
   branch: staging
   specs:
     goo (0.0.2)
@@ -26,7 +26,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ontologies_linked_data.git
-  revision: bd352082940fd1dabb4b433ac88a4c39fe581dfc
+  revision: fc6f38d53eb961e16a2c6ab2d4dc4dfd929b63c5
   branch: staging
   specs:
     ontologies_linked_data (0.0.1)
@@ -116,7 +116,7 @@ GEM
     faraday (0.9.1)
       multipart-post (>= 1.2, < 3)
     ffi (1.9.8)
-    google-api-client (0.8.3)
+    google-api-client (0.8.5)
       activesupport (>= 3.2)
       addressable (~> 2.3)
       autoparse (~> 0.3)
@@ -127,13 +127,13 @@ GEM
       multi_json (~> 1.10)
       retriable (~> 1.4)
       signet (~> 0.6)
-    googleauth (0.3.0)
+    googleauth (0.4.0)
       faraday (~> 0.9)
-      jwt (~> 1.4.1)
+      jwt (~> 1.4)
       logging (~> 1.8)
-      memoist (~> 0.11.0)
-      multi_json (= 1.11.0)
-      signet (~> 0.6.0)
+      memoist (~> 0.11)
+      multi_json (= 1.11)
+      signet (~> 0.6)
     http-cookie (1.0.2)
       domain_name (~> 0.5)
     i18n (0.7.0)
@@ -188,7 +188,7 @@ GEM
     rubyzip (1.1.7)
     rufus-scheduler (2.0.24)
       tzinfo (>= 0.3.22)
-    sequel (4.20.0)
+    sequel (4.21.0)
     signet (0.6.0)
       addressable (~> 2.3)
       extlib (~> 0.9)

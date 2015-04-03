@@ -158,6 +158,8 @@ module NcboCron
 
         sub.bring_remaining; sub.ontology.bring(:acronym)
         log_path = sub.parsing_log_path
+        FileUtils.mkdir_p(sub.data_folder) unless Dir.exists?(sub.data_folder)
+
         logger.info "Logging parsing output to #{log_path}"
         logger = Logger.new(log_path)
         logger.debug "Starting parsing for #{submissionId}\n\n\n\n"

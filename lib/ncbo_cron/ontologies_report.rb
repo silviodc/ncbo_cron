@@ -6,20 +6,20 @@ module NcboCron
     class OntologiesReport
 
       ERROR_CODES = {
-          summaryOnly:                         "Ontology is summary-only",
-          flat:                                "This ontology is designated as 'flat'",
-          errSummaryOnlyWithSubmissions:       "Ontology has submissions but it is set to summary-only",
-          errNoSubmissions:                    "Ontology has no submissions",
-          errNoReadySubmission:                "Ontology has no submissions in a ready state",
-          errNoLatestReadySubmission:          "The latest submission of this ontology is not in a ready state",
-          errNoClassesLatestSubmission:        "The latest submission of this ontology has no classes",
-          errNoRootsLatestSubmission:          "The latest submission of this ontology has no roots",
-          errNoMetricsLatestSubmission:        "The latest submission of this ontology contains no metrics",
-          errIncorrectMetricsLatestSubmission: "The latest submission of this ontology contains incorrect metrics",
-          errNoAnnotator:                      "Annotator returns no results for this ontology",
-          errNoSearch:                         "Search returns no results for this ontology",
-          errErrorStatus:                      [],
-          errMissingStatus:                    []
+          summaryOnly:                              "Ontology is summary-only",
+          flat:                                     "This ontology is designated as 'flat'",
+          errSummaryOnlyWithSubmissions:            "Ontology has submissions but it is set to summary-only",
+          errNoSubmissions:                         "Ontology has no submissions",
+          errNoReadySubmission:                     "Ontology has no submissions in a ready state",
+          errNoLatestReadySubmission:               lambda { |n| "The latest submission is not ready and is ahead of the latest ready by #{n} revision#{n > 1?'s':''}" },
+          errNoClassesLatestReadySubmission:        "The latest ready submission has no classes",
+          errNoRootsLatestReadySubmission:          "The latest ready submission has no roots",
+          errNoMetricsLatestReadySubmission:        "The latest ready submission has no metrics",
+          errIncorrectMetricsLatestReadySubmission: "The latest ready submission has incorrect metrics",
+          errNoAnnotator:                           "Annotator returns no results for this ontology",
+          errNoSearch:                              "Search returns no results for this ontology",
+          errErrorStatus:                           [],
+          errMissingStatus:                         []
       }
 
       def initialize(logger, saveto)
@@ -31,6 +31,7 @@ module NcboCron
         @logger.info("Running ontologies report...\n")
         ontologies = LinkedData::Models::Ontology.where.include(:acronym).all
         # ontologies_to_indclude = ["AERO", "SBO", "EHDAA", "CCO", "ONLIRA", "VT", "ZEA", "SMASH", "PLIO", "OGI", "CO", "NCIT", "GO"]
+        # ontologies_to_indclude = ["DCM", "D1-CARBON-FLUX", "STUFF"]
         # ontologies.select! { |ont| ontologies_to_indclude.include?(ont.acronym) }
         report = {}
         count = 0
@@ -78,7 +79,13 @@ module NcboCron
           return report
         end
 
-        add_error_code(report, :errNoLatestReadySubmission) if latest_any.id.to_s != latest_ready.id.to_s
+        # submission that's ready is not the latest one
+        if latest_any.id.to_s != latest_ready.id.to_s
+          sub_count = 0
+          latest_submission_id = latest_ready.submissionId.to_i
+          ont.submissions.each { |sub| sub_count += 1 if sub.submissionId.to_i > latest_submission_id }
+          add_error_code(report, :errNoLatestReadySubmission, sub_count)
+        end
 
         # rest of the tests run for latest_ready
         sub = latest_ready
@@ -87,7 +94,7 @@ module NcboCron
         sub.bring(:metrics)
 
         # add error statuses
-        sub.submissionStatus.each { |st| add_error_code(report, :errErrorStatus, st.id.to_s.split("/")[-1]) if st.error? }
+        sub.submissionStatus.each { |st| add_error_code(report, :errErrorStatus, st.get_code_from_id) if st.error? }
 
         # add missing statuses
         statuses = LinkedData::Models::SubmissionStatus.where.all
@@ -104,7 +111,7 @@ module NcboCron
               break
             end
           end
-          add_error_code(report, :errMissingStatus, ok.id.to_s.split("/")[-1]) unless found
+          add_error_code(report, :errMissingStatus, ok.get_code_from_id) unless found
         end
 
         # check if classes exist
@@ -143,13 +150,17 @@ module NcboCron
         return report
       end
 
-      def add_error_code(report, code, status=nil)
+      def add_error_code(report, code, data=nil)
         report[:problem] = false unless report.has_key? :problem
         if ERROR_CODES.has_key? code
           if ERROR_CODES[code].kind_of?(Array)
-            unless status.nil?
+            unless data.nil?
               report[code] = [] unless report.has_key? code
-              report[code] << status
+              report[code] << data
+            end
+          elsif ERROR_CODES[code].is_a? (Proc)
+            unless data.nil?
+              report[code] = ERROR_CODES[code].call(data)
             end
           else
             report[code] = ERROR_CODES[code]

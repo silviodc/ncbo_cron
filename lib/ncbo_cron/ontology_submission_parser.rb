@@ -158,6 +158,8 @@ module NcboCron
 
         sub.bring_remaining; sub.ontology.bring(:acronym)
         log_path = sub.parsing_log_path
+        FileUtils.mkdir_p(sub.data_folder) unless Dir.exists?(sub.data_folder)
+
         logger.info "Logging parsing output to #{log_path}"
         logger = Logger.new(log_path)
         logger.debug "Starting parsing for #{submissionId}\n\n\n\n"
@@ -167,15 +169,19 @@ module NcboCron
         if sub
           # Check to make sure the file has been downloaded
           if sub.pullLocation && (!sub.uploadFilePath || !File.exist?(sub.uploadFilePath))
+            logger.debug "Pull location found, but no file in the upload file path. Retrying download."
             file, filename = sub.download_ontology_file
             file_location = sub.class.copy_file_repository(sub.ontology.acronym, sub.submissionId, file, filename)
             file_location = "../" + file_location if file_location.start_with?(".") # relative path fix
             sub.uploadFilePath = File.expand_path(file_location, __FILE__)
             sub.save
+            logger.debug "Download complete"
           end
 
+          logger.debug "Parsing submission"
           sub.process_submission(logger, actions)
           if sub.ready?
+            logger.debug "Submission parsed successfully, archiving previous submissions"
             submissions = LinkedData::Models::OntologySubmission
               .where(ontology: sub.ontology)
               .include(:submissionId)
@@ -198,6 +204,8 @@ module NcboCron
                 old_sub.save
               end
             end
+          else
+            logger.debug "Submission parsing failed"
           end
 
           process_annotator(logger, sub) if actions[:process_annotator]

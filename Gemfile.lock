@@ -26,7 +26,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ontologies_linked_data.git
-  revision: fc6f38d53eb961e16a2c6ab2d4dc4dfd929b63c5
+  revision: f631f33b189c00e4ca7b89728028c403fc32eef6
   branch: staging
   specs:
     ontologies_linked_data (0.0.1)

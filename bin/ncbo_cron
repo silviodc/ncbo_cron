@@ -16,6 +16,13 @@ config_exists = File.exist?(File.expand_path('../../config/config.rb', __FILE__)
 abort("Please create a config/config.rb file using the config/config.rb.sample as a template") unless config_exists
 require_relative '../config/config'
 
+#################
+## IMPORTANT
+#################
+# We shut off security for LinkedData when we run the cron bin because otherwise ontologies can't get updated
+# This has to happen after the config file has been loaded, to make sure it won't get overwritten
+LinkedData.settings.enable_security = false
+
 require 'optparse'
 options = NcboCron.settings.to_h
 opt_parser = OptionParser.new do |opts|

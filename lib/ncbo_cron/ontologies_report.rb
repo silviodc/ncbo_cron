@@ -33,17 +33,19 @@ module NcboCron
         # ontologies_to_indclude = ["AERO", "SBO", "EHDAA", "CCO", "ONLIRA", "VT", "ZEA", "SMASH", "PLIO", "OGI", "CO", "NCIT", "GO"]
         # ontologies_to_indclude = ["DCM", "D1-CARBON-FLUX", "STUFF"]
         # ontologies.select! { |ont| ontologies_to_indclude.include?(ont.acronym) }
-        report = {}
+        report = {ontologies: {}, date_generated: nil}
         count = 0
         ontologies.each do |ont|
           count += 1
           @logger.info("Processing report for #{ont.acronym} - #{count} of #{ontologies.length} ontologies."); @logger.flush
           time = Benchmark.realtime do
-            report[ont.acronym] = sanity_report(ont)
+            report[:ontologies][ont.acronym] = sanity_report(ont)
           end
           @logger.info("Finished report for #{ont.acronym} in #{time} sec."); @logger.flush
         end
 
+        tm = Time.new
+        report[:date_generated] = tm.strftime("%m/%d/%Y %I:%M%p")
         File.open(@saveto, 'w') { |file| file.write(JSON.pretty_generate(report)) }
         @logger.info("Finished generating ontologies report. Wrote report data to #{@saveto}.\n"); @logger.flush
       end
@@ -76,6 +78,8 @@ module NcboCron
         if latest_ready.nil?
           # no ready submission exists, cannot continue
           add_error_code(report, :errNoReadySubmission)
+          # add error statuses from the latest non-ready submission
+          latest_any.submissionStatus.each { |st| add_error_code(report, :errErrorStatus, st.get_code_from_id) if st.error? }
           return report
         end
 

@@ -16,7 +16,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ncbo_annotator.git
-  revision: 8a15e9f8ee1c2b3da6b9083b1c360b7072a9c576
+  revision: f82726f3809040e432cbc828d1d2ea487ee9d8f7
   branch: staging
   specs:
     ncbo_annotator (0.0.1)
@@ -26,7 +26,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ontologies_linked_data.git
-  revision: bfdd6b8e7d735381780f25fca567533018689092
+  revision: 84bbba68ada9826b48cfd71170f38921130ef6bf
   branch: staging
   specs:
     ontologies_linked_data (0.0.1)
@@ -153,7 +153,7 @@ GEM
       mime-types (>= 1.16, < 3)
     memoist (0.12.0)
     method_source (0.8.2)
-    mime-types (2.4.3)
+    mime-types (2.5)
     minitest (4.7.5)
     mlanett-redis-lock (0.2.6)
       redis
@@ -162,7 +162,7 @@ GEM
     mysql2 (0.3.18)
     net-http-persistent (2.9.4)
     netrc (0.10.3)
-    oj (2.12.4)
+    oj (2.12.5)
     pony (1.11)
       mail (>= 2.0)
     pry (0.10.1)

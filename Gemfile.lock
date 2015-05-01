@@ -16,7 +16,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ncbo_annotator.git
-  revision: 62ef4905d961ba5fb12ad540c02ee1c7d3de2ffa
+  revision: f662c222a9ba811480632da4ba8da1ffcb7ac15e
   branch: master
   specs:
     ncbo_annotator (0.0.1)
@@ -26,7 +26,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ontologies_linked_data.git
-  revision: d20a85f6b04f79e82a60c68ab3ee50b79c70f99d
+  revision: fb68d45b21dd27e12982bea8ca72832c2b594b5a
   branch: master
   specs:
     ontologies_linked_data (0.0.1)
@@ -97,7 +97,7 @@ GEM
     coderay (1.1.0)
     cube-ruby (0.0.3)
     dante (0.2.0)
-    domain_name (0.5.23)
+    domain_name (0.5.24)
       unf (>= 0.0.5, < 1.0.0)
     elasticsearch (1.0.8)
       elasticsearch-api (= 1.0.7)
@@ -116,7 +116,7 @@ GEM
     faraday (0.9.1)
       multipart-post (>= 1.2, < 3)
     ffi (1.9.8)
-    google-api-client (0.8.5)
+    google-api-client (0.8.6)
       activesupport (>= 3.2)
       addressable (~> 2.3)
       autoparse (~> 0.3)
@@ -127,11 +127,11 @@ GEM
       multi_json (~> 1.10)
       retriable (~> 1.4)
       signet (~> 0.6)
-    googleauth (0.4.0)
+    googleauth (0.4.1)
       faraday (~> 0.9)
       jwt (~> 1.4)
-      logging (~> 1.8)
-      memoist (~> 0.11)
+      logging (~> 2.0)
+      memoist (~> 0.12)
       multi_json (= 1.11)
       signet (~> 0.6)
     http-cookie (1.0.2)
@@ -144,16 +144,16 @@ GEM
       addressable (~> 2.3)
     libxml-ruby (2.8.0)
     little-plugger (1.1.3)
-    logging (1.8.2)
-      little-plugger (>= 1.1.3)
-      multi_json (>= 1.8.4)
+    logging (2.0.0)
+      little-plugger (~> 1.1)
+      multi_json (~> 1.10)
     macaddr (1.7.1)
       systemu (~> 2.6.2)
     mail (2.6.3)
       mime-types (>= 1.16, < 3)
-    memoist (0.11.0)
+    memoist (0.12.0)
     method_source (0.8.2)
-    mime-types (2.4.3)
+    mime-types (2.5)
     minitest (4.7.5)
     mlanett-redis-lock (0.2.6)
       redis
@@ -162,7 +162,7 @@ GEM
     mysql2 (0.3.18)
     net-http-persistent (2.9.4)
     netrc (0.10.3)
-    oj (2.12.1)
+    oj (2.12.5)
     pony (1.11)
       mail (>= 2.0)
     pry (0.10.1)
@@ -196,7 +196,7 @@ GEM
       jwt (~> 1.0)
       multi_json (~> 1.10)
     slop (3.6.0)
-    sys-proctable (0.9.6)
+    sys-proctable (0.9.8)
     systemu (2.6.5)
     thread_safe (0.3.5)
     typhoeus (0.7.1)
@@ -205,7 +205,7 @@ GEM
       thread_safe (~> 0.1)
     unf (0.1.4)
       unf_ext
-    unf_ext (0.0.6)
+    unf_ext (0.0.7.1)
     uuid (2.3.7)
       macaddr (~> 1.0)
 

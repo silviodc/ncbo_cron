@@ -1,6 +1,6 @@
 GIT
   remote: git://github.com/ncbo/goo.git
-  revision: a7217cd8b6992dc5c14639b751be7fe935321e51
+  revision: 03ffedcd708b8b7f086e3e4ab5925a40567f83ab
   branch: master
   specs:
     goo (0.0.2)
@@ -16,7 +16,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ncbo_annotator.git
-  revision: ae4db9ca4c7da83b848f49497ea8bf8ec033ba99
+  revision: 81ade38bf1fec36858530165113ee49ad2ecee96
   branch: master
   specs:
     ncbo_annotator (0.0.1)
@@ -162,14 +162,14 @@ GEM
     mysql2 (0.3.18)
     net-http-persistent (2.9.4)
     netrc (0.10.3)
-    oj (2.12.5)
+    oj (2.12.7)
     pony (1.11)
       mail (>= 2.0)
     pry (0.10.1)
       coderay (~> 1.1.0)
       method_source (~> 0.8.1)
       slop (~> 3.4)
-    rack (1.6.0)
+    rack (1.6.1)
     rack-test (0.6.3)
       rack (>= 1.0)
     rake (10.4.2)

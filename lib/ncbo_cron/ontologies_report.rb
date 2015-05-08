@@ -144,7 +144,7 @@ module NcboCron
           text_ann = first_page_classes.map { |c| c.prefLabel }.join(" | ")
           ann = Annotator::Models::NcboAnnotator.new(@logger)
           ann_response = ann.annotate(text_ann, { ontologies: [ ont.acronym ] })
-          add_error_code(report, :errNoAnnotator) unless ann_response.length > 10
+          add_error_code(report, :errNoAnnotator) if ann_response.length < first_page_classes.length
           # check for Search calls
           search_query = first_page_classes.first.prefLabel
           resp = LinkedData::Models::Class.search(search_query,query_params(ont.acronym))

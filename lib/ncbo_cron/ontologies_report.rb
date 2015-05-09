@@ -219,20 +219,20 @@ module NcboCron
 
       def query_params(acronym)
         return {
-          "defType" => "edismax",
-          "stopwords" => "true",
-          "lowercaseOperators" => "true",
-          "fl" => "*,score",
-          "hl" => "on",
-          "hl.simple.pre" => "<em>",
-          "hl.simple.post" => "</em>",
-          "qf" => "resource_id^100 prefLabelExact^90 prefLabel^70 synonymExact^50 synonym^10 notation cui semanticType",
-          "hl.fl" => "resource_id prefLabelExact prefLabel synonymExact synonym notation cui semanticType",
-          "fq" => "submissionAcronym:\"#{acronym}\" AND obsolete:false",
-          "page" => 1,
-          "pagesize" => 50,
-          "start" => 0,
-          "rows" => 50
+            "defType" => "edismax",
+            "stopwords" => "true",
+            "lowercaseOperators" => "true",
+            "fl" => "*,score",
+            "hl" => "on",
+            "hl.simple.pre" => "<em>",
+            "hl.simple.post" => "</em>",
+            "qf" => "resource_id^100 prefLabelExact^90 prefLabel^70 synonymExact^50 synonym^10 notation cui semanticType",
+            "hl.fl" => "resource_id prefLabelExact prefLabel synonymExact synonym notation cui semanticType",
+            "fq" => "submissionAcronym:\"#{acronym}\" AND obsolete:false",
+            "page" => 1,
+            "pagesize" => 50,
+            "start" => 0,
+            "rows" => 50
         }
       end
 

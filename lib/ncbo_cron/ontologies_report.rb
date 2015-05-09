@@ -118,9 +118,6 @@ module NcboCron
           add_error_code(report, :errMissingStatus, ok.get_code_from_id) unless found
         end
 
-        # check if classes exist
-        first_page_classes = LinkedData::Models::Class.in(sub).include(:prefLabel, :synonym).page(1, 10).all
-        add_error_code(report, :errNoClassesLatestSubmission) if first_page_classes.length == 0
         # check whether ontology has been designated as "flat" or root classes exist
         if sub.ontology.flat
           add_error_code(report, :flat)
@@ -139,19 +136,62 @@ module NcboCron
           end
         end
 
-        if first_page_classes.length > 0
+        # check if classes exist
+        good_classes = good_classes(sub)
+
+        if good_classes.empty?
+          add_error_code(report, :errNoClassesLatestSubmission)
+        else
+          search_text = good_classes.join(" | ")
           # check for Annotator calls
-          text_ann = first_page_classes.map { |c| c.prefLabel }.join(" | ")
           ann = Annotator::Models::NcboAnnotator.new(@logger)
-          ann_response = ann.annotate(text_ann, { ontologies: [ ont.acronym ] })
-          add_error_code(report, :errNoAnnotator) if ann_response.length < first_page_classes.length
+          ann_response = ann.annotate(search_text, { ontologies: [ont.acronym] })
+          add_error_code(report, :errNoAnnotator) if ann_response.length < good_classes.length
+
           # check for Search calls
-          search_query = first_page_classes.first.prefLabel
-          resp = LinkedData::Models::Class.search(search_query,query_params(ont.acronym))
-          add_error_code(report, :errNoSearch) unless resp["response"]["numFound"] > 0
+          resp = LinkedData::Models::Class.search(search_text, query_params(ont.acronym))
+          add_error_code(report, :errNoSearch) unless resp["response"]["numFound"] < good_classes.length
         end
 
         return report
+      end
+
+      def good_classes(submission)
+        page = 1
+        size = 10
+        paging = LinkedData::Models::Class.in(submission).include(:prefLabel, :synonym).page(page, size)
+        good_classes = Array.new
+
+        begin
+          page_classes = paging.all
+          break if page_classes.empty?
+
+          page_classes.each do |cls|
+            prefLabel = nil
+
+            begin
+              prefLabel = cls.prefLabel
+            rescue Goo::Base::AttributeNotLoaded =>  e
+              next
+            end
+
+            # Skip classes with no prefLabel or b-nodes
+            next if prefLabel.nil? || cls.id.to_s.include?(".well-known/genid")
+
+            # store good prefLabel
+            good_classes << prefLabel
+            break if good_classes.length === size
+          end
+
+          break if good_classes.length === size
+          page = page_classes.next_page
+
+          if page
+            paging.page(page)
+          end
+        end while !page.nil?
+
+        good_classes
       end
 
       def add_error_code(report, code, data=nil)
@@ -174,22 +214,22 @@ module NcboCron
       end
 
       def query_params(acronym)
-        return {"defType"=>"edismax",
-         "stopwords"=>"true",
-         "lowercaseOperators"=>"true",
-         "fl"=>"*,score",
-         "hl"=>"on",
-         "hl.simple.pre"=>"<em>",
-         "hl.simple.post"=>"</em>",
-         "qf"=>
-          "resource_id^100 prefLabelExact^90 prefLabel^70 synonymExact^50 synonym^10 notation cui semanticType",
-         "hl.fl"=>
-          "resource_id prefLabelExact prefLabel synonymExact synonym notation cui semanticType",
-         "fq"=>"submissionAcronym:\"#{acronym}\" AND obsolete:false",
-         "page"=>1,
-         "pagesize"=>50,
-         "start"=>0,
-         "rows"=>50}
+        return {
+          "defType" => "edismax",
+          "stopwords" => "true",
+          "lowercaseOperators" => "true",
+          "fl" => "*,score",
+          "hl" => "on",
+          "hl.simple.pre" => "<em>",
+          "hl.simple.post" => "</em>",
+          "qf" => "resource_id^100 prefLabelExact^90 prefLabel^70 synonymExact^50 synonym^10 notation cui semanticType",
+          "hl.fl" => "resource_id prefLabelExact prefLabel synonymExact synonym notation cui semanticType",
+          "fq" => "submissionAcronym:\"#{acronym}\" AND obsolete:false",
+          "page" => 1,
+          "pagesize" => 50,
+          "start" => 0,
+          "rows" => 50
+        }
       end
 
     end

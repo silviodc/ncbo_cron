@@ -16,8 +16,8 @@ module NcboCron
           errNoRootsLatestReadySubmission:          "The latest ready submission has no roots",
           errNoMetricsLatestReadySubmission:        "The latest ready submission has no metrics",
           errIncorrectMetricsLatestReadySubmission: "The latest ready submission has incorrect metrics",
-          errNoAnnotator:                           "Annotator returns no results for this ontology",
-          errNoSearch:                              "Search returns no results for this ontology",
+          errNoAnnotator:                           lambda { |n| "Annotator - no/few results for: #{n}" },
+          errNoSearch:                              lambda { |n| "Search - no/few results for: #{n}" },
           errErrorStatus:                           [],
           errMissingStatus:                         []
       }
@@ -146,11 +146,11 @@ module NcboCron
           # check for Annotator calls
           ann = Annotator::Models::NcboAnnotator.new(@logger)
           ann_response = ann.annotate(search_text, { ontologies: [ont.acronym] })
-          add_error_code(report, :errNoAnnotator) if ann_response.length < good_classes.length
+          add_error_code(report, :errNoAnnotator, search_text) if ann_response.length < good_classes.length
 
           # check for Search calls
           resp = LinkedData::Models::Class.search(solr_escape(search_text), query_params(ont.acronym))
-          add_error_code(report, :errNoSearch) if resp["response"]["numFound"] < good_classes.length
+          add_error_code(report, :errNoSearch, search_text) if resp["response"]["numFound"] < good_classes.length
         end
 
         return report

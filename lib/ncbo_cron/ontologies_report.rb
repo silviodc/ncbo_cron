@@ -150,7 +150,7 @@ module NcboCron
 
           # check for Search calls
           resp = LinkedData::Models::Class.search(search_text, query_params(ont.acronym))
-          add_error_code(report, :errNoSearch) unless resp["response"]["numFound"] < good_classes.length
+          add_error_code(report, :errNoSearch) if resp["response"]["numFound"] < good_classes.length
         end
 
         return report

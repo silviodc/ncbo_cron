@@ -142,14 +142,14 @@ module NcboCron
         if good_classes.empty?
           add_error_code(report, :errNoClassesLatestSubmission)
         else
-          search_text = good_classes.join(" | ")
+          search_text = good_classes.join(" , ")
           # check for Annotator calls
           ann = Annotator::Models::NcboAnnotator.new(@logger)
           ann_response = ann.annotate(search_text, { ontologies: [ont.acronym] })
           add_error_code(report, :errNoAnnotator) if ann_response.length < good_classes.length
 
           # check for Search calls
-          resp = LinkedData::Models::Class.search(search_text, query_params(ont.acronym))
+          resp = LinkedData::Models::Class.search(solr_escape(search_text), query_params(ont.acronym))
           add_error_code(report, :errNoSearch) if resp["response"]["numFound"] < good_classes.length
         end
 
@@ -192,6 +192,10 @@ module NcboCron
         end while !page.nil?
 
         good_classes
+      end
+
+      def solr_escape(text)
+        RSolr.solr_escape(text).gsub(/\s+/,"\\ ")
       end
 
       def add_error_code(report, code, data=nil)

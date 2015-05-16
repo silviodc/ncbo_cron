@@ -34,20 +34,8 @@ module NcboCron
         # ontologies_to_indclude = ["AERO", "SBO", "EHDAA", "CCO", "ONLIRA", "VT", "ZEA", "SMASH", "PLIO", "OGI", "CO", "NCIT", "GO"]
         # ontologies_to_indclude = ["DCM", "D1-CARBON-FLUX", "STUFF"]
         # ontologies.select! { |ont| ontologies_to_indclude.include?(ont.acronym) }
-
-
-
-
-
-
         # ontologies_to_indclude = ["ADAR", "ELIG"]
         # ontologies.select! { |ont| ontologies_to_indclude.include?(ont.acronym) }
-
-
-
-
-
-
         report = {ontologies: {}, date_generated: nil}
         count = 0
         ontologies.each do |ont|

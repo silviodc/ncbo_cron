@@ -7,7 +7,7 @@ module NcboCron
 
       ERROR_CODES = {
           summaryOnly:                              "Ontology is summary-only",
-          flat:                                     "This ontology is designated as 'flat'",
+          flat:                                     "This ontology is designated as FLAT",
           errSummaryOnlyWithSubmissions:            "Ontology has submissions but it is set to summary-only",
           errNoSubmissions:                         "Ontology has no submissions",
           errNoReadySubmission:                     "Ontology has no submissions in a ready state",
@@ -25,6 +25,7 @@ module NcboCron
       def initialize(logger, saveto)
         @logger = logger
         @saveto = saveto
+        @stop_words = Annotator.settings.stop_words_default_list
       end
 
       def run
@@ -33,6 +34,22 @@ module NcboCron
         # ontologies_to_indclude = ["AERO", "SBO", "EHDAA", "CCO", "ONLIRA", "VT", "ZEA", "SMASH", "PLIO", "OGI", "CO", "NCIT", "GO"]
         # ontologies_to_indclude = ["DCM", "D1-CARBON-FLUX", "STUFF"]
         # ontologies.select! { |ont| ontologies_to_indclude.include?(ont.acronym) }
+
+
+
+
+
+
+        ontologies_to_indclude = ["ADAR", "ELIG"]
+        ontologies.select! { |ont| ontologies_to_indclude.include?(ont.acronym) }
+
+
+
+
+binding.pry
+
+
+
         report = {ontologies: {}, date_generated: nil}
         count = 0
         ontologies.each do |ont|
@@ -175,8 +192,8 @@ module NcboCron
               next
             end
 
-            # Skip classes with no prefLabel or b-nodes
-            next if prefLabel.nil? || cls.id.to_s.include?(".well-known/genid")
+            # Skip classes with no prefLabel, b-nodes, or stop-words
+            next if prefLabel.nil? || cls.id.to_s.include?(".well-known/genid") || @stop_words.include?(prefLabel.upcase)
 
             # store good prefLabel
             good_classes << prefLabel
@@ -240,14 +257,14 @@ module NcboCron
   end
 end
 
-# require 'ontologies_linked_data'
-# require 'goo'
-# require 'ncbo_annotator'
-# require 'ncbo_cron/config'
-# require_relative '../../config/config'
-#
-# ontologies_report_path = File.join("logs", "ontologies-report.log")
-# ontologies_report_logger = Logger.new(ontologies_report_path)
-# save_report_path = "../test/reports/ontologies_report.json"
-# NcboCron::Models::OntologiesReport.new(ontologies_report_logger, save_report_path).run
+require 'ontologies_linked_data'
+require 'goo'
+require 'ncbo_annotator'
+require 'ncbo_cron/config'
+require_relative '../../config/config'
+
+ontologies_report_path = File.join("logs", "ontologies-report.log")
+ontologies_report_logger = Logger.new(ontologies_report_path)
+save_report_path = "../test/reports/ontologies_report.json"
+NcboCron::Models::OntologiesReport.new(ontologies_report_logger, save_report_path).run
 # ./bin/ncbo_cron --disable-processing true --disable-pull true --disable-flush true --disable-warmq true --disable-ontology-analytics true --ontologies-report '22 * * * *'

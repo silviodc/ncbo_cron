@@ -18,6 +18,7 @@ module NcboCron
           errIncorrectMetricsLatestReadySubmission: "The latest ready submission has incorrect metrics",
           errNoAnnotator:                           lambda { |data| "Annotator - #{data[0] > 0 ? 'FEW' : 'NO'} results for: #{data[1]}" },
           errNoSearch:                              lambda { |data| "Search - #{data[0] > 0 ? 'FEW' : 'NO'} results for: #{data[1]}" },
+          errRunningReport:                         lambda { |data| "Error while running report on component #{data[0]}: #{data[1]}: #{data[2]}" },
           errErrorStatus:                           [],
           errMissingStatus:                         []
       }
@@ -34,7 +35,7 @@ module NcboCron
         # ontologies_to_indclude = ["AERO", "SBO", "EHDAA", "CCO", "ONLIRA", "VT", "ZEA", "SMASH", "PLIO", "OGI", "CO", "NCIT", "GO"]
         # ontologies_to_indclude = ["DCM", "D1-CARBON-FLUX", "STUFF"]
         # ontologies.select! { |ont| ontologies_to_indclude.include?(ont.acronym) }
-        # ontologies_to_indclude = ["ADAR", "ELIG"]
+        # ontologies_to_indclude = ["NALT"]
         # ontologies.select! { |ont| ontologies_to_indclude.include?(ont.acronym) }
         report = {ontologies: {}, date_generated: nil}
         count = 0
@@ -125,7 +126,12 @@ module NcboCron
         if sub.ontology.flat
           add_error_code(report, :flat)
         else
-          add_error_code(report, :errNoRootsLatestSubmission) unless sub.roots().length > 0
+          begin
+            add_error_code(report, :errNoRootsLatestSubmission) unless sub.roots().length > 0
+          rescue Exception => e
+            add_error_code(report, :errNoRootsLatestSubmission)
+            add_error_code(report, :errRunningReport, ["sub.roots()", e.class, e.message])
+          end
         end
 
         # check if metrics has been generated

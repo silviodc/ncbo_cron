@@ -16,7 +16,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ncbo_annotator.git
-  revision: a8d06ed360dccfa6de8394e519006f5669f61a78
+  revision: 8d8bf0888a05acf93313566ecc4f2f5d982ebabe
   branch: staging
   specs:
     ncbo_annotator (0.0.1)
@@ -26,7 +26,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ontologies_linked_data.git
-  revision: f3dfb3b7e8fc08cd4c948d6742146f81f60687c9
+  revision: abfe38750db4bff62a3ada076bfa7cb73f63ef2e
   branch: staging
   specs:
     ontologies_linked_data (0.0.1)
@@ -162,7 +162,7 @@ GEM
     mysql2 (0.3.18)
     net-http-persistent (2.9.4)
     netrc (0.10.3)
-    oj (2.12.7)
+    oj (2.12.8)
     pony (1.11)
       mail (>= 2.0)
     pry (0.10.1)

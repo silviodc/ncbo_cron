@@ -170,16 +170,17 @@ module NcboCron
 
       def good_classes(submission)
         page_num = 1
-        size = 1000
+        page_size = 1000
+        classes_size = 10
         good_classes = Array.new
 
-        paging = LinkedData::Models::Class.in(submission).include(:prefLabel, :synonym).page(page_num, size)
+        paging = LinkedData::Models::Class.in(submission).include(:prefLabel, :synonym).page(page_num, page_size)
 
         begin
           page_classes = nil
 
           begin
-            page_classes = paging.page(page_num, size).all
+            page_classes = paging.page(page_num, page_size).all
           rescue Exception =>  e
             # some obscure error that happens intermittently
             @logger.error("#{e.class}: #{e.message}")
@@ -204,10 +205,10 @@ module NcboCron
 
             # store good prefLabel
             good_classes << prefLabel
-            break if good_classes.length === size
+            break if good_classes.length === classes_size
           end
 
-          page_num = (good_classes.length === size || !page_classes.next?) ? nil : page_num + 1
+          page_num = (good_classes.length === classes_size || !page_classes.next?) ? nil : page_num + 1
         end while !page_num.nil?
 
         good_classes

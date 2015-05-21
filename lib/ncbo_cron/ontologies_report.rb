@@ -34,8 +34,7 @@ module NcboCron
         ontologies = LinkedData::Models::Ontology.where.include(:acronym).all
         # ontologies_to_indclude = ["AERO", "SBO", "EHDAA", "CCO", "ONLIRA", "VT", "ZEA", "SMASH", "PLIO", "OGI", "CO", "NCIT", "GO"]
         # ontologies_to_indclude = ["DCM", "D1-CARBON-FLUX", "STUFF"]
-        # ontologies.select! { |ont| ontologies_to_indclude.include?(ont.acronym) }
-        # ontologies_to_indclude = ["NALT"]
+        # ontologies_to_indclude = ["ADAR", "PR", "PORO", "PROV", "PSIMOD"]
         # ontologies.select! { |ont| ontologies_to_indclude.include?(ont.acronym) }
         report = {ontologies: {}, date_generated: nil}
         count = 0
@@ -55,7 +54,7 @@ module NcboCron
       end
 
       def sanity_report(ont)
-        report = {problem: false}
+        report = {problem: false, logFilePath: ''}
         ont.bring_remaining()
         ont.bring(:submissions)
         submissions = ont.submissions
@@ -77,6 +76,10 @@ module NcboCron
           add_error_code(report, :errNoSubmissions)
           return report
         end
+
+        # path to most recent log file
+        log_file_path = log_file(ont.acronym, latest_any.submissionId.to_s)
+        report[:logFilePath] = log_file_path unless log_file_path.empty?
 
         latest_ready = ont.latest_submission
         if latest_ready.nil?
@@ -166,13 +169,24 @@ module NcboCron
       end
 
       def good_classes(submission)
-        page = 1
-        size = 10
-        paging = LinkedData::Models::Class.in(submission).include(:prefLabel, :synonym).page(page, size)
+        page_num = 1
+        size = 1000
         good_classes = Array.new
 
+        paging = LinkedData::Models::Class.in(submission).include(:prefLabel, :synonym).page(page_num, size)
+
         begin
-          page_classes = paging.all
+          page_classes = nil
+
+          begin
+            page_classes = paging.page(page_num, size).all
+          rescue Exception =>  e
+            # some obscure error that happens intermittently
+            @logger.error("#{e.class}: #{e.message}")
+            @logger.error("Sub: #{submission.id}")
+            throw e
+          end
+
           break if page_classes.empty?
 
           page_classes.each do |cls|
@@ -184,23 +198,31 @@ module NcboCron
               next
             end
 
-            # Skip classes with no prefLabel, b-nodes, or stop-words
-            next if prefLabel.nil? || cls.id.to_s.include?(".well-known/genid") || @stop_words.include?(prefLabel.upcase)
+            # Skip classes with no prefLabel, short prefLabel, b-nodes, or stop-words
+            next if prefLabel.nil? || prefLabel.length < 3 ||
+                cls.id.to_s.include?(".well-known/genid") || @stop_words.include?(prefLabel.upcase)
 
             # store good prefLabel
             good_classes << prefLabel
             break if good_classes.length === size
           end
 
-          break if good_classes.length === size
-          page = page_classes.next_page
-
-          if page
-            paging.page(page)
-          end
-        end while !page.nil?
+          page_num = (good_classes.length === size || !page_classes.next?) ? nil : page_num + 1
+        end while !page_num.nil?
 
         good_classes
+      end
+
+      def log_file(acronym, submission_id)
+        log_file_path = ''
+
+        begin
+          ont_repo_path = Dir.open("#{LinkedData.settings.repository_folder}/#{acronym}/#{submission_id}")
+          log_file_path = Dir.glob(File.join(ont_repo_path, '*.log')).max_by {|f| File.mtime(f)}
+        rescue Exception => e
+          # no log file or dir exists
+        end
+        log_file_path ||= ''
       end
 
       def solr_escape(text)
@@ -249,14 +271,14 @@ module NcboCron
   end
 end
 
-# require 'ontologies_linked_data'
-# require 'goo'
-# require 'ncbo_annotator'
-# require 'ncbo_cron/config'
-# require_relative '../../config/config'
-#
-# ontologies_report_path = File.join("logs", "ontologies-report.log")
-# ontologies_report_logger = Logger.new(ontologies_report_path)
-# save_report_path = "../test/reports/ontologies_report.json"
-# NcboCron::Models::OntologiesReport.new(ontologies_report_logger, save_report_path).run
+require 'ontologies_linked_data'
+require 'goo'
+require 'ncbo_annotator'
+require 'ncbo_cron/config'
+require_relative '../../config/config'
+
+ontologies_report_path = File.join("logs", "ontologies-report.log")
+ontologies_report_logger = Logger.new(ontologies_report_path)
+save_report_path = "../test/reports/ontologies_report.json"
+NcboCron::Models::OntologiesReport.new(ontologies_report_logger, save_report_path).run
 # ./bin/ncbo_cron --disable-processing true --disable-pull true --disable-flush true --disable-warmq true --disable-ontology-analytics true --ontologies-report '22 * * * *'

@@ -271,14 +271,14 @@ module NcboCron
   end
 end
 
-require 'ontologies_linked_data'
-require 'goo'
-require 'ncbo_annotator'
-require 'ncbo_cron/config'
-require_relative '../../config/config'
-
-ontologies_report_path = File.join("logs", "ontologies-report.log")
-ontologies_report_logger = Logger.new(ontologies_report_path)
-save_report_path = "../test/reports/ontologies_report.json"
-NcboCron::Models::OntologiesReport.new(ontologies_report_logger, save_report_path).run
+# require 'ontologies_linked_data'
+# require 'goo'
+# require 'ncbo_annotator'
+# require 'ncbo_cron/config'
+# require_relative '../../config/config'
+#
+# ontologies_report_path = File.join("logs", "ontologies-report.log")
+# ontologies_report_logger = Logger.new(ontologies_report_path)
+# save_report_path = "../test/reports/ontologies_report.json"
+# NcboCron::Models::OntologiesReport.new(ontologies_report_logger, save_report_path).run
 # ./bin/ncbo_cron --disable-processing true --disable-pull true --disable-flush true --disable-warmq true --disable-ontology-analytics true --ontologies-report '22 * * * *'

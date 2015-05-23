@@ -4,6 +4,7 @@ require 'benchmark'
 module NcboCron
   module Models
     class OntologiesReport
+      class OntologiesReportError < StandardError; end
 
       ERROR_CODES = {
           summaryOnly:                              "Ontology is summary-only",
@@ -23,38 +24,87 @@ module NcboCron
           errMissingStatus:                         []
       }
 
-      def initialize(logger, saveto)
+      def initialize(logger, report_path='')
         @logger = logger
-        @saveto = saveto
+        @report_path = report_path.empty? ? NcboCron.settings.ontology_report_path : report_path
         @stop_words = Annotator.settings.stop_words_default_list
       end
 
       def run
-        @logger.info("Running ontologies report...\n")
+        ontologies_to_include = []
+        # ontologies_to_include = ["AERO", "SBO", "EHDAA", "CCO", "ONLIRA", "VT", "ZEA", "SMASH", "PLIO", "OGI", "CO", "NCIT", "GO"]
+        # ontologies_to_include = ["DCM", "D1-CARBON-FLUX", "STUFF", "GO"]
+        # ontologies_to_include = ["ADAR", "PR", "PORO", "PROV", "PSIMOD"]
+        refresh_report(ontologies_to_include)
+      end
+
+      def refresh_report(acronyms=[])
+        info_msg = 'Running ontologies report for'
+        ontologies_msg = ''
+        update_msg = ''
+        report = {}
         ontologies = LinkedData::Models::Ontology.where.include(:acronym).all
-        # ontologies_to_indclude = ["AERO", "SBO", "EHDAA", "CCO", "ONLIRA", "VT", "ZEA", "SMASH", "PLIO", "OGI", "CO", "NCIT", "GO"]
-        # ontologies_to_indclude = ["DCM", "D1-CARBON-FLUX", "STUFF"]
-        # ontologies_to_indclude = ["ADAR", "PR", "PORO", "PROV", "PSIMOD"]
-        # ontologies.select! { |ont| ontologies_to_indclude.include?(ont.acronym) }
-        report = {ontologies: {}, date_generated: nil}
+
+        if acronyms.empty?
+          ontologies_msg = 'ALL ontologies'
+          update_msg = 'generating'
+        else
+          ontologies.select! { |ont| acronyms.include?(ont.acronym) }
+          ontologies_msg = "ontologies #{acronyms.join(", ")}"
+          update_msg = 'updating'
+          report = ontologies_report(true)
+        end
+
+        @logger.info("#{info_msg} #{ontologies_msg}...\n")
+        report = {ontologies: {}, date_generated: nil} if report.empty?
         count = 0
+
         ontologies.each do |ont|
           count += 1
           @logger.info("Processing report for #{ont.acronym} - #{count} of #{ontologies.length} ontologies."); @logger.flush
           time = Benchmark.realtime do
-            report[:ontologies][ont.acronym] = sanity_report(ont)
+            report[:ontologies][ont.acronym.to_sym] = generate_single_ontology_report(ont)
           end
           @logger.info("Finished report for #{ont.acronym} in #{time} sec."); @logger.flush
         end
 
         tm = Time.new
-        report[:date_generated] = tm.strftime("%m/%d/%Y %I:%M%p")
-        File.open(@saveto, 'w') { |file| file.write(JSON.pretty_generate(report)) }
-        @logger.info("Finished generating ontologies report. Wrote report data to #{@saveto}.\n"); @logger.flush
+        tm_str = tm.strftime("%m/%d/%Y %I:%M%p")
+        report[:date_generated] = tm_str if report[:date_generated].nil?
+        File.open(@report_path, 'w') { |file| file.write(::JSON.pretty_generate(report)) }
+        @logger.info("Finished #{update_msg} report for #{ontologies_msg}. Wrote report data to #{@report_path}.\n"); @logger.flush
       end
 
-      def sanity_report(ont)
-        report = {problem: false, logFilePath: ''}
+      def ontologies_report(suppress_error=false)
+        report = {}
+        report_file_exists = File.exist?(@report_path)
+
+        if !suppress_error && !report_file_exists
+          raise OntologiesReportError, "Ontologies report file #{@report_path} not found"
+        end
+
+        if report_file_exists
+          json_string = ::IO.read(@report_path)
+          report = ::JSON.parse(json_string, :symbolize_names => true)
+        end
+
+        report
+      end
+
+      def delete_ontologies_from_report(acronyms)
+        report = ontologies_report(true)
+        report_file_exists = File.exist?(@report_path)
+
+        if report_file_exists && !report.empty?
+          acronyms.each { |acronym| report[:ontologies].delete acronym.to_sym }
+          File.open(@report_path, 'w') { |file| file.write(::JSON.pretty_generate(report)) }
+        end
+      end
+
+      private
+
+      def generate_single_ontology_report(ont)
+        report = {problem: false, logFilePath: '', date_updated: nil}
         ont.bring_remaining()
         ont.bring(:submissions)
         submissions = ont.submissions
@@ -66,6 +116,7 @@ module NcboCron
           else
             add_error_code(report, :summaryOnly)
           end
+          ontology_report_date_updated(report)
           return report
         end
 
@@ -74,6 +125,7 @@ module NcboCron
         if latest_any.nil?
           # no submissions, cannot continue
           add_error_code(report, :errNoSubmissions)
+          ontology_report_date_updated(report)
           return report
         end
 
@@ -87,6 +139,7 @@ module NcboCron
           add_error_code(report, :errNoReadySubmission)
           # add error statuses from the latest non-ready submission
           latest_any.submissionStatus.each { |st| add_error_code(report, :errErrorStatus, st.get_code_from_id) if st.error? }
+          ontology_report_date_updated(report)
           return report
         end
 
@@ -161,11 +214,17 @@ module NcboCron
           add_error_code(report, :errNoAnnotator, [ann_response.length, search_text]) if ann_response.length < good_classes.length
 
           # check for Search calls
-          resp = LinkedData::Models::Class.search(solr_escape(search_text), query_params(ont.acronym))
+          resp = LinkedData::Models::Class.search(solr_escape(search_text), search_query_params(ont.acronym))
           add_error_code(report, :errNoSearch, [resp["response"]["numFound"], search_text]) if resp["response"]["numFound"] < good_classes.length
         end
+        ontology_report_date_updated(report)
+        report
+      end
 
-        return report
+      def ontology_report_date_updated(report)
+        tm = Time.new
+        tm_str = tm.strftime("%m/%d/%Y %I:%M%p")
+        report[:date_updated] = tm_str
       end
 
       def good_classes(submission)
@@ -173,7 +232,6 @@ module NcboCron
         page_size = 1000
         classes_size = 10
         good_classes = Array.new
-
         paging = LinkedData::Models::Class.in(submission).include(:prefLabel, :synonym).page(page_num, page_size)
 
         begin
@@ -223,6 +281,7 @@ module NcboCron
         rescue Exception => e
           # no log file or dir exists
         end
+
         log_file_path ||= ''
       end
 
@@ -249,7 +308,7 @@ module NcboCron
         end
       end
 
-      def query_params(acronym)
+      def search_query_params(acronym)
         return {
           "defType" => "edismax",
           "stopwords" => "true",
@@ -280,6 +339,5 @@ end
 #
 # ontologies_report_path = File.join("logs", "ontologies-report.log")
 # ontologies_report_logger = Logger.new(ontologies_report_path)
-# save_report_path = "../test/reports/ontologies_report.json"
-# NcboCron::Models::OntologiesReport.new(ontologies_report_logger, save_report_path).run
+# NcboCron::Models::OntologiesReport.new(ontologies_report_logger).run
 # ./bin/ncbo_cron --disable-processing true --disable-pull true --disable-flush true --disable-warmq true --disable-ontology-analytics true --ontologies-report '22 * * * *'

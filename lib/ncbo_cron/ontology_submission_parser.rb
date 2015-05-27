@@ -89,7 +89,7 @@ module NcboCron
           end
         end
         onts_set = Set.new
-        onts = LinkedData::Models::Ontology.where.include(:acronym,:summaryOnly).all.each do |o|
+        onts = LinkedData::Models::Ontology.where.include(:acronym, :summaryOnly).all.each do |o|
           onts_set << o.id.to_s
         end
         zombies = []

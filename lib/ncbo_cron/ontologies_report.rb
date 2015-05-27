@@ -89,11 +89,11 @@ module NcboCron
         report
       end
 
-      def delete_ontologies_from_report(acronyms)
+      def delete_ontologies_from_report(acronyms=[])
         report = ontologies_report(true)
         report_file_exists = File.exist?(@report_path)
 
-        if report_file_exists && !report.empty?
+        if report_file_exists && !report.empty? && !acronyms.empty?
           acronyms.each { |acronym| report[:ontologies].delete acronym.to_sym }
           File.open(@report_path, 'w') { |file| file.write(::JSON.pretty_generate(report)) }
         end

@@ -51,6 +51,7 @@ begin
     exit(1)
   end
   ont.delete
+  NcboCron::Models::OntologiesReport.delete_ontologies_from_report([options[:ontology]])
   logger.info("Ontology deleted: #{options[:ontology]}")
 rescue Exception => e
   msg = "Failed, exception: #{e.to_json}."

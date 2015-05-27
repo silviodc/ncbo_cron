@@ -94,11 +94,9 @@ def index_ontology(indexed_ontologies, acronym, logger)
     end
     # NOTE: process_submission controls all aspects of re-indexing, including
     # removal of the old index and committing a new index.  There is no 'dry-run' option.
-    sub.bring_remaining
-    sub.process_submission(logger,
-                           process_rdf: false,
-                           index_search: true, index_commit: true,
-                           run_metrics: false, reasoning: false)
+    NcboCron::Models::OntologySubmissionParser.process_submission(logger, sub.id.to_s, {process_rdf: false,
+                                                                                        index_search: true, index_commit: true,
+                                                                                        run_metrics: false, reasoning: false})
     indexed_ontologies << acronym
   rescue Exception => e
     msg = "Exception: #{e.to_json}"

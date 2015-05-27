@@ -68,9 +68,7 @@ module NcboCron
           @logger.info("Finished report for #{ont.acronym} in #{time} sec."); @logger.flush
         end
 
-        tm = Time.new
-        tm_str = tm.strftime("%m/%d/%Y %I:%M%p")
-        report[:date_generated] = tm_str if report[:date_generated].nil?
+        ontology_report_date(report, "date_generated")
         File.open(@report_path, 'w') { |file| file.write(::JSON.pretty_generate(report)) }
         @logger.info("Finished #{update_msg} report for #{ontologies_msg}. Wrote report data to #{@report_path}.\n"); @logger.flush
       end
@@ -116,7 +114,7 @@ module NcboCron
           else
             add_error_code(report, :summaryOnly)
           end
-          ontology_report_date_updated(report)
+          ontology_report_date(report, "date_updated")
           return report
         end
 
@@ -125,7 +123,7 @@ module NcboCron
         if latest_any.nil?
           # no submissions, cannot continue
           add_error_code(report, :errNoSubmissions)
-          ontology_report_date_updated(report)
+          ontology_report_date(report, "date_updated")
           return report
         end
 
@@ -139,7 +137,7 @@ module NcboCron
           add_error_code(report, :errNoReadySubmission)
           # add error statuses from the latest non-ready submission
           latest_any.submissionStatus.each { |st| add_error_code(report, :errErrorStatus, st.get_code_from_id) if st.error? }
-          ontology_report_date_updated(report)
+          ontology_report_date(report, "date_updated")
           return report
         end
 
@@ -217,14 +215,14 @@ module NcboCron
           resp = LinkedData::Models::Class.search(solr_escape(search_text), search_query_params(ont.acronym))
           add_error_code(report, :errNoSearch, [resp["response"]["numFound"], search_text]) if resp["response"]["numFound"] < good_classes.length
         end
-        ontology_report_date_updated(report)
+        ontology_report_date(report, "date_updated")
         report
       end
 
-      def ontology_report_date_updated(report)
+      def ontology_report_date(report, date_str)
         tm = Time.new
         tm_str = tm.strftime("%m/%d/%Y %I:%M%p")
-        report[:date_updated] = tm_str
+        report[date_str.to_sym] = tm_str
       end
 
       def good_classes(submission)

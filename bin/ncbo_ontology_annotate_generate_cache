@@ -112,7 +112,7 @@ begin
   time = Benchmark.realtime do
     annotator.create_term_cache(options[:ontologies], options[:remove_cache], options[:redis_prefix])
     # update ontologies report entries
-    NcboCron::Models::OntologiesReport.refresh_report(options[:ontologies])
+    NcboCron::Models::OntologiesReport.new(logger).refresh_report(options[:ontologies])
   end
 
   if (options[:all])

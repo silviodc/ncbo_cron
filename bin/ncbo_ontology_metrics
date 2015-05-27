@@ -65,7 +65,7 @@ begin
     puts msg
     exit(1)
   end
-  NcboCron::Models::OntologySubmissionParser.process_submission(logger, sub.id.to_s, {process_rdf: false,
+  NcboCron::Models::OntologySubmissionParser.new.process_submission(logger, sub.id.to_s, {process_rdf: false,
                                                                                       index_search: false, index_commit: false,
                                                                                       run_metrics: true, reasoning: false})
 rescue Exception => e

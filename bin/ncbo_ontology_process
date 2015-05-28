@@ -65,7 +65,7 @@ options[:ontologies].each do |acronym|
     end
     NcboCron::Models::OntologySubmissionParser.new.process_submission(logger, sub.id.to_s, NcboCron::Models::OntologySubmissionParser::ACTIONS)
   rescue Exception => e
-    msg = "Failed, exception: #{e.to_json}."
+    msg = "Failed, exception: #{e.class}: #{e.message}\n#{e.backtrace.join("\n")}"
     logger.error(msg)
     puts msg
     print e.backtrace.join("\n")

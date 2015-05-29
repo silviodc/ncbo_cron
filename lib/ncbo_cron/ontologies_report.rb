@@ -68,7 +68,7 @@ module NcboCron
           @logger.info("Finished report for #{ont.acronym} in #{time} sec."); @logger.flush
         end
 
-        ontology_report_date(report, "date_generated")
+        ontology_report_date(report, "date_generated") if acronyms.empty?
         File.open(@report_path, 'w') { |file| file.write(::JSON.pretty_generate(report)) }
         @logger.info("Finished #{update_msg} report for #{ontologies_msg}. Wrote report data to #{@report_path}.\n"); @logger.flush
       end

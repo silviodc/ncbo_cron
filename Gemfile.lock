@@ -26,7 +26,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ontologies_linked_data.git
-  revision: 5c1865219be99696a693f7e41a239dc0f28ba941
+  revision: 28d07f2fc3ac432c2f49805b342715949264739f
   branch: staging
   specs:
     ontologies_linked_data (0.0.1)
@@ -99,12 +99,12 @@ GEM
     dante (0.2.0)
     domain_name (0.5.24)
       unf (>= 0.0.5, < 1.0.0)
-    elasticsearch (1.0.10)
-      elasticsearch-api (= 1.0.10)
-      elasticsearch-transport (= 1.0.10)
-    elasticsearch-api (1.0.10)
+    elasticsearch (1.0.11)
+      elasticsearch-api (= 1.0.11)
+      elasticsearch-transport (= 1.0.11)
+    elasticsearch-api (1.0.11)
       multi_json
-    elasticsearch-transport (1.0.10)
+    elasticsearch-transport (1.0.11)
       faraday
       multi_json
     email_spec (1.6.0)

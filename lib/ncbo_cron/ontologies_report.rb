@@ -60,7 +60,7 @@ module NcboCron
         info_msg = 'Running ontologies report for'
         ontologies_msg = ''
         update_msg = ''
-        report = {ontologies: {}}
+        report = empty_report
         ontologies = LinkedData::Models::Ontology.where.include(:acronym).all
         ontologies.select! { |ont| ont_to_include.include?(ont.acronym) }
 
@@ -94,7 +94,7 @@ module NcboCron
 
         begin
           redis.setex lock_key, 10, true
-          report_to_write = ontologies_report(true)
+          report_to_write = acronyms.empty? ? empty_report : ontologies_report(true)
           report_to_write[:ontologies].merge!(report[:ontologies])
           ontology_report_date(report_to_write, "date_generated") if acronyms.empty?
           File.open(@report_path, 'w') { |file| file.write(::JSON.pretty_generate(report_to_write)) }
@@ -105,7 +105,7 @@ module NcboCron
       end
 
       def ontologies_report(suppress_error=false)
-        report = {ontologies: {}, date_generated: nil}
+        report = empty_report
         report_file_exists = File.exist?(@report_path)
 
         if !suppress_error && !report_file_exists
@@ -134,6 +134,10 @@ module NcboCron
       end
 
       private
+
+      def empty_report
+        {ontologies: {}, date_generated: nil}
+      end
 
       def generate_single_ontology_report(ont)
         report = {problem: false, logFilePath: '', date_updated: nil}

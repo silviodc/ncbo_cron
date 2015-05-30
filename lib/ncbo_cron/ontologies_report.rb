@@ -24,39 +24,55 @@ module NcboCron
           errMissingStatus:                         []
       }
 
-      def initialize(logger, report_path='')
-        @logger = logger
+      def initialize(logger=nil, report_path='')
+        @logger = nil
+        if logger.nil?
+          log_file = File.new(NcboCron.settings.log_path, "a")
+          log_path = File.dirname(File.absolute_path(log_file))
+          log_filename_no_ext = File.basename(log_file, ".*")
+          ontologies_report_log_path = File.join(log_path, "#{log_filename_no_ext}-ontologies-report.log")
+          @logger = Logger.new(ontologies_report_log_path)
+        else
+          @logger = logger
+        end
         @report_path = report_path.empty? ? NcboCron.settings.ontology_report_path : report_path
         @stop_words = Annotator.settings.stop_words_default_list
       end
 
+      def ontologies_to_include(acronyms)
+        ont_to_include = acronyms
+        if acronyms.empty?
+          ont_to_include = []
+          # ont_to_include = ["AERO", "SBO", "EHDAA", "CCO", "ONLIRA", "VT", "ZEA", "SMASH", "PLIO", "OGI", "CO", "NCIT", "GO"]
+          # ont_to_include = ["DCM", "D1-CARBON-FLUX", "STUFF", "GO"]
+          # ont_to_include = ["ADAR", "PR", "PORO", "PROV", "PSIMOD"]
+        end
+        ont_to_include
+      end
+
       def run
-        ontologies_to_include = []
-        # ontologies_to_include = ["AERO", "SBO", "EHDAA", "CCO", "ONLIRA", "VT", "ZEA", "SMASH", "PLIO", "OGI", "CO", "NCIT", "GO"]
-        # ontologies_to_include = ["DCM", "D1-CARBON-FLUX", "STUFF", "GO"]
-        # ontologies_to_include = ["ADAR", "PR", "PORO", "PROV", "PSIMOD"]
-        refresh_report(ontologies_to_include)
+        ont_to_include = ontologies_to_include([])
+        refresh_report(ont_to_include)
       end
 
       def refresh_report(acronyms=[])
+        ont_to_include = ontologies_to_include(acronyms)
         info_msg = 'Running ontologies report for'
         ontologies_msg = ''
         update_msg = ''
-        report = {}
+        report = {ontologies: {}}
         ontologies = LinkedData::Models::Ontology.where.include(:acronym).all
+        ontologies.select! { |ont| ont_to_include.include?(ont.acronym) }
 
         if acronyms.empty?
           ontologies_msg = 'ALL ontologies'
           update_msg = 'generating'
         else
-          ontologies.select! { |ont| acronyms.include?(ont.acronym) }
           ontologies_msg = "ontologies #{acronyms.join(", ")}"
           update_msg = 'updating'
-          report = ontologies_report(true)
         end
 
         @logger.info("#{info_msg} #{ontologies_msg}...\n")
-        report = {ontologies: {}, date_generated: nil} if report.empty?
         count = 0
 
         ontologies.each do |ont|
@@ -68,13 +84,28 @@ module NcboCron
           @logger.info("Finished report for #{ont.acronym} in #{time} sec."); @logger.flush
         end
 
-        ontology_report_date(report, "date_generated") if acronyms.empty?
-        File.open(@report_path, 'w') { |file| file.write(::JSON.pretty_generate(report)) }
+        lock_key = "ONTOLOGIES_REPORT_LOCK"
+        lock = redis.get(lock_key)
+
+        while lock do
+          sleep(2)
+          lock = redis.get(lock_key)
+        end
+
+        begin
+          redis.setex lock_key, 10, true
+          report_to_write = ontologies_report(true)
+          report_to_write[:ontologies].merge!(report[:ontologies])
+          ontology_report_date(report_to_write, "date_generated") if acronyms.empty?
+          File.open(@report_path, 'w') { |file| file.write(::JSON.pretty_generate(report_to_write)) }
+        ensure
+          redis.del(lock_key)
+        end
         @logger.info("Finished #{update_msg} report for #{ontologies_msg}. Wrote report data to #{@report_path}.\n"); @logger.flush
       end
 
       def ontologies_report(suppress_error=false)
-        report = {}
+        report = {ontologies: {}, date_generated: nil}
         report_file_exists = File.exist?(@report_path)
 
         if !suppress_error && !report_file_exists
@@ -90,12 +121,15 @@ module NcboCron
       end
 
       def delete_ontologies_from_report(acronyms=[])
-        report = ontologies_report(true)
         report_file_exists = File.exist?(@report_path)
 
-        if report_file_exists && !report.empty? && !acronyms.empty?
-          acronyms.each { |acronym| report[:ontologies].delete acronym.to_sym }
-          File.open(@report_path, 'w') { |file| file.write(::JSON.pretty_generate(report)) }
+        if report_file_exists && !acronyms.empty?
+          report = ontologies_report(true)
+
+          unless report[:ontologies].empty?
+            acronyms.each { |acronym| report[:ontologies].delete acronym.to_sym }
+            File.open(@report_path, 'w') { |file| file.write(::JSON.pretty_generate(report)) }
+          end
         end
       end
 
@@ -216,6 +250,7 @@ module NcboCron
           add_error_code(report, :errNoSearch, [resp["response"]["numFound"], search_text]) if resp["response"]["numFound"] < good_classes.length
         end
         ontology_report_date(report, "date_updated")
+
         report
       end
 
@@ -325,6 +360,9 @@ module NcboCron
         }
       end
 
+      def redis
+        Redis.new(host: Annotator.settings.annotator_redis_host, port: Annotator.settings.annotator_redis_port)
+      end
     end
   end
 end

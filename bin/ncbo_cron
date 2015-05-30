@@ -103,7 +103,7 @@ opt_parser = OptionParser.new do |opts|
     options[:pull_umls_url] = v
   end
   opts.on("-c", "--pull-cron SCHED", String, "cron schedule for ontology pull", "(default: #{options[:pull_schedule]})") do |c|
-    options[:cron_schedule] = c
+    options[:pull_schedule] = c
   end
   opts.on("-f", "--flush-old-graphs SCHED", String, "cron schedule to delete class graphs of archive submissions", "(default: #{options[:cron_flush]})") do |c|
     options[:cron_flush] = c

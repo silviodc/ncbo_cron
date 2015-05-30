@@ -44,7 +44,7 @@ module NcboCron
         if acronyms.empty?
           ont_to_include = []
           # ont_to_include = ["AERO", "SBO", "EHDAA", "CCO", "ONLIRA", "VT", "ZEA", "SMASH", "PLIO", "OGI", "CO", "NCIT", "GO"]
-          # ont_to_include = ["DCM", "D1-CARBON-FLUX", "STUFF", "GO"]
+          ont_to_include = ["DCM", "D1-CARBON-FLUX", "STUFF", "GO"]
           # ont_to_include = ["ADAR", "PR", "PORO", "PROV", "PSIMOD"]
         end
         ont_to_include
@@ -62,7 +62,6 @@ module NcboCron
         update_msg = ''
         report = empty_report
         ontologies = LinkedData::Models::Ontology.where.include(:acronym).all
-        ontologies.select! { |ont| ont_to_include.include?(ont.acronym) }
 
         if acronyms.empty?
           ontologies_msg = 'ALL ontologies'
@@ -70,6 +69,7 @@ module NcboCron
         else
           ontologies_msg = "ontologies #{acronyms.join(", ")}"
           update_msg = 'updating'
+          ontologies.select! { |ont| ont_to_include.include?(ont.acronym) }
         end
 
         @logger.info("#{info_msg} #{ontologies_msg}...\n")

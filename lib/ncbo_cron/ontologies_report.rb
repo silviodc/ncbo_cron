@@ -44,7 +44,7 @@ module NcboCron
         if acronyms.empty?
           ont_to_include = []
           # ont_to_include = ["AERO", "SBO", "EHDAA", "CCO", "ONLIRA", "VT", "ZEA", "SMASH", "PLIO", "OGI", "CO", "NCIT", "GO"]
-          ont_to_include = ["DCM", "D1-CARBON-FLUX", "STUFF", "GO"]
+          # ont_to_include = ["DCM", "D1-CARBON-FLUX", "STUFF", "GO"]
           # ont_to_include = ["ADAR", "PR", "PORO", "PROV", "PSIMOD"]
         end
         ont_to_include

@@ -44,6 +44,7 @@ module NcboCron
         if acronyms.empty?
           ont_to_include = []
           # ont_to_include = ["AERO", "SBO", "EHDAA", "CCO", "ONLIRA", "VT", "ZEA", "SMASH", "PLIO", "OGI", "CO", "NCIT", "GO"]
+          # ont_to_include = ["ICO", "GEOSPECIES", "TEO", "TMO"]
           # ont_to_include = ["DCM", "D1-CARBON-FLUX", "STUFF", "GO"]
           # ont_to_include = ["ADAR", "PR", "PORO", "PROV", "PSIMOD"]
         end
@@ -116,7 +117,6 @@ module NcboCron
           json_string = ::IO.read(@report_path)
           report = ::JSON.parse(json_string, :symbolize_names => true)
         end
-
         report
       end
 
@@ -254,7 +254,6 @@ module NcboCron
           add_error_code(report, :errNoSearch, [resp["response"]["numFound"], search_text]) if resp["response"]["numFound"] < good_classes.length
         end
         ontology_report_date(report, "date_updated")
-
         report
       end
 
@@ -305,7 +304,6 @@ module NcboCron
 
           page_num = (good_classes.length === classes_size || !page_classes.next?) ? nil : page_num + 1
         end while !page_num.nil?
-
         good_classes
       end
 
@@ -315,10 +313,10 @@ module NcboCron
         begin
           ont_repo_path = Dir.open("#{LinkedData.settings.repository_folder}/#{acronym}/#{submission_id}")
           log_file_path = Dir.glob(File.join(ont_repo_path, '*.log')).max_by {|f| File.mtime(f)}
+          log_file_path.sub!(/^#{LinkedData.settings.repository_folder}\//, '') if log_file_path
         rescue Exception => e
           # no log file or dir exists
         end
-
         log_file_path ||= ''
       end
 

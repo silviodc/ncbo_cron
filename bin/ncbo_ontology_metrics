@@ -65,10 +65,9 @@ begin
     puts msg
     exit(1)
   end
-  sub.bring_remaining
-  sub.process_submission(logger,
-                       process_rdf: false, index_search: false,
-                       run_metrics: true, reasoning: false)
+  NcboCron::Models::OntologySubmissionParser.new.process_submission(logger, sub.id.to_s, {process_rdf: false,
+                                                                                      index_search: false, index_commit: false,
+                                                                                      run_metrics: true, reasoning: false})
 rescue Exception => e
   msg = "Failed, exception: #{e.to_json}."
   logger.error(msg)

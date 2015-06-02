@@ -1,6 +1,6 @@
 GIT
   remote: git://github.com/ncbo/goo.git
-  revision: 03ffedcd708b8b7f086e3e4ab5925a40567f83ab
+  revision: 56364c76c4654df82a21e66b30376526e997bc7b
   branch: master
   specs:
     goo (0.0.2)
@@ -46,7 +46,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/resource_index.git
-  revision: b39a3ab6673c73c7f725799fc258386995c4cbdc
+  revision: a680c51507d68eb6f174e5c20b53c7637ab13d95
   specs:
     ncbo_resource_index (0.0.1)
       elasticsearch
@@ -99,12 +99,12 @@ GEM
     dante (0.2.0)
     domain_name (0.5.24)
       unf (>= 0.0.5, < 1.0.0)
-    elasticsearch (1.0.9)
-      elasticsearch-api (= 1.0.9)
-      elasticsearch-transport (= 1.0.9)
-    elasticsearch-api (1.0.9)
+    elasticsearch (1.0.12)
+      elasticsearch-api (= 1.0.12)
+      elasticsearch-transport (= 1.0.12)
+    elasticsearch-api (1.0.12)
       multi_json
-    elasticsearch-transport (1.0.9)
+    elasticsearch-transport (1.0.12)
       faraday
       multi_json
     email_spec (1.6.0)
@@ -137,7 +137,7 @@ GEM
     http-cookie (1.0.2)
       domain_name (~> 0.5)
     i18n (0.7.0)
-    json (1.8.2)
+    json (1.8.3)
     json_pure (1.8.2)
     jwt (1.5.0)
     launchy (2.4.3)
@@ -153,7 +153,7 @@ GEM
       mime-types (>= 1.16, < 3)
     memoist (0.12.0)
     method_source (0.8.2)
-    mime-types (2.5)
+    mime-types (2.6.1)
     minitest (4.7.5)
     mlanett-redis-lock (0.2.6)
       redis
@@ -162,7 +162,7 @@ GEM
     mysql2 (0.3.18)
     net-http-persistent (2.9.4)
     netrc (0.10.3)
-    oj (2.12.8)
+    oj (2.12.9)
     pony (1.11)
       mail (>= 2.0)
     pry (0.10.1)
@@ -188,7 +188,7 @@ GEM
     rubyzip (1.1.7)
     rufus-scheduler (2.0.24)
       tzinfo (>= 0.3.22)
-    sequel (4.22.0)
+    sequel (4.23.0)
     signet (0.6.0)
       addressable (~> 2.3)
       extlib (~> 0.9)

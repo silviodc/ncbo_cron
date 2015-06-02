@@ -43,9 +43,9 @@ module NcboCron
           key = process_data[:redis_key]
           redis.hdel(QUEUE_HOLDER, key)
           begin
-            logger.info "Starting parsing for #{realKey}"
-            process_queue_submission(logger, realKey, actions)
-            logger.info "Finished parsing for #{realKey}"
+            logger.info "Starting processing of #{realKey}"
+            process_submission(logger, realKey, actions)
+            logger.info "Finished processing of #{realKey}"
           rescue Exception => e
             logger.debug "Exception processing #{realKey}"
             logger.error(e.message + "\n" + e.backtrace.join("\n\t"))
@@ -89,7 +89,7 @@ module NcboCron
           end
         end
         onts_set = Set.new
-        onts = LinkedData::Models::Ontology.where.include(:acronym,:summaryOnly).all.each do |o|
+        onts = LinkedData::Models::Ontology.where.include(:acronym, :summaryOnly).all.each do |o|
           onts_set << o.id.to_s
         end
         zombies = []
@@ -141,32 +141,28 @@ module NcboCron
         end
 
         zombie_classes_graphs.each do |zg|
-          logger.info("Zombie class graph #{zg}") ; logger.flush
+          logger.info("Zombie class graph #{zg}"); logger.flush
         end
 
-        logger.info("finish process_flush_classes") ; logger.flush
+        logger.info("finish process_flush_classes"); logger.flush
 
         return deleted
       end
 
-
-      private
-
-      def process_queue_submission(logger, submissionId, actions={})
+      def process_submission(logger, submissionId, actions=ACTIONS)
         t0 = Time.now
         sub = LinkedData::Models::OntologySubmission.find(RDF::IRI.new(submissionId)).first
 
-        sub.bring_remaining; sub.ontology.bring(:acronym)
-        log_path = sub.parsing_log_path
-        FileUtils.mkdir_p(sub.data_folder) unless Dir.exists?(sub.data_folder)
-
-        logger.info "Logging parsing output to #{log_path}"
-        logger = Logger.new(log_path)
-        logger.debug "Starting parsing for #{submissionId}\n\n\n\n"
-
-        status_archived = LinkedData::Models::SubmissionStatus.find("ARCHIVED").first
-
         if sub
+          sub.bring_remaining
+          sub.ontology.bring(:acronym)
+          log_path = sub.parsing_log_path
+          FileUtils.mkdir_p(sub.data_folder) unless Dir.exists?(sub.data_folder)
+
+          logger.info "Logging parsing output to #{log_path}"
+          logger = Logger.new(log_path)
+          logger.debug "Starting parsing for #{submissionId}\n\n"
+
           # Check to make sure the file has been downloaded
           if sub.pullLocation && (!sub.uploadFilePath || !File.exist?(sub.uploadFilePath))
             logger.debug "Pull location found, but no file in the upload file path. Retrying download."
@@ -178,84 +174,63 @@ module NcboCron
             logger.debug "Download complete"
           end
 
-          logger.debug "Parsing submission"
+          logger.debug "Processing submission #{submissionId}..."
           sub.process_submission(logger, actions)
-          if sub.ready?
-            logger.debug "Submission parsed successfully, archiving previous submissions"
-            submissions = LinkedData::Models::OntologySubmission
-              .where(ontology: sub.ontology)
-              .include(:submissionId)
-              .include(:submissionStatus)
-              .all
-            # Get recent submissions, sorted by submissionId (latest first)
-            recent_submissions = submissions.sort { |a,b| b.submissionId <=> a.submissionId }[0..10]
-            # Mark older submissions archived
-            recent_submissions.each do |old_sub|
-              next if old_sub.id.to_s == sub.id.to_s
-              next if sub.submissionId < old_sub.submissionId
-              unless sub.archived?
-                old_sub.bring_remaining
-                old_sub.add_submission_status(status_archived)
+          logger.debug "Submission #{sub.id} processed successfully"
+          parsed = sub.ready?(status: [:rdf, :rdf_labels])
 
-                options = { process_rdf: false, index_search: false, index_commit: false,
-                            run_metrics: false, reasoning: false, archive: true }
-                old_sub.process_submission(logger, options)
-
-                old_sub.save
-              end
-            end
+          if parsed
+            archive_old_submissions(logger, sub) if actions[:process_rdf]
+            process_annotator(logger, sub) if actions[:process_annotator]
+            logger.debug "Completed processing of #{submissionId} in #{(Time.now - t0).to_f.round(2)}s"
           else
-            logger.debug "Submission parsing failed"
+            logger.error "Submission #{submissionId} parsing failed"
           end
-
-          process_annotator(logger, sub) if actions[:process_annotator]
-
-          logger.debug "Calculating diffs for 5 most recent submissions"
-          submissions = LinkedData::Models::OntologySubmission
-            .where(ontology: sub.ontology)
-            .include(:submissionId)
-            .include(:diffFilePath)
-            .all
-          # Get recent submissions, sorted by submissionId (latest first)
-          recent_submissions = submissions.sort { |a,b| b.submissionId <=> a.submissionId }[0..5]
-          recent_submissions.each_with_index do |this_sub, i|
-            if this_sub.diffFilePath.nil?
-              begin
-                # Get the next submission, should be an older version.
-                that_sub = recent_submissions[i+1]
-                if not that_sub.nil?
-                  logger.debug "Calculating diff between #{recent_submissions[i].submissionId}
-                                and #{recent_submissions[i+1].submissionId}"
-                  this_sub.diff(logger, that_sub)
-                end
-              rescue
-                next
-              end
-            end
-          end
+          NcboCron::Models::OntologiesReport.new(logger).refresh_report([sub.ontology.acronym])
+        else
+          logger.error "Submission #{submissionId} is not in the system. Processing cancelled..."
         end
+      end
 
-        logger.debug "Completed parsing in #{(Time.now - t0).to_f.round(2)}s"
+      private
+
+      def archive_old_submissions(logger, sub)
+        # Mark older submissions archived
+        logger.debug "Archiving submissions previous to #{sub.id.to_s}..."
+        submissions = LinkedData::Models::OntologySubmission
+                          .where(ontology: sub.ontology)
+                          .include(:submissionId)
+                          .include(:submissionStatus)
+                          .all
+        # Get recent submissions, sorted by submissionId (latest first)
+        recent_submissions = submissions.sort { |a, b| b.submissionId <=> a.submissionId }[0..10]
+        options = { process_rdf: false, index_search: false, index_commit: false,
+                    run_metrics: false, reasoning: false, archive: true }
+        recent_submissions.each do |old_sub|
+          next if old_sub.id.to_s == sub.id.to_s
+          next if sub.submissionId < old_sub.submissionId
+          old_sub.process_submission(logger, options) unless old_sub.archived?
+        end
+        logger.debug "Completed archiving submissions previous to #{sub.id.to_s}"
       end
 
       def process_annotator(logger, sub)
-        to_bring = [:ontology, :submissionId].select {|x| sub.bring?(x)}
-        sub.bring(to_bring) if to_bring.length > 0
-        sub.ontology.bring(:acronym) if sub.ontology.bring?(:acronym)
         parsed = sub.ready?(status: [:rdf, :rdf_labels])
-        raise Exception, "Annotator entries cannot be generated on the submission #{sub.ontology.acronym}/submissions/#{sub.submissionId} because it has not been successfully parsed" unless parsed
 
-        begin
-          annotator = Annotator::Models::NcboAnnotator.new
-          annotator.create_term_cache_for_submission(logger, sub)
-          annotator.generate_dictionary_file()
-        rescue Exception => e
-          logger.error(e.message + "\n" + e.backtrace.join("\n\t"))
-          logger.flush()
+        if parsed
+          begin
+            annotator = Annotator::Models::NcboAnnotator.new
+            annotator.create_term_cache_for_submission(logger, sub)
+            annotator.generate_dictionary_file()
+          rescue Exception => e
+            logger.error(e.message + "\n" + e.backtrace.join("\n\t"))
+            logger.flush()
+          end
+        else
+          logger.error "Annotator entries cannot be generated on the submission #{sub.id.to_s} because it has not been successfully parsed"
         end
-        sub.save()
       end
-
     end
+
   end
 end

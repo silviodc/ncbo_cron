@@ -15,7 +15,8 @@ require_relative '../config/config'
 logfile = 'archive_old_submissions.log'
 if File.file?(logfile); File.delete(logfile); end
 logger = Logger.new(logfile)
-
+options = { process_rdf: false, index_search: false, index_commit: false,
+            run_metrics: false, reasoning: false, archive: true }
 onts = LinkedData::Models::Ontology.all
 onts.each { |ont| ont.bring(:acronym, :submissions) }
 onts.sort! { |a,b| a.acronym <=> b.acronym }
@@ -32,9 +33,7 @@ onts.each do |ont|
         msg = "#{ont.acronym}: found un-archived old submission with ID #{sub.submissionId}."
         puts msg
         logger.info msg
-        options = { process_rdf: false, index_search: false, index_commit: false, 
-          run_metrics: false, reasoning: false, archive: true }
-        sub.process_submission(logger, options)
+        NcboCron::Models::OntologySubmissionParser.new.process_submission(logger, sub.id.to_s, options)
       end
     end
   end

@@ -63,14 +63,9 @@ options[:ontologies].each do |acronym|
       puts msg
       next
     end
-    sub.bring_remaining
-    sub.process_submission(logger)
-    # make available in annotator
-    annotator = Annotator::Models::NcboAnnotator.new
-    annotator.create_term_cache_for_submission(logger, sub)
-    annotator.generate_dictionary_file()
+    NcboCron::Models::OntologySubmissionParser.new.process_submission(logger, sub.id.to_s, NcboCron::Models::OntologySubmissionParser::ACTIONS)
   rescue Exception => e
-    msg = "Failed, exception: #{e.to_json}."
+    msg = "Failed, exception: #{e.class}: #{e.message}\n#{e.backtrace.join("\n")}"
     logger.error(msg)
     puts msg
     print e.backtrace.join("\n")

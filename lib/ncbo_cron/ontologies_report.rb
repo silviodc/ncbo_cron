@@ -140,7 +140,7 @@ module NcboCron
       end
 
       def generate_single_ontology_report(ont)
-        report = {problem: false, logFilePath: '', date_updated: nil}
+        report = {problem: false, format: '', logFilePath: '', date_updated: nil}
         ont.bring_remaining()
         ont.bring(:submissions)
         submissions = ont.submissions
@@ -168,6 +168,11 @@ module NcboCron
         # path to most recent log file
         log_file_path = log_file(ont.acronym, latest_any.submissionId.to_s)
         report[:logFilePath] = log_file_path unless log_file_path.empty?
+
+        # ontology format
+        latest_any.bring(:hasOntologyLanguage)
+        format_obj = latest_any.hasOntologyLanguage
+        report[:format] = format_obj.get_code_from_id if format_obj
 
         latest_ready = ont.latest_submission
         if latest_ready.nil?

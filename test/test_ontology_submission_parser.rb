@@ -57,85 +57,92 @@ class TestOntologySubmissionParser < TestCase
 
   def test_parse_submissions
     parser = NcboCron::Models::OntologySubmissionParser.new
-
-    submission_ids = [1,2]
     archived_submissions = []
     not_archived_submissions = []
-    submission_ids.each do |id|
-      o1 = @@ontologies[0]
-      o1.bring(:submissions) if o1.bring?(:submissions)
-      sub1 = o1.submissions.select { |x| x.id.to_s["/submissions/#{id}"]}.first
-      sub1.bring(:submissionStatus) if sub1.bring?(:submissionStatus)
 
-      o2 = @@ontologies[1]
-      o2.bring(:submissions) if o2.bring?(:submissions)
-      sub2 = o2.submissions.select { |x| x.id.to_s["/submissions/#{id}"]}.first
-      sub2.bring(:submissionStatus) if sub2.bring?(:submissionStatus)
+    o1 = @@ontologies[0]
+    o1.bring(:submissions)
+    o1_sub1 = o1.submissions.select { |x| x.id.to_s["/submissions/1"]}.first
+    o1_sub1.bring(:submissionStatus)
+    o1_sub2 = o1.submissions.select { |x| x.id.to_s["/submissions/2"]}.first
+    o1_sub2.bring(:submissionStatus)
 
-      parser.queue_submission(sub1, {
-          :dummy_action => true, :process_rdf => true, :index_search => true,
-          :dummy_metrics => false, :run_metrics => false, :process_annotator => false,
-          :another_dummy_action => false, :all => false})
-      parser.queue_submission(sub2, {
-          dummy_action: false, process_rdf: true, index_search: false,
-          dummy_metrics: true, run_metrics: false, process_annotator: true,
-          another_dummy_action: true, all: false})
+    o2 = @@ontologies[1]
+    o2.bring(:submissions)
+    o2_sub1 = o2.submissions.select { |x| x.id.to_s["/submissions/1"]}.first
+    o2_sub1.bring(:submissionStatus)
+    o2_sub2 = o2.submissions.select { |x| x.id.to_s["/submissions/2"]}.first
+    o2_sub2.bring(:submissionStatus)
 
-      parser.process_queue_submissions
+    options_o1 = {
+      :dummy_action => true, :process_rdf => true, :index_search => true, :diff => true,
+      :dummy_metrics => false, :run_metrics => false, :process_annotator => false,
+      :another_dummy_action => false, :all => false
+    }
 
-      sub1 = LinkedData::Models::OntologySubmission.find(RDF::IRI.new(sub1.id)).first
-      sub1.bring(:submissionStatus) if sub1.bring?(:submissionStatus)
-      sub2 = LinkedData::Models::OntologySubmission.find(RDF::IRI.new(sub2.id)).first
-      sub2.bring(:submissionStatus) if sub2.bring?(:submissionStatus)
-      sub1statusCodes = LinkedData::Models::SubmissionStatus.get_status_codes(sub1.submissionStatus)
-      assert_equal [], ["UPLOADED", "RDF", "RDF_LABELS", "INDEXED"] - sub1statusCodes
-      sub2statusCodes = LinkedData::Models::SubmissionStatus.get_status_codes(sub2.submissionStatus)
-      assert_equal [], ["UPLOADED", "RDF", "RDF_LABELS", "ANNOTATOR"] - sub2statusCodes
-      if id > 1
-        [o1,o2].each do |os|
-          os.submissions.each do |s|
-            s.bring(:submissionStatus)
-            s.bring(:submissionId)
-            if s.submissionId == 1
-              assert s.archived?
-              archived_submissions << s
-            else
-              not_archived_submissions << s
-            end
-          end
-        end
-      end
-      # Check ontology diffs
-      subs4ont1 = o1.submissions
-      subs4ont1.each { |o| o.bring(:submissionId, :diffFilePath) }
-      recent_submissions = subs4ont1.sort { |a,b| b.submissionId <=> a.submissionId }[0..5]
-      recent_submissions.each_with_index do |s|
-        if s.submissionId == 1
-          assert(s.diffFilePath == nil, 'Should not create submission diff for oldest submission')
-        else
-          assert(s.diffFilePath != nil, 'Failed to create submission diff for a recent submission')
-        end
-      end
-    end
+    options_o2 = {
+      dummy_action: false, process_rdf: true, index_search: false, :diff => true,
+      dummy_metrics: true, run_metrics: false, process_annotator: true,
+      another_dummy_action: true, all: false
+    }
+
+    parser.queue_submission(o1_sub1, options_o1)
+    parser.queue_submission(o2_sub1, options_o2)
+
+    parser.process_queue_submissions
+
+    parser.queue_submission(o1_sub2, options_o1)
+    parser.queue_submission(o2_sub2, options_o2)
+
+    parser.process_queue_submissions
+
+    o1_sub1 = LinkedData::Models::OntologySubmission.find(RDF::IRI.new(o1_sub1.id)).first
+    o1_sub1.bring(:submissionStatus)
+    o1_sub2 = LinkedData::Models::OntologySubmission.find(RDF::IRI.new(o1_sub2.id)).first
+    o1_sub2.bring(:submissionStatus)
+
+    o2_sub1 = LinkedData::Models::OntologySubmission.find(RDF::IRI.new(o2_sub1.id)).first
+    o2_sub1.bring(:submissionStatus)
+    o2_sub2 = LinkedData::Models::OntologySubmission.find(RDF::IRI.new(o2_sub2.id)).first
+    o2_sub2.bring(:submissionStatus)
+
+    o1_sub1_statusCodes = LinkedData::Models::SubmissionStatus.get_status_codes(o1_sub1.submissionStatus)
+    o1_sub2_statusCodes = LinkedData::Models::SubmissionStatus.get_status_codes(o1_sub2.submissionStatus)
+    o2_sub1_statusCodes = LinkedData::Models::SubmissionStatus.get_status_codes(o2_sub1.submissionStatus)
+    o2_sub2_statusCodes = LinkedData::Models::SubmissionStatus.get_status_codes(o2_sub2.submissionStatus)
+
+    assert_equal [], ["ARCHIVED"] - o1_sub1_statusCodes
+    assert_equal [], ["UPLOADED", "RDF", "RDF_LABELS", "INDEXED", "DIFF"] - o1_sub2_statusCodes
+    assert_equal [], ["ARCHIVED"] - o2_sub1_statusCodes
+    assert_equal [], ["UPLOADED", "RDF", "RDF_LABELS", "ANNOTATOR", "DIFF"] - o2_sub2_statusCodes
+
+    archived_submissions << o1_sub1
+    archived_submissions << o2_sub1
+    not_archived_submissions << o1_sub2
+    not_archived_submissions << o2_sub2
 
     logger = Logger.new(STDOUT)
+
     archived_submissions.each do |s|
       assert LinkedData::Models::Class.where.in(s).all.count > 0
     end
+
     not_archived_submissions.each do |s|
       assert LinkedData::Models::Class.where.in(s).all.count > 50
     end
+
     parser.process_flush_classes(logger)
+
     archived_submissions.each do |s|
       assert LinkedData::Models::Class.where.in(s).all.count == 0
     end
+
     not_archived_submissions.each do |s|
       assert LinkedData::Models::Class.where.in(s).all.count > 50
     end
 
     ont_submission_iter = NcboCron::Models::QueryWarmer.new(logger).run
     assert ont_submission_iter >= 0
-
 
     o1 = @@ontologies[0]
     o1.delete

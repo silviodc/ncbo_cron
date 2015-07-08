@@ -44,9 +44,7 @@ module NcboCron
         if acronyms.empty?
           ont_to_include = []
           # ont_to_include = ["AERO", "SBO", "EHDAA", "CCO", "ONLIRA", "VT", "ZEA", "SMASH", "PLIO", "OGI", "CO", "NCIT", "GO"]
-          # ont_to_include = ["ICO", "GEOSPECIES", "TEO", "TMO"]
-          # ont_to_include = ["DCM", "D1-CARBON-FLUX", "STUFF", "GO"]
-          # ont_to_include = ["ADAR", "PR", "PORO", "PROV", "PSIMOD"]
+          # ont_to_include = ["AEO", "DATA-CITE", "FLOPO", "ICF-d8", "OGG-MM", "PP", "PROV", "TESTONTOO"]
         end
         ont_to_include
       end
@@ -140,7 +138,7 @@ module NcboCron
       end
 
       def generate_single_ontology_report(ont)
-        report = {problem: false, logFilePath: '', date_updated: nil}
+        report = {problem: false, format: '', logFilePath: '', date_updated: nil}
         ont.bring_remaining()
         ont.bring(:submissions)
         submissions = ont.submissions
@@ -168,6 +166,11 @@ module NcboCron
         # path to most recent log file
         log_file_path = log_file(ont.acronym, latest_any.submissionId.to_s)
         report[:logFilePath] = log_file_path unless log_file_path.empty?
+
+        # ontology format
+        latest_any.bring(:hasOntologyLanguage)
+        format_obj = latest_any.hasOntologyLanguage
+        report[:format] = format_obj.get_code_from_id if format_obj
 
         latest_ready = ont.latest_submission
         if latest_ready.nil?
@@ -205,6 +208,7 @@ module NcboCron
 
         statuses.each do |ok|
           found = false
+
           sub.submissionStatus.each do |st|
             if st == ok
               found = true
@@ -228,10 +232,12 @@ module NcboCron
 
         # check if metrics has been generated
         metrics = sub.metrics
+
         if metrics.nil?
           add_error_code(report, :errNoMetricsLatestSubmission)
         else
-          metrics.bring_remaining()
+          metrics.bring_remaining
+
           if metrics.classes + metrics.properties < 10
             add_error_code(report, :errIncorrectMetricsLatestSubmission)
           end
@@ -243,15 +249,35 @@ module NcboCron
         if good_classes.empty?
           add_error_code(report, :errNoClassesLatestSubmission)
         else
-          search_text = good_classes.join(" | ")
+          delim = " | "
+          search_text = good_classes.join(delim)
+
           # check for Annotator calls
           ann = Annotator::Models::NcboAnnotator.new(@logger)
           ann_response = ann.annotate(search_text, { ontologies: [ont.acronym] })
-          add_error_code(report, :errNoAnnotator, [ann_response.length, search_text]) if ann_response.length < good_classes.length
+
+          if ann_response.length < good_classes.length
+            ann_search_terms = []
+
+            good_classes.each do |cls|
+              ann_response_term = ann.annotate(cls, { ontologies: [ont.acronym] })
+              ann_search_terms << (ann_response_term.empty? ? "<span class='missing_term'>#{cls}</span>" : cls)
+            end
+            add_error_code(report, :errNoAnnotator, [ann_response.length, ann_search_terms.join(delim)])
+          end
 
           # check for Search calls
-          resp = LinkedData::Models::Class.search(solr_escape(search_text), search_query_params(ont.acronym))
-          add_error_code(report, :errNoSearch, [resp["response"]["numFound"], search_text]) if resp["response"]["numFound"] < good_classes.length
+          search_resp = LinkedData::Models::Class.search(solr_escape(search_text), search_query_params(ont.acronym))
+
+          if search_resp["response"]["numFound"] < good_classes.length
+            search_search_terms = []
+
+            good_classes.each do |cls|
+              search_response_term = LinkedData::Models::Class.search(solr_escape(cls), search_query_params(ont.acronym))
+              search_search_terms << (search_response_term["response"]["numFound"] > 0 ? cls : "<span class='missing_term'>#{cls}</span>")
+            end
+            add_error_code(report, :errNoSearch, [search_resp["response"]["numFound"], search_search_terms.join(delim)])
+          end
         end
         ontology_report_date(report, "date_updated")
         report

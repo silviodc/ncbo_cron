@@ -182,7 +182,6 @@ module NcboCron
           if parsed
             archive_old_submissions(logger, sub) if actions[:process_rdf]
             process_annotator(logger, sub) if actions[:process_annotator]
-            generate_diffs(logger, sub)
             logger.debug "Completed processing of #{submissionId} in #{(Time.now - t0).to_f.round(2)}s"
           else
             logger.error "Submission #{submissionId} parsing failed"
@@ -194,32 +193,6 @@ module NcboCron
       end
 
       private
-
-      def generate_diffs(logger, sub)
-        logger.debug "Calculating diffs for 5 most recent submissions"
-        submissions = LinkedData::Models::OntologySubmission
-                          .where(ontology: sub.ontology)
-                          .include(:submissionId)
-                          .include(:diffFilePath)
-                          .all
-        # Get recent submissions, sorted by submissionId (latest first)
-        recent_submissions = submissions.sort { |a, b| b.submissionId <=> a.submissionId }[0..5]
-        recent_submissions.each_with_index do |this_sub, i|
-          if this_sub.diffFilePath.nil?
-            begin
-              # Get the next submission, should be an older version.
-              that_sub = recent_submissions[i+1]
-              if not that_sub.nil?
-                logger.debug "Calculating diff between #{recent_submissions[i].submissionId}
-                                and #{recent_submissions[i+1].submissionId}"
-                this_sub.diff(logger, that_sub)
-              end
-            rescue
-              next
-            end
-          end
-        end
-      end
 
       def archive_old_submissions(logger, sub)
         # Mark older submissions archived

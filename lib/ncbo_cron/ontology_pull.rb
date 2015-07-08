@@ -18,10 +18,13 @@ module NcboCron
         logger.info "UMLS auto-pull #{options[:enable_pull_umls] == true}"
         logger.flush
         ontologies = LinkedData::Models::Ontology.where.include(:acronym).all
+        # ont_to_include = ["CHEBI", "FIX", "MP", "PW", "SP"]
+        # ont_to_include = ["FIX"]
+        # ontologies.select! { |ont| ont_to_include.include?(ont.acronym) }
         enable_pull_umls = options[:enable_pull_umls]
         umls_download_url = options[:pull_umls_url]
 
-        ontologies.sort! {|a,b| a.acronym.downcase <=> b.acronym.downcase}
+        ontologies.sort! {|a, b| a.acronym.downcase <=> b.acronym.downcase}
 
         new_submissions = []
         ontologies.each do |ont|
@@ -41,6 +44,7 @@ module NcboCron
               logger.info("Using alternative download for umls #{last.pullLocation.to_s}")
               logger.flush
             end
+
             if (last.remote_file_exists?(last.pullLocation.to_s))
               logger.info "Checking download for #{ont.acronym}"
               logger.info "Location: #{last.pullLocation.to_s}"; logger.flush
@@ -121,4 +125,13 @@ module NcboCron
   end
 end
 
-
+# require 'ontologies_linked_data'
+# require 'goo'
+# require 'ncbo_annotator'
+# require 'ncbo_cron/config'
+# require_relative '../../config/config'
+# ontologies_pull_log_path = File.join("logs", "scheduler-pull.log")
+# ontologies_pull_logger = Logger.new(ontologies_pull_log_path)
+# pull = NcboCron::Models::OntologyPull.new
+# pull.do_remote_ontology_pull({logger: ontologies_pull_logger, enable_pull_umls: false})
+# ./bin/ncbo_cron --disable-processing true --disable-flush true --disable-warmq true --disable-ontology-analytics true --disable-ontologies-report true --pull-cron '22 * * * *'

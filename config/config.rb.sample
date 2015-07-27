@@ -10,6 +10,12 @@ LinkedData.config do |config|
   config.goo_redis_host = "localhost"
   config.goo_redis_port = 6379
 
+  # Used to define other bioportal that can be mapped to
+  # Example to map to ncbo bioportal : {"ncbo" => {"api" => "http://data.bioontology.org", "ui" => "http://bioportal.bioontology.org"}
+  # Then create the mapping using the following class in JSON : "http://purl.bioontology.org/ontology/MESH/C585345": "ncbo:MESH"
+  # Where "ncbo" is the namespace used as key in the interportal_hash
+  config.interportal_hash   = {}
+
   # Email notifications.
   config.enable_notifications    = true
   config.email_sender            = "sender@domain.com" # Default sender for emails

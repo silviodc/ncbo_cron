@@ -50,8 +50,8 @@ GIT
 
 GIT
   remote: git://github.com/sifrproject/ontologies_linked_data.git
-  revision: fcf2ecdca0f50e1d8a08125b116328f3f97322d9
-  branch: add_external_mappings
+  revision: 33155bcfc30630e807f6cd364d6712b9cf1a1b8e
+  branch: sifr_linked_data
   specs:
     ontologies_linked_data (0.0.1)
       activesupport
@@ -163,10 +163,10 @@ GEM
       redis
     multi_json (1.11.0)
     multipart-post (2.0.0)
-    mysql2 (0.3.18)
+    mysql2 (0.3.19)
     net-http-persistent (2.9.4)
     netrc (0.10.3)
-    oj (2.12.10)
+    oj (2.12.11)
     pony (1.11)
       mail (>= 2.0)
     pry (0.10.1)
@@ -192,7 +192,7 @@ GEM
     rubyzip (1.1.7)
     rufus-scheduler (2.0.24)
       tzinfo (>= 0.3.22)
-    sequel (4.24.0)
+    sequel (4.25.0)
     signet (0.6.1)
       addressable (~> 2.3)
       extlib (~> 0.9)

@@ -1,6 +1,6 @@
 GIT
   remote: git://github.com/ncbo/goo.git
-  revision: 5ffce826af3f11981676a80de86452ac88190b4e
+  revision: 22fd8973768c3f21a2bb1e62e8197778656c31cf
   branch: master
   specs:
     goo (0.0.2)
@@ -16,18 +16,19 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ncbo_annotator.git
-  revision: d9ac30c4fee7022bf48c5cd235cf7816af8c9592
+  revision: fc15412de203f4578dd554145e49beb471ecf400
   branch: master
   specs:
     ncbo_annotator (0.0.1)
       goo
       ontologies_linked_data
       redis
+      ruby-xxHash
 
 GIT
   remote: git://github.com/ncbo/ontologies_linked_data.git
-  revision: 822adc5972ee1e542d18e780baaa495bb854ae1b
-  branch: staging
+  revision: 29d5eb60a4cdf13964b98c58cb27f43f8cd40ebb
+  branch: master
   specs:
     ontologies_linked_data (0.0.1)
       activesupport
@@ -159,10 +160,10 @@ GEM
       redis
     multi_json (1.11.0)
     multipart-post (2.0.0)
-    mysql2 (0.3.18)
+    mysql2 (0.3.19)
     net-http-persistent (2.9.4)
     netrc (0.10.3)
-    oj (2.12.10)
+    oj (2.12.11)
     pony (1.11)
       mail (>= 2.0)
     pry (0.10.1)
@@ -188,7 +189,7 @@ GEM
     rubyzip (1.1.7)
     rufus-scheduler (2.0.24)
       tzinfo (>= 0.3.22)
-    sequel (4.24.0)
+    sequel (4.25.0)
     signet (0.6.1)
       addressable (~> 2.3)
       extlib (~> 0.9)

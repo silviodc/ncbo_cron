@@ -25,15 +25,25 @@ options = {}
 opt_parser = OptionParser.new do |opts|
   # Set a banner, displayed at the top of the help screen.
   #opts.banner = "Usage: ncbo_ontology_metrics [options]"
-  options[:ontology] = false
-  opts.on('-o', '--ontology ONTOLOGY_ACRONYM', 'Ontology acronym to generate metrics for (required).') do |acronym|
-    puts "Processing metrics for ontology: #{acronym}"
-    options[:ontology] = acronym
+
+  options[:ontologies] = []
+  opts.on('-a', '--all-ontologies', 'Generate metrics for all ontologies (this or -o option required).') do
+    LinkedData::Models::Ontology.all.each  do |ont|
+      ont.bring(:acronym)
+      options[:ontologies].push(ont.acronym)
+    end
+    options[:all] = true
   end
-  options[:logfile] = "metrics.log"
-  opts.on( '-l', '--logfile FILE', "Write log to FILE (default is 'metrics.log')" ) do |filename|
+
+  opts.on('-o', '--ontologies ACRONYM1,ACRONYM2,ACRONYM3', 'Comma-separated list of ontologies to generate metrics for (this or -a option required).') do |acronyms|
+    options[:ontologies] = acronyms.split(",").map {|o| o.strip}
+  end
+
+  options[:logfile] = "logs/metrics.log"
+  opts.on( '-l', '--logfile FILE', "Write log to FILE (default is 'logs/metrics.log')" ) do |filename|
     options[:logfile] = filename
   end
+
   # Display the help screen, all programs are assumed to have this option.
   opts.on( '-h', '--help', 'Display this screen' ) do
     puts opts
@@ -43,35 +53,70 @@ end
 # Parse the command-line. The 'parse' method simply parses ARGV, while the 'parse!' method parses ARGV and removes
 # any options found there, as well as any parameters for the options.
 opt_parser.parse!
-unless options[:ontology]
+unless options[:ontologies]
   puts opt_parser.help
   exit(1)
+end
+
+def generate_metrics_for_ontology(finished_ontologies, acronym, logger)
+  begin
+    ont = LinkedData::Models::Ontology.find(acronym).first
+    if ont.nil?
+      raise "Ontology not found: #{acronym}"
+    end
+    logger.info("Retrieved ontology: #{acronym}")
+
+    sub = ont.latest_submission(status: :rdf)
+    if sub.nil?
+      raise "Cannot find latest submission with 'RDF' parsed status for ontology: #{acronym}"
+    end
+    NcboCron::Models::OntologySubmissionParser.new.process_submission(logger, sub.id.to_s, {process_rdf: false,
+                                                                      index_search: false, index_commit: false,
+                                                                      run_metrics: true, reasoning: false})
+    finished_ontologies << acronym
+  rescue Exception => e
+    msg = "Exception: #{e.to_json}"
+    puts msg
+    logger.error(msg)
+  end
 end
 
 begin
   logger = Logger.new(options[:logfile])
   puts "Processing details are logged to #{options[:logfile]}"
-  ont = LinkedData::Models::Ontology.find(options[:ontology]).first
-  if ont.nil?
-    msg = "Quitting, ontology not found: #{options[:ontology]}"
-    logger.error(msg)
-    puts msg
-    exit(1)
+  msg = ""
+
+  if (options[:all])
+    msg = "Generating metrics for all ontologies on #{options[:solr_core_url]}"
+  else
+    msg = "Generating metrics for ontologies: #{options[:ontologies]}"
   end
-  sub = ont.latest_submission(status: :rdf)
-  if sub.nil?
-    msg = "Quitting, cannot find latest submission with 'rdf' parsed status."
-    logger.error(msg)
-    puts msg
-    exit(1)
+  puts msg
+  logger.info(msg)
+
+  finished_ontologies = []
+  remaining_ontologies = options[:ontologies].length
+
+  time = Benchmark.realtime do
+    logger.info("There is a total of #{options[:ontologies].length} ontolog#{options[:ontologies].length > 1 ? "ies" : "y"} to generate metrics for")
+
+    options[:ontologies].each do |acronym|
+      generate_metrics_for_ontology(finished_ontologies, acronym, logger)
+      remaining_ontologies -= 1
+      logger.info("There is a total of #{remaining_ontologies} ontolog#{remaining_ontologies > 1 ? "ies" : "y"} remaining out of #{options[:ontologies].length} ontologies") if (remaining_ontologies > 0)
+    end
   end
-  NcboCron::Models::OntologySubmissionParser.new.process_submission(logger, sub.id.to_s, {process_rdf: false,
-                                                                                      index_search: false, index_commit: false,
-                                                                                      run_metrics: true, reasoning: false})
+
+  if (options[:all])
+    msg = "Completed generating metrics for all ontologies in #{(time/60).round(1)} minutes."
+  else
+    msg = "Completed generating metrics for ontologies: #{finished_ontologies} in #{(time/60).round(1)} minutes."
+  end
+  puts msg
+  logger.info(msg)
 rescue Exception => e
-  msg = "Failed, exception: #{e.to_json}."
+  msg = "Failed metrics generation with exception: #{e.to_json}"
   logger.error(msg)
   puts msg
   exit(1)
 end
-

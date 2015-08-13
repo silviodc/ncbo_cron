@@ -87,7 +87,7 @@ begin
   msg = ""
 
   if (options[:all])
-    msg = "Generating metrics for all ontologies on #{options[:solr_core_url]}"
+    msg = "Generating metrics for all ontologies"
   else
     msg = "Generating metrics for ontologies: #{options[:ontologies]}"
   end

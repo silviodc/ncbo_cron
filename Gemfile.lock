@@ -16,8 +16,8 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ncbo_annotator.git
-  revision: 298295a68b23c5ca36c97c42dce26e648f045b7f
-  branch: master
+  revision: 158feb274fdf3322740ef146be1c54324b5cd573
+  branch: staging
   specs:
     ncbo_annotator (0.0.1)
       goo
@@ -128,12 +128,12 @@ GEM
       multi_json (~> 1.10)
       retriable (~> 1.4)
       signet (~> 0.6)
-    googleauth (0.4.1)
+    googleauth (0.4.2)
       faraday (~> 0.9)
       jwt (~> 1.4)
       logging (~> 2.0)
       memoist (~> 0.12)
-      multi_json (= 1.11)
+      multi_json (~> 1.11)
       signet (~> 0.6)
     http-cookie (1.0.2)
       domain_name (~> 0.5)
@@ -158,12 +158,12 @@ GEM
     minitest (4.7.5)
     mlanett-redis-lock (0.2.6)
       redis
-    multi_json (1.11.0)
+    multi_json (1.11.2)
     multipart-post (2.0.0)
     mysql2 (0.3.19)
     net-http-persistent (2.9.4)
     netrc (0.10.3)
-    oj (2.12.11)
+    oj (2.12.12)
     pony (1.11)
       mail (>= 2.0)
     pry (0.10.1)
@@ -200,7 +200,7 @@ GEM
     sys-proctable (0.9.8)
     systemu (2.6.5)
     thread_safe (0.3.5)
-    typhoeus (0.7.2)
+    typhoeus (0.7.3)
       ethon (>= 0.7.4)
     tzinfo (1.2.2)
       thread_safe (~> 0.1)

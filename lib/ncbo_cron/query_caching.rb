@@ -35,7 +35,6 @@ module NcboCron
       def run
         @logger.info("running counts per ontology")
         @logger.flush()
-        LinkedData::Mappings.create_mapping_counts(@logger)
 
         iterations = 0
         retrieve_latest_submissions.each do |acr,sub|

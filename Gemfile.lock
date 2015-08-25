@@ -50,7 +50,7 @@ GIT
 
 GIT
   remote: git://github.com/sifrproject/ontologies_linked_data.git
-  revision: 33155bcfc30630e807f6cd364d6712b9cf1a1b8e
+  revision: 99e564631a26015b3492c07383f8e791a2c54a29
   branch: sifr_linked_data
   specs:
     ontologies_linked_data (0.0.1)
@@ -163,7 +163,7 @@ GEM
       redis
     multi_json (1.11.2)
     multipart-post (2.0.0)
-    mysql2 (0.3.19)
+    mysql2 (0.3.20)
     net-http-persistent (2.9.4)
     netrc (0.10.3)
     oj (2.12.12)

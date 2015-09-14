@@ -16,18 +16,17 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ncbo_annotator.git
-  revision: fa536246eed008e33951071ea6862e59642cac0a
+  revision: 2ae9de5704b6191afedad78ab0b32b52a2174d19
   branch: staging
   specs:
     ncbo_annotator (0.0.1)
       goo
       ontologies_linked_data
       redis
-      ruby-xxHash
 
 GIT
   remote: git://github.com/ncbo/ontologies_linked_data.git
-  revision: 5ac6cc75ca206829b6126e6bc45fc3c64214e751
+  revision: 7e9a23542656310cb160a45c9109a3a0ab080a4a
   branch: staging
   specs:
     ontologies_linked_data (0.0.1)

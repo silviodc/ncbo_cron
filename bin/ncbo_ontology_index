@@ -94,7 +94,7 @@ def index_ontology(indexed_ontologies, acronym, logger)
     end
     # NOTE: process_submission controls all aspects of re-indexing, including
     # removal of the old index and committing a new index.  There is no 'dry-run' option.
-    NcboCron::Models::OntologySubmissionParser.new.process_submission(logger, sub.id.to_s, {process_rdf: false,
+    NcboCron::Models::OntologySubmissionParser.new.process_submission(logger, sub.id.to_s, {process_rdf: false, diff: false,
                                                                                         index_search: true, index_commit: true,
                                                                                         run_metrics: false, reasoning: false})
     ont.bring(:provisionalClasses) if ont.bring?(:provisionalClasses)

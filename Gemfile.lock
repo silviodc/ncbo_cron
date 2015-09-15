@@ -100,12 +100,12 @@ GEM
     dante (0.2.0)
     domain_name (0.5.24)
       unf (>= 0.0.5, < 1.0.0)
-    elasticsearch (1.0.12)
-      elasticsearch-api (= 1.0.12)
-      elasticsearch-transport (= 1.0.12)
-    elasticsearch-api (1.0.12)
+    elasticsearch (1.0.13)
+      elasticsearch-api (= 1.0.13)
+      elasticsearch-transport (= 1.0.13)
+    elasticsearch-api (1.0.13)
       multi_json
-    elasticsearch-transport (1.0.12)
+    elasticsearch-transport (1.0.13)
       faraday
       multi_json
     email_spec (1.6.0)
@@ -154,7 +154,7 @@ GEM
       mime-types (>= 1.16, < 3)
     memoist (0.12.0)
     method_source (0.8.2)
-    mime-types (2.6.1)
+    mime-types (2.6.2)
     minitest (4.7.5)
     mlanett-redis-lock (0.2.6)
       redis
@@ -163,7 +163,7 @@ GEM
     mysql2 (0.4.0)
     net-http-persistent (2.9.4)
     netrc (0.10.3)
-    oj (2.12.13)
+    oj (2.12.14)
     pony (1.11)
       mail (>= 2.0)
     pry (0.10.1)

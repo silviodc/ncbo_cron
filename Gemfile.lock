@@ -1,7 +1,7 @@
 GIT
   remote: git://github.com/ncbo/goo.git
-  revision: 22fd8973768c3f21a2bb1e62e8197778656c31cf
-  branch: master
+  revision: d180856010dc43141d27a19c73bcfe3d0b01a11b
+  branch: staging
   specs:
     goo (0.0.2)
       addressable (= 2.3.5)
@@ -16,8 +16,8 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ncbo_annotator.git
-  revision: 1a758f55181f55faad060d007e25a4e0f791bffb
-  branch: master
+  revision: fa536246eed008e33951071ea6862e59642cac0a
+  branch: staging
   specs:
     ncbo_annotator (0.0.1)
       goo
@@ -27,8 +27,8 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ontologies_linked_data.git
-  revision: 372addd2a9deff02acc109adc484252337ad1055
-  branch: master
+  revision: 27b1ad1a532cd3d3beff44a93a407c7e50804df9
+  branch: staging
   specs:
     ontologies_linked_data (0.0.1)
       activesupport
@@ -100,12 +100,12 @@ GEM
     dante (0.2.0)
     domain_name (0.5.24)
       unf (>= 0.0.5, < 1.0.0)
-    elasticsearch (1.0.12)
-      elasticsearch-api (= 1.0.12)
-      elasticsearch-transport (= 1.0.12)
-    elasticsearch-api (1.0.12)
+    elasticsearch (1.0.13)
+      elasticsearch-api (= 1.0.13)
+      elasticsearch-transport (= 1.0.13)
+    elasticsearch-api (1.0.13)
       multi_json
-    elasticsearch-transport (1.0.12)
+    elasticsearch-transport (1.0.13)
       faraday
       multi_json
     email_spec (1.6.0)
@@ -154,16 +154,16 @@ GEM
       mime-types (>= 1.16, < 3)
     memoist (0.12.0)
     method_source (0.8.2)
-    mime-types (2.6.1)
+    mime-types (2.6.2)
     minitest (4.7.5)
     mlanett-redis-lock (0.2.6)
       redis
     multi_json (1.11.2)
     multipart-post (2.0.0)
-    mysql2 (0.3.20)
+    mysql2 (0.4.0)
     net-http-persistent (2.9.4)
     netrc (0.10.3)
-    oj (2.12.12)
+    oj (2.12.14)
     pony (1.11)
       mail (>= 2.0)
     pry (0.10.1)

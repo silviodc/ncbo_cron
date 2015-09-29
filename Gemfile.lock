@@ -166,7 +166,7 @@ GEM
     oj (2.12.14)
     pony (1.11)
       mail (>= 2.0)
-    pry (0.10.1)
+    pry (0.10.2)
       coderay (~> 1.1.0)
       method_source (~> 0.8.1)
       slop (~> 3.4)

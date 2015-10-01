@@ -113,6 +113,9 @@ opt_parser = OptionParser.new do |opts|
   end
   opts.on("-w", "--warm-long-queries SCHED", String, "cron schedule to warmup long time running queries", "(default: #{options[:cron_warmq]})") do |c|
     options[:cron_warmq] = c
+  end  
+  opts.on("-m", "--create-mapping-counts SCHED", String, "cron schedule to create mapping counts", "(default: #{options[:cron_mapping_counts]})") do |c|
+    options[:cron_mapping_counts] = c
   end
   opts.on("--ontology-analytics SCHED", String, "cron schedule to run ontology analytics refresh", "(default: #{options[:cron_ontology_analytics]})") do |c|
     options[:cron_ontology_analytics] = c

@@ -1,5 +1,5 @@
 
-module NCBOCron
+module NcboCron
   module Models
   
     class MappingCounts

@@ -1,6 +1,6 @@
 GIT
   remote: git://github.com/ncbo/goo.git
-  revision: 22fd8973768c3f21a2bb1e62e8197778656c31cf
+  revision: 1437bdb40ef8c0d5babcdf288ecea0de26c4e0b3
   branch: master
   specs:
     goo (0.0.2)
@@ -16,7 +16,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ncbo_annotator.git
-  revision: 298295a68b23c5ca36c97c42dce26e648f045b7f
+  revision: c9257d633cb5be8b0bdd859f2ac4d095721dc590
   branch: master
   specs:
     ncbo_annotator (0.0.1)
@@ -103,18 +103,18 @@ GEM
     dante (0.2.0)
     domain_name (0.5.24)
       unf (>= 0.0.5, < 1.0.0)
-    elasticsearch (1.0.12)
-      elasticsearch-api (= 1.0.12)
-      elasticsearch-transport (= 1.0.12)
-    elasticsearch-api (1.0.12)
+    elasticsearch (1.0.13)
+      elasticsearch-api (= 1.0.13)
+      elasticsearch-transport (= 1.0.13)
+    elasticsearch-api (1.0.13)
       multi_json
-    elasticsearch-transport (1.0.12)
+    elasticsearch-transport (1.0.13)
       faraday
       multi_json
     email_spec (1.6.0)
       launchy (~> 2.1)
       mail (~> 2.2)
-    ethon (0.7.4)
+    ethon (0.8.0)
       ffi (>= 1.3.0)
     extlib (0.9.16)
     faraday (0.9.1)
@@ -147,7 +147,7 @@ GEM
     launchy (2.4.3)
       addressable (~> 2.3)
     libxml-ruby (2.8.0)
-    little-plugger (1.1.3)
+    little-plugger (1.1.4)
     logging (2.0.0)
       little-plugger (~> 1.1)
       multi_json (~> 1.10)
@@ -157,19 +157,19 @@ GEM
       mime-types (>= 1.16, < 3)
     memoist (0.12.0)
     method_source (0.8.2)
-    mime-types (2.6.1)
+    mime-types (2.6.2)
     minitest (4.7.5)
     mlanett-redis-lock (0.2.6)
       redis
     multi_json (1.11.2)
     multipart-post (2.0.0)
-    mysql2 (0.3.20)
+    mysql2 (0.4.1)
     net-http-persistent (2.9.4)
     netrc (0.10.3)
-    oj (2.12.12)
+    oj (2.12.14)
     pony (1.11)
       mail (>= 2.0)
-    pry (0.10.1)
+    pry (0.10.2)
       coderay (~> 1.1.0)
       method_source (~> 0.8.1)
       slop (~> 3.4)
@@ -192,7 +192,7 @@ GEM
     rubyzip (1.1.7)
     rufus-scheduler (2.0.24)
       tzinfo (>= 0.3.22)
-    sequel (4.25.0)
+    sequel (4.27.0)
     signet (0.6.1)
       addressable (~> 2.3)
       extlib (~> 0.9)
@@ -203,9 +203,10 @@ GEM
     sys-proctable (0.9.8)
     systemu (2.6.5)
     thread_safe (0.3.5)
-    typhoeus (0.7.3)
-      ethon (>= 0.7.4)
-    tzinfo (0.3.44)
+    typhoeus (0.8.0)
+      ethon (>= 0.8.0)
+    tzinfo (1.2.2)
+      thread_safe (~> 0.1)
     unf (0.1.4)
       unf_ext
     unf_ext (0.0.7.1)

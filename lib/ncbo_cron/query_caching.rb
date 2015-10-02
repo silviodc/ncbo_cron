@@ -33,12 +33,6 @@ module NcboCron
       end
 
       def run
-        @logger.info("running counts per ontology")
-        @logger.flush()
-
-        # Let create_mapping_counts for SIFR 
-        LinkedData::Mappings.create_mapping_counts(@logger)
-
         iterations = 0
         retrieve_latest_submissions.each do |acr,sub|
           @logger.info("running first page mappings #{sub.id.to_s}")

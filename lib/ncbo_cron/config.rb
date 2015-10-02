@@ -29,6 +29,7 @@ module NcboCron
     @settings.enable_pull ||= true
     @settings.enable_flush ||= true
     @settings.enable_warmq ||= true
+    @settings.enable_mapping_counts ||= true
     # enable ontology analytics
     @settings.enable_ontology_analytics ||= true
     # enable ontologies report
@@ -45,6 +46,9 @@ module NcboCron
     @settings.cron_flush ||= "00 22 * * 2"
     # Warmup long time running queries
     @settings.cron_warmq ||= "00 */3 * * *"
+    # Create mapping counts schedule
+    # 30 0 * * 6 - run once per week on Saturday at 12:30AM
+    @settings.cron_mapping_counts ||= "30 0 * * 6"
     # Ontology analytics refresh schedule
     # 15 0 * * 1 - run once a week on Monday at 12:15AM
     @settings.cron_ontology_analytics ||= "15 0 * * 1"

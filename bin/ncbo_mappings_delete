@@ -1,0 +1,57 @@
+#!/usr/bin/env ruby
+
+# Exit cleanly from an early interrupt
+Signal.trap("INT") { exit 1 }
+
+# Setup the bundled gems in our environment
+require 'bundler/setup'
+
+# Configure the process for the current cron configuration.
+require_relative '../lib/ncbo_cron'
+config_exists = File.exist?(File.expand_path('../../config/config.rb', __FILE__))
+abort("Please create a config/config.rb file using the config/config.rb.sample as a template") unless config_exists
+require_relative '../config/config';
+
+require 'optparse'
+options = {}
+opt_parser = OptionParser.new do |opts|
+  # Set a banner, displayed at the top of the help screen.
+  #opts.banner = "Usage: ncbo_ontology_process [options]"
+  opts.on('-o', '--ontologies ACRONYM[,ACRONYM,...]', 'Delete all mappings from/to this ontology acronym(s).') do |acronym|
+    options[:ontologies] = acronym.split(',')
+  end
+  options[:logfile] = "delete_mapping.log"
+  opts.on( '-l', '--logfile FILE', "Write log to FILE (default is 'delete_mapping.log')" ) do |filename|
+    options[:logfile] = filename
+  end
+  # Display the help screen, all programs are assumed to have this option.
+  opts.on( '-h', '--help', 'Display this screen' ) do
+    puts opts
+    exit
+  end
+end
+# Parse the command-line. The 'parse' method simply parses ARGV, while the 'parse!' method parses ARGV and removes
+# any options found there, as well as any parameters for the options.
+opt_parser.parse!
+=begin
+unless options[:ontologies]
+  puts opt_parser.help
+  exit(1)
+=end
+
+
+#######################################################################################################################
+#
+# MAIN
+#
+
+logger = Logger.new(options[:logfile])
+puts "Processing details are logged to #{options[:logfile]}"
+
+# Go through all REST mapping and delete all of them
+LinkedData::Models::RestBackupMapping.all.each do |m|
+  puts m.id.to_s
+  mapping_id = RDF::URI.new(m.id.to_s)
+  puts LinkedData::Mappings.delete_rest_mapping(mapping_id)
+end
+

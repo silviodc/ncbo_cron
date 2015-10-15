@@ -20,6 +20,9 @@ opt_parser = OptionParser.new do |opts|
   opts.on('-o', '--ontologies ACRONYM[,ACRONYM,...]', 'Delete all mappings from/to this ontology acronym(s).') do |acronym|
     options[:ontologies] = acronym.split(',')
   end
+  opts.on('--delete_all', 'Delete ALL REST mapping of the BioPortal instance') do |d|
+    options[:delete_all] = true
+  end
   options[:logfile] = "delete_mapping.log"
   opts.on( '-l', '--logfile FILE', "Write log to FILE (default is 'delete_mapping.log')" ) do |filename|
     options[:logfile] = filename
@@ -33,11 +36,6 @@ end
 # Parse the command-line. The 'parse' method simply parses ARGV, while the 'parse!' method parses ARGV and removes
 # any options found there, as well as any parameters for the options.
 opt_parser.parse!
-=begin
-unless options[:ontologies]
-  puts opt_parser.help
-  exit(1)
-=end
 
 
 #######################################################################################################################
@@ -48,10 +46,36 @@ unless options[:ontologies]
 logger = Logger.new(options[:logfile])
 puts "Processing details are logged to #{options[:logfile]}"
 
-# Go through all REST mapping and delete all of them
-LinkedData::Models::RestBackupMapping.all.each do |m|
-  puts m.id.to_s
-  mapping_id = RDF::URI.new(m.id.to_s)
-  puts LinkedData::Mappings.delete_rest_mapping(mapping_id)
+if options[:delete_all]
+  # Go through all REST mapping and delete all of them
+  LinkedData::Models::RestBackupMapping.all.each do |m|
+    mapping_id = RDF::URI.new(m.id.to_s)
+    logger.info("#{LinkedData::Mappings.delete_rest_mapping(mapping_id)} has been deleted")
+  end
+elsif options[:ontologies]
+  # Go through all REST mapping and delete only the one corresponding to the ontology acronyms
+  options[:ontologies].each do |acronym|
+    ont = LinkedData::Models::Ontology.find(acronym).first
+    if ont.nil?
+      msg = "Error, ontology not found: #{acronym}"
+      logger.error(msg)
+      puts msg
+      next
+    end
+    logger.info("DELETING #{acronym} MAPPINGS")
+    LinkedData::Models::RestBackupMapping.all.each do |m|
+      mapping_id = RDF::URI.new(m.id.to_s)
+      backup = LinkedData::Models::RestBackupMapping.find(mapping_id).include(:class_urns).first
+      backup.class_urns.each do |urn|
+        if urn.split(":")[1] == acronym
+          logger.info("#{LinkedData::Mappings.delete_rest_mapping(mapping_id)} has been deleted")
+          puts backup.class_urns
+        end
+      end
+    end
+  end
+else
+  puts opt_parser.help
+  exit(1)
 end
 

@@ -20,7 +20,7 @@ opt_parser = OptionParser.new do |opts|
   opts.on('-o', '--ontologies ACRONYM[,ACRONYM,...]', 'Delete all mappings from/to this ontology acronym(s).') do |acronym|
     options[:ontologies] = acronym.split(',')
   end
-  opts.on('--delete_all', 'Delete ALL REST mapping of the BioPortal instance') do |d|
+  opts.on('--delete-all', 'Delete ALL REST mapping of the BioPortal instance') do |d|
     options[:delete_all] = true
   end
   options[:logfile] = "delete_mapping.log"
@@ -47,9 +47,9 @@ logger = Logger.new(options[:logfile])
 puts "Processing details are logged to #{options[:logfile]}"
 
 if options[:delete_all]
+  logger.info("DELETING ALL MAPPINGS")
   # Go through all REST mapping and delete all of them
   LinkedData::Models::RestBackupMapping.all.each do |m|
-    logger.info("DELETING ALL MAPPINGS")
     mapping_id = RDF::URI.new(m.id.to_s)
     logger.info("#{LinkedData::Mappings.delete_rest_mapping(mapping_id)} has been deleted")
   end

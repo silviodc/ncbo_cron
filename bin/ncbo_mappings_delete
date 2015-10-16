@@ -50,8 +50,13 @@ if options[:delete_all]
   logger.info("DELETING ALL MAPPINGS")
   # Go through all REST mapping and delete all of them
   LinkedData::Models::RestBackupMapping.all.each do |m|
-    mapping_id = RDF::URI.new(m.id.to_s)
-    logger.info("#{LinkedData::Mappings.delete_rest_mapping(mapping_id)} has been deleted")
+    begin
+      mapping_id = RDF::URI.new(m.id.to_s)
+      logger.info("#{LinkedData::Mappings.delete_rest_mapping(mapping_id)} has been deleted")
+    rescue
+      logger.error("#{m.id.to_s} FAILED")
+      next
+    end
   end
 elsif options[:ontologies]
   # Go through all REST mapping and delete only the one corresponding to the ontology acronyms
@@ -66,11 +71,16 @@ elsif options[:ontologies]
     logger.info("DELETING #{acronym} MAPPINGS")
     LinkedData::Models::RestBackupMapping.all.each do |m|
       mapping_id = RDF::URI.new(m.id.to_s)
-      backup = LinkedData::Models::RestBackupMapping.find(mapping_id).include(:class_urns).first
-      backup.class_urns.each do |urn|
-        if urn.split(":")[1] == acronym
-          logger.info("#{LinkedData::Mappings.delete_rest_mapping(mapping_id)} has been deleted")
+      begin
+        backup = LinkedData::Models::RestBackupMapping.find(mapping_id).include(:class_urns).first
+        backup.class_urns.each do |urn|
+          if urn.split(":")[1] == acronym
+            logger.info("#{LinkedData::Mappings.delete_rest_mapping(mapping_id)} has been deleted")
+          end
         end
+      rescue
+        logger.error("#{m.id.to_s} FAILED")
+        next
       end
     end
   end

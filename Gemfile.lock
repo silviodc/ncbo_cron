@@ -27,7 +27,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ontologies_linked_data.git
-  revision: 80e0d3e10e71a54cec2b5c672087a0aab974d114
+  revision: fcf43947e8a09b0c40fd617ab080dffa49877f9f
   branch: staging
   specs:
     ontologies_linked_data (0.0.1)
@@ -98,14 +98,14 @@ GEM
     coderay (1.1.0)
     cube-ruby (0.0.3)
     dante (0.2.0)
-    domain_name (0.5.24)
+    domain_name (0.5.25)
       unf (>= 0.0.5, < 1.0.0)
-    elasticsearch (1.0.13)
-      elasticsearch-api (= 1.0.13)
-      elasticsearch-transport (= 1.0.13)
-    elasticsearch-api (1.0.13)
+    elasticsearch (1.0.14)
+      elasticsearch-api (= 1.0.14)
+      elasticsearch-transport (= 1.0.14)
+    elasticsearch-api (1.0.14)
       multi_json
-    elasticsearch-transport (1.0.13)
+    elasticsearch-transport (1.0.14)
       faraday
       multi_json
     email_spec (1.6.0)
@@ -114,7 +114,7 @@ GEM
     ethon (0.8.0)
       ffi (>= 1.3.0)
     extlib (0.9.16)
-    faraday (0.9.1)
+    faraday (0.9.2)
       multipart-post (>= 1.2, < 3)
     ffi (1.9.10)
     google-api-client (0.8.6)
@@ -166,7 +166,7 @@ GEM
     oj (2.12.14)
     pony (1.11)
       mail (>= 2.0)
-    pry (0.10.2)
+    pry (0.10.3)
       coderay (~> 1.1.0)
       method_source (~> 0.8.1)
       slop (~> 3.4)
@@ -183,13 +183,13 @@ GEM
       mime-types (>= 1.16, < 3.0)
       netrc (~> 0.7)
     retriable (1.4.1)
-    rsolr (1.0.12)
+    rsolr (1.0.13)
       builder (>= 2.1.2)
     ruby-xxHash (0.4.0.1)
     rubyzip (1.1.7)
     rufus-scheduler (2.0.24)
       tzinfo (>= 0.3.22)
-    sequel (4.26.0)
+    sequel (4.27.0)
     signet (0.6.1)
       addressable (~> 2.3)
       extlib (~> 0.9)

@@ -52,9 +52,10 @@ if options[:delete_all]
   LinkedData::Models::RestBackupMapping.all.each do |m|
     begin
       mapping_id = RDF::URI.new(m.id.to_s)
-      logger.info("#{LinkedData::Mappings.delete_rest_mapping(mapping_id)} has been deleted")
-    rescue
-      logger.error("#{m.id.to_s} FAILED")
+      deleted_mapping = LinkedData::Mappings.delete_rest_mapping(mapping_id)
+      logger.info("#{deleted_mapping.id.to_s} has been deleted")
+    rescue => e
+      logger.error("#{m.id.to_s} FAILED. Error: #{e.to_s}")
       next
     end
   end

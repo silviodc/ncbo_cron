@@ -43,12 +43,6 @@ module NcboCron
         ont_to_include = acronyms
         if acronyms.empty?
           ont_to_include = []
-
-
-
-          ont_to_include = ["AERO", "SBO"]
-
-
           # ont_to_include = ["AERO", "SBO", "EHDAA", "CCO", "ONLIRA", "VT", "ZEA", "SMASH", "PLIO", "OGI", "CO", "NCIT", "GO"]
           # ont_to_include = ["AEO", "DATA-CITE", "FLOPO", "ICF-d8", "OGG-MM", "PP", "PROV", "TESTONTOO"]
         end
@@ -405,13 +399,13 @@ module NcboCron
   end
 end
 
-require 'ontologies_linked_data'
-require 'goo'
-require 'ncbo_annotator'
-require 'ncbo_cron/config'
-require_relative '../../config/config'
-
-ontologies_report_path = File.join("logs", "ontologies-report.log")
-ontologies_report_logger = Logger.new(ontologies_report_path)
-NcboCron::Models::OntologiesReport.new(ontologies_report_logger).run
+# require 'ontologies_linked_data'
+# require 'goo'
+# require 'ncbo_annotator'
+# require 'ncbo_cron/config'
+# require_relative '../../config/config'
+#
+# ontologies_report_path = File.join("logs", "ontologies-report.log")
+# ontologies_report_logger = Logger.new(ontologies_report_path)
+# NcboCron::Models::OntologiesReport.new(ontologies_report_logger).run
 # ./bin/ncbo_cron --disable-processing true --disable-pull true --disable-flush true --disable-warmq true --disable-ontology-analytics true --ontologies-report '22 * * * *'

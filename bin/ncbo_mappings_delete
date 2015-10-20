@@ -48,17 +48,19 @@ puts "Processing details are logged to #{options[:logfile]}"
 
 if options[:delete_all]
   logger.info("DELETING ALL MAPPINGS")
-  # Go through all REST mapping and delete all of them
+  # Go through all RestBackupMapping and delete all of them
   LinkedData::Models::RestBackupMapping.all.each do |m|
-    begin
-      mapping_id = RDF::URI.new(m.id.to_s)
-      deleted_mapping = LinkedData::Mappings.delete_rest_mapping(mapping_id)
-      logger.info("#{deleted_mapping.id.to_s} has been deleted")
-    rescue => e
-      logger.error("#{m.id.to_s} FAILED. Error: #{e.to_s}")
-      next
-    end
+    backup = LinkedData::Models::RestBackupMapping.find(RDF::URI.new(m.id.to_s)).first
+    backup.delete
   end
+  # Go through all MappingProcess and delete all of them
+  LinkedData::Models::MappingProcess.all.each do |m|
+    process = LinkedData::Models::MappingProcess.find(RDF::URI.new(m.id.to_s)).first
+    process.delete
+  end
+  # Go through all triples that link mappings to class to delete them (use of metadata/def/mappingRest predicate)
+  LinkedData::Mappings.delete_all_rest_mappings_from_sparql
+
 elsif options[:ontologies]
   # Go through all REST mapping and delete only the one corresponding to the ontology acronyms
   options[:ontologies].each do |acronym|

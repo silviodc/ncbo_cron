@@ -47,6 +47,12 @@ logger = Logger.new(options[:logfile])
 puts "Processing details are logged to #{options[:logfile]}"
 
 if options[:delete_all]
+  puts "WARNING: you are going to delete ALL REST MAPPINGS from the Bioportal appliance."
+  puts "Type 'yes' to continue: "
+  $stdout.flush
+  confirm = $stdin.gets
+  abort("Aborting...\n\n") unless (confirm.strip == 'yes')
+
   logger.info("DELETING ALL MAPPINGS")
   # Go through all RestBackupMapping and delete all of them
   LinkedData::Models::RestBackupMapping.all.each do |m|

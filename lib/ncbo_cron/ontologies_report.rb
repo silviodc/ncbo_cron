@@ -99,7 +99,7 @@ module NcboCron
           report_to_write[:ontologies].merge!(report[:ontologies])
 
           if acronyms.empty?
-            FileUtils.rm(@report_path)
+            FileUtils.rm(@report_path, :force => true)
             ontology_report_date(report_to_write, "report_date_generated")
           end
 

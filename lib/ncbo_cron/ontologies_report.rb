@@ -1,5 +1,6 @@
 require 'logger'
 require 'benchmark'
+require 'FileUtils'
 
 module NcboCron
   module Models
@@ -96,7 +97,12 @@ module NcboCron
           redis.setex lock_key, 10, true
           report_to_write = acronyms.empty? ? empty_report : ontologies_report(true)
           report_to_write[:ontologies].merge!(report[:ontologies])
-          ontology_report_date(report_to_write, "report_date_generated") if acronyms.empty?
+
+          if acronyms.empty?
+            FileUtils.rm(@report_path)
+            ontology_report_date(report_to_write, "report_date_generated")
+          end
+
           File.open(@report_path, 'w') { |file| file.write(::JSON.pretty_generate(report_to_write)) }
         ensure
           redis.del(lock_key)

@@ -1,6 +1,6 @@
 require 'logger'
 require 'benchmark'
-require 'FileUtils'
+require 'fileutils'
 
 module NcboCron
   module Models
@@ -406,13 +406,13 @@ module NcboCron
   end
 end
 
-# require 'ontologies_linked_data'
-# require 'goo'
-# require 'ncbo_annotator'
-# require 'ncbo_cron/config'
-# require_relative '../../config/config'
-#
-# ontologies_report_path = File.join("logs", "ontologies-report.log")
-# ontologies_report_logger = Logger.new(ontologies_report_path)
-# NcboCron::Models::OntologiesReport.new(ontologies_report_logger).run
+require 'ontologies_linked_data'
+require 'goo'
+require 'ncbo_annotator'
+require 'ncbo_cron/config'
+require_relative '../../config/config'
+
+ontologies_report_path = File.join("logs", "ontologies-report.log")
+ontologies_report_logger = Logger.new(ontologies_report_path)
+NcboCron::Models::OntologiesReport.new(ontologies_report_logger).run
 # ./bin/ncbo_cron --disable-processing true --disable-pull true --disable-flush true --disable-warmq true --disable-ontology-analytics true --ontologies-report '22 * * * *'

@@ -1,0 +1,55 @@
+#!/usr/bin/env ruby
+
+# Exit cleanly from an early interrupt
+Signal.trap("INT") { exit 1 }
+
+# Setup the bundled gems in our environment
+require 'bundler/setup'
+
+# Configure the process for the current cron configuration.
+require_relative '../lib/ncbo_cron'
+config_exists = File.exist?(File.expand_path('../../config/config.rb', __FILE__))
+abort("Please create a config/config.rb file using the config/config.rb.sample as a template") unless config_exists
+require_relative '../config/config';
+
+require 'optparse'
+options = {}
+opt_parser = OptionParser.new do |opts|
+  # Set a banner, displayed at the top of the help screen.
+  #opts.banner = "Usage: ncbo_ontology_process [options]"
+  opts.on('-b', '--load FILEPATH', 'Load mappings from this file') do |filepath|
+    options[:loadfile] = filepath
+  end
+  options[:logfile] = "bulk_load_mapping.log"
+  opts.on( '-l', '--logfile FILE', "Write log to FILE (default is 'bulk_load_mapping.log')" ) do |filename|
+    options[:logfile] = filename
+  end
+  # Display the help screen, all programs are assumed to have this option.
+  opts.on( '-h', '--help', 'Display this screen' ) do
+    puts opts
+    exit
+  end
+end
+# Parse the command-line. The 'parse' method simply parses ARGV, while the 'parse!' method parses ARGV and removes
+# any options found there, as well as any parameters for the options.
+opt_parser.parse!
+
+
+#######################################################################################################################
+#
+# MAIN
+#
+
+logger = Logger.new(options[:logfile])
+puts "Processing details are logged to #{options[:logfile]}"
+
+if options[:loadfile]
+  json_load = JSON.parse(File.read(options[:loadfile]))
+  json_load.each do |mapping|
+    puts mapping
+  end
+else
+  puts opt_parser.help
+  exit(1)
+end
+

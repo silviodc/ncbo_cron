@@ -40,7 +40,7 @@ module NcboCron
       end
 
       if scheduler_type == :cron
-        interval = options[:cron_schedule]
+        interval = cron_schedule
       end
 
       redis = Redis.new(host: redis_host, port: redis_port)

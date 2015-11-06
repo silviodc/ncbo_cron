@@ -50,6 +50,7 @@ class CronUnit < MiniTest::Unit
       Goo.sparql_update_client.update("DELETE {?s ?p ?o } WHERE { ?s ?p ?o }")
       LinkedData::Models::SubmissionStatus.init_enum
       LinkedData::Models::OntologyFormat.init_enum
+      LinkedData::Models::OntologyType.init_enum
       LinkedData::Models::Users::Role.init_enum
       LinkedData::Models::Users::NotificationType.init_enum
     else

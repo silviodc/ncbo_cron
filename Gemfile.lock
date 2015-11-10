@@ -16,7 +16,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ncbo_annotator.git
-  revision: cd22303b969179aba59e15ddc571e666ce65a242
+  revision: 4104b5ff95f945e59c4eea58bd5ff408cb1ef83f
   branch: master
   specs:
     ncbo_annotator (0.0.1)
@@ -197,7 +197,7 @@ GEM
       jwt (~> 1.5)
       multi_json (~> 1.10)
     slop (3.6.0)
-    sys-proctable (0.9.8)
+    sys-proctable (0.9.9)
     systemu (2.6.5)
     thread_safe (0.3.5)
     typhoeus (0.8.0)

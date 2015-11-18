@@ -52,18 +52,18 @@ if options[:loadfile]
   json_load.each do |mapping|
     begin
       loaded_mapping = LinkedData::Mappings.bulk_load_mapping(mapping, logger)
-      result = "Mapping loaded: "
+      str_result = "Mapping loaded: "
       loaded_mapping.classes.each do |cls|
         if cls.respond_to?"id"
           # case it is an internal mapping
-          result += cls.id.to_s
+          str_result += cls.id.to_s
         else
           # case it is an external or interportal mapping
-          result += cls[:id].to_s
+          str_result += cls[:id].to_s
         end
-        result += " and "
+        str_result += " and "
       end
-      logger.info(load_result)
+      logger.info(str_result)
       mapping_count += 1
     rescue => e
       logger.error("MAPPING BETWEEN: #{mapping[:classes].to_s} HAS FAILED. Message: #{e.message.to_s}")

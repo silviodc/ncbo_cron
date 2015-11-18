@@ -1,6 +1,7 @@
 # Ignore RubyMine editor files
 .idea/
 config/config.rb
+config/appliance.rb
 config/config_*.rb
 config/*.p12
 projectFilesBackup/

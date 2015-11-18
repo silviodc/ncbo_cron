@@ -90,6 +90,9 @@ opt_parser = OptionParser.new do |opts|
   opts.on("--disable-warmq", "disable query warmer") do |v|
     options[:enable_warmq] = false
   end
+  opts.on("--disable-mapping-counts", "disable mapping counts creation") do |v|
+    options[:enable_mapping_counts] = false
+  end
   opts.on("--enable-umls", "enable UMLS auto-pull") do |v|
     options[:enable_pull_umls] = true
   end
@@ -110,6 +113,9 @@ opt_parser = OptionParser.new do |opts|
   end
   opts.on("-w", "--warm-long-queries SCHED", String, "cron schedule to warmup long time running queries", "(default: #{options[:cron_warmq]})") do |c|
     options[:cron_warmq] = c
+  end  
+  opts.on("-m", "--create-mapping-counts SCHED", String, "cron schedule to create mapping counts", "(default: #{options[:cron_mapping_counts]})") do |c|
+    options[:cron_mapping_counts] = c
   end
   opts.on("--ontology-analytics SCHED", String, "cron schedule to run ontology analytics refresh", "(default: #{options[:cron_ontology_analytics]})") do |c|
     options[:cron_ontology_analytics] = c
@@ -287,6 +293,26 @@ runner.execute do |opts|
     end
   end
 
+  if options[:enable_mapping_counts]
+    mapping_counts_thread = Thread.new do
+      mapping_counts_options = options.dup
+      mapping_counts_options[:job_name] = "ncbo_cron_mapping_counts_thread"
+      mapping_counts_options[:scheduler_type] = :cron
+      mapping_counts_options[:cron_schedule] = mapping_counts_options[:cron_mapping_counts]
+      logger.debug "Setting up the mapping counts creation cron job with options #{mapping_counts_options[:cron_mapping_counts]}"; logger.flush
+      mapping_counts_log_path = File.join(log_path, "#{log_filename_noExt}-mapping-counts.log")
+      mapping_counts_logger = Logger.new(mapping_counts_log_path)
+      NcboCron::Scheduler.scheduled_locking_job(mapping_counts_options) do
+        logger.info "Starting mapping counts creation"; logger.flush
+        logger.info "Logging mapping counts creation details to #{mapping_counts_log_path}"; logger.flush
+        t0 = Time.now
+        NcboCron::Models::MappingCounts.new(mapping_counts_logger).run
+        logger.info "Mapping counts creation job completed in #{Time.now - t0} sec."; logger.flush
+        logger.info "Finished mapping counts creation"; logger.flush
+      end
+    end
+  end
+
   if options[:enable_ontology_analytics]
     analytics_thread = Thread.new do
       ontology_analytics_options = options.dup
@@ -345,4 +371,5 @@ runner.execute do |opts|
   warmq_thread.join if warmq_thread
   analytics_thread.join if analytics_thread
   ontologies_report_thread.join if ontologies_report_thread
+  mapping_counts_thread.join if mapping_counts_thread
 end

@@ -9,7 +9,7 @@ class TestOntologySubmissionParser < TestCase
     @@redis = Redis.new(:host => NcboCron.settings.redis_host, :port => NcboCron.settings.redis_port)
     db_size = @@redis.dbsize
 
-    if db_size > 5000
+    if db_size > 10_000
       puts "This test cannot be run. You are probably pointing to the wrong redis backend. "
       return
     end

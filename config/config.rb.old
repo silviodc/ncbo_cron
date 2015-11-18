@@ -1,0 +1,52 @@
+LinkedData.config do |config|
+  config.enable_monitoring = false
+  config.cube_host         = "localhost"
+  config.goo_host          = "localhost"
+  config.goo_port          = 8081
+  config.search_server_url = "http://localhost:8082/solr/core1"
+  config.repository_folder = "/srv/ncbo/repository"
+  config.goo_redis_host    = "localhost"
+  config.goo_redis_port    = 6380
+  config.http_redis_host   = "localhost"
+  config.http_redis_port   = 6382
+  config.enable_http_cache = true
+
+  #Email notifications
+  config.enable_notifications   = false
+  config.email_sender           = "admin@example.org" # Default sender for emails
+  config.email_override         = "override@example.org" # all email gets sent here. Disable with email_override_disable.
+  config.email_disable_override = true
+  config.smtp_host              = "localhost"
+  config.smtp_port              = 25
+  config.smtp_auth_type         = :none # :none, :plain, :login, :cram_md5
+  config.smtp_domain            = "example.org"
+
+  #PURL server config parameters
+  config.enable_purl            = false
+  config.purl_host              = "purl.example.org"
+  config.purl_port              = 80
+  config.purl_username          = "admin"
+  config.purl_password          = "password"
+  config.purl_maintainers       = "admin"
+  config.purl_target_url_prefix = "http://example.org"
+
+end
+
+Annotator.config do |config|
+  config.mgrep_dictionary_file   = "/srv/mgrep/dictionary/dictionary.txt"
+  config.mgrep_host              = "localhost"
+  config.mgrep_port              = 55555
+  config.annotator_redis_host    = "localhost"
+  config.annotator_redis_port    = 6379
+end
+
+NcboCron.config do |config|
+  config.redis_host           = Annotator.settings.annotator_redis_host
+  config.redis_port           = Annotator.settings.annotator_redis_port 
+  config.pull_umls_url        = "http://localhost:8080/umls_turtle/"
+  config.enable_pull_umls     = false
+  config.search_index_all_url = "http://localhost:8082/solr/core2"
+  config.enable_flush         = false
+end
+
+Goo.use_cache = true

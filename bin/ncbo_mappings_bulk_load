@@ -45,7 +45,8 @@ puts "Processing details are logged to #{options[:logfile]}"
 
 if options[:loadfile]
   logger.info("Loading file: #{options[:loadfile].to_s}")
-  logger.info("Begin: #{Time.now.to_s}")
+  t0 = Time.now
+  logger.info("Begin: #{t0.to_s}")
   mapping_count = 0
   json_load = JSON.parse(File.read(options[:loadfile]), {:symbolize_names => true})
   json_load.each do |mapping|
@@ -70,6 +71,7 @@ if options[:loadfile]
     end
   end
   logger.info("End: #{Time.now.to_s}")
+  logger.info("Execution time: #{Time.now - t0}")
   logger.info("Mappinds uploaded count: #{mapping_count.to_s}")
 else
   puts opt_parser.help

@@ -83,8 +83,12 @@ options[:solr_core_url] = LinkedData.settings.search_server_url if (options[:sol
 def index_ontology(indexed_ontologies, acronym, logger)
   begin
     ont = LinkedData::Models::Ontology.find(acronym).first
+
     if ont.nil?
-      raise "Ontology not found: #{acronym}"
+      logger.info("Ontology is nil: #{acronym}. Retrying...")
+      sleep(2)
+      ont = LinkedData::Models::Ontology.find(acronym).first
+      raise "Ontology not found even after retrying: #{acronym}" if ont.nil?
     end
     logger.info("Retrieved ontology: #{acronym}")
 
@@ -97,8 +101,24 @@ def index_ontology(indexed_ontologies, acronym, logger)
     NcboCron::Models::OntologySubmissionParser.new.process_submission(logger, sub.id.to_s, {process_rdf: false, diff: false,
                                                                                         index_search: true, index_commit: true,
                                                                                         run_metrics: false, reasoning: false})
-    ont.bring(:provisionalClasses) if ont.bring?(:provisionalClasses)
-    ont.provisionalClasses.each { |pc| pc.index }
+    ont.bring(:provisionalClasses)
+    ont1 = ont.dup
+
+    begin
+      ont.provisionalClasses.each { |pc| pc.index }
+    rescue Goo::Base::AttributeNotLoaded => e
+      logger.error("Attribute not loaded: #{e.backtrace.join("\n")} #{ont1}")
+      sleep(2)
+
+      begin
+        ont.bring(:provisionalClasses)
+        ont1 = ont.dup
+        ont.provisionalClasses.each { |pc| pc.index }
+      rescue Goo::Base::AttributeNotLoaded => e1
+        logger.error("Attribute not loaded even after sleep: #{e1.backtrace.join("\n")} #{ont1}. Sleeping again for 5 seconds...")
+        sleep(5)
+      end
+    end
 
     indexed_ontologies << acronym
   rescue Exception => e

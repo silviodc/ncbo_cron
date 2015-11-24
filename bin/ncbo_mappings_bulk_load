@@ -52,7 +52,7 @@ if options[:loadfile]
   json_load.each do |mapping|
     begin
       loaded_mapping = LinkedData::Mappings.bulk_load_mapping(mapping, logger)
-      str_result = "Mapping loaded: "
+      str_result = "Mapping ##{mapping_count} loaded: "
       loaded_mapping.classes.each do |cls|
         if cls.respond_to?"id"
           # case it is an internal mapping

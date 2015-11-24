@@ -9,6 +9,7 @@ LinkedData.config do |config|
   config.http_redis_port = 6379
   config.goo_redis_host = "localhost"
   config.goo_redis_port = 6379
+  config.enable_resource_index = false
 
   # Used to define other bioportal that can be mapped to
   # Example to map to ncbo bioportal : {"ncbo" => {"api" => "http://data.bioontology.org", "ui" => "http://bioportal.bioontology.org", "apikey" => ""}

@@ -101,26 +101,23 @@ def index_ontology(indexed_ontologies, acronym, logger)
     NcboCron::Models::OntologySubmissionParser.new.process_submission(logger, sub.id.to_s, {process_rdf: false, diff: false,
                                                                                         index_search: true, index_commit: true,
                                                                                         run_metrics: false, reasoning: false})
-    ont.bring(:provisionalClasses)
-    ont1 = ont.dup
-
     begin
+      ont.bring(:provisionalClasses)
       ont.provisionalClasses.each { |pc| pc.index }
+      indexed_ontologies << acronym
     rescue Goo::Base::AttributeNotLoaded => e
-      logger.error("Attribute not loaded: #{e.backtrace.join("\n")} #{ont1}")
+      logger.error("Attribute not loaded: #{e.backtrace.join("\n")}")
       sleep(2)
 
       begin
         ont.bring(:provisionalClasses)
-        ont1 = ont.dup
         ont.provisionalClasses.each { |pc| pc.index }
+        indexed_ontologies << acronym
       rescue Goo::Base::AttributeNotLoaded => e1
-        logger.error("Attribute not loaded even after sleep: #{e1.backtrace.join("\n")} #{ont1}. Sleeping again for 5 seconds...")
+        logger.error("Attribute not loaded even after sleep: #{e1.backtrace.join("\n")}. Sleeping again for 5 seconds...")
         sleep(5)
       end
     end
-
-    indexed_ontologies << acronym
   rescue Exception => e
     msg = "Exception: #{e.class}: #{e.message}\n#{e.backtrace.join("\n")}"
     puts msg

@@ -65,8 +65,14 @@ if options[:loadfile]
       end
       logger.info(str_result)
       mapping_count += 1
+      sleep 0.3
     rescue => e
       logger.error("MAPPING BETWEEN: #{mapping[:classes].to_s} HAS FAILED. Message: #{e.message.to_s}")
+      if e.class.to_s != "ArgumentError"
+        #system "bprestart" => could generate error because not run by a user with enough permissions
+        sleep 20
+        retry
+      end
       next
     end
   end

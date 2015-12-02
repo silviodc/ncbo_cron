@@ -70,6 +70,7 @@ if options[:loadfile]
       logger.error("MAPPING BETWEEN: #{mapping[:classes].to_s} HAS FAILED. Message: #{e.message.to_s}")
       if e.class.to_s != "ArgumentError"
         #system "bprestart" => could generate error because not run by a user with enough permissions
+        logger.info("sleeping for 20s...")
         sleep 20
         retry
       end

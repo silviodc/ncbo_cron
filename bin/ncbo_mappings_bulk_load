@@ -49,6 +49,7 @@ if options[:loadfile]
   logger.info("Begin: #{t0.to_s}")
   mapping_count = 0
   json_load = JSON.parse(File.read(options[:loadfile]), {:symbolize_names => true})
+  mappings_failed = []
   json_load.each do |mapping|
     begin
       loaded_mapping = LinkedData::Mappings.bulk_load_mapping(mapping, logger)
@@ -64,14 +65,20 @@ if options[:loadfile]
         str_result += " and "
       end
       logger.info(str_result)
+      # remove the mapping from the error array if successfully added
+      if mappings_failed.include? mapping[:classes].to_s
+        mappings_failed.delete(mapping[:classes].to_s)
+      end
       mapping_count += 1
-      sleep 0.3
+      sleep 0.5
     rescue => e
       logger.error("MAPPING BETWEEN: #{mapping[:classes].to_s} HAS FAILED. Message: #{e.message.to_s}")
       if e.class.to_s != "ArgumentError"
         #system "bprestart" => could generate error because not run by a user with enough permissions
-        logger.info("sleeping for 20s...")
-        sleep 20
+        # add the mappings to the error array (removed if manage to add after)
+        mappings_failed.push(mapping[:classes].to_s)
+        logger.info("sleeping for 40s...")
+        sleep 40
         retry
       end
       next
@@ -79,6 +86,7 @@ if options[:loadfile]
   end
   logger.info("End: #{Time.now.to_s}")
   logger.info("Execution time: #{Time.now - t0}")
+  logger.info("Mappings failed: #{mappings_failed.to_s}")
   logger.info("Mappinds uploaded count: #{mapping_count.to_s}")
 else
   puts opt_parser.help

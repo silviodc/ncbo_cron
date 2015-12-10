@@ -1,6 +1,6 @@
 GIT
   remote: git://github.com/ncbo/goo.git
-  revision: 44c446f9440f9f7a1745488017e4251212728e57
+  revision: 9c3aeeb4d77547c56d5509db4a1eeec80f472ebd
   branch: master
   specs:
     goo (0.0.2)
@@ -16,7 +16,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ncbo_annotator.git
-  revision: ff65845735682365bba09162b3068b751d357b80
+  revision: 4742f0bcfc9dde0a8c8fedb3c4f64671c92a9cb4
   branch: master
   specs:
     ncbo_annotator (0.0.1)
@@ -50,8 +50,8 @@ GIT
 
 GIT
   remote: git://github.com/sifrproject/ontologies_linked_data.git
-  revision: a18ebcdfb2667d724c50228bb5e36c9f08f58fe1
-  branch: lirmm_linked_data
+  revision: c7f6908f89df3d6a86896fd222071fbfe756d841
+  branch: sifr_linked_data
   specs:
     ontologies_linked_data (0.0.1)
       activesupport
@@ -103,12 +103,12 @@ GEM
     dante (0.2.0)
     domain_name (0.5.25)
       unf (>= 0.0.5, < 1.0.0)
-    elasticsearch (1.0.14)
-      elasticsearch-api (= 1.0.14)
-      elasticsearch-transport (= 1.0.14)
-    elasticsearch-api (1.0.14)
+    elasticsearch (1.0.15)
+      elasticsearch-api (= 1.0.15)
+      elasticsearch-transport (= 1.0.15)
+    elasticsearch-api (1.0.15)
       multi_json
-    elasticsearch-transport (1.0.14)
+    elasticsearch-transport (1.0.15)
       faraday
       multi_json
     email_spec (1.6.0)
@@ -155,18 +155,18 @@ GEM
       systemu (~> 2.6.2)
     mail (2.6.3)
       mime-types (>= 1.16, < 3)
-    memoist (0.12.0)
+    memoist (0.13.0)
     method_source (0.8.2)
-    mime-types (2.6.2)
+    mime-types (2.99)
     minitest (4.7.5)
     mlanett-redis-lock (0.2.7)
       redis
     multi_json (1.11.2)
     multipart-post (2.0.0)
-    mysql2 (0.4.1)
+    mysql2 (0.4.2)
     net-http-persistent (2.9.4)
     netrc (0.11.0)
-    oj (2.13.1)
+    oj (2.14.0)
     pony (1.11)
       mail (>= 2.0)
     pry (0.10.3)
@@ -192,10 +192,9 @@ GEM
     rubyzip (1.1.7)
     rufus-scheduler (2.0.24)
       tzinfo (>= 0.3.22)
-    sequel (4.28.0)
-    signet (0.6.1)
+    sequel (4.29.0)
+    signet (0.7.0)
       addressable (~> 2.3)
-      extlib (~> 0.9)
       faraday (~> 0.9)
       jwt (~> 1.5)
       multi_json (~> 1.10)
@@ -205,7 +204,7 @@ GEM
     thread_safe (0.3.5)
     typhoeus (0.8.0)
       ethon (>= 0.8.0)
-    tzinfo (0.3.45)
+    tzinfo (0.3.46)
     unf (0.1.4)
       unf_ext
     unf_ext (0.0.7.1)

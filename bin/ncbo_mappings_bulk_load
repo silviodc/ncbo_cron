@@ -64,18 +64,18 @@ if options[:loadfile]
         end
         str_result += " and "
       end
-      logger.info(str_result)
+      logger.info(str_result[0..-5])
       # remove the mapping from the error array if successfully added
       if mappings_failed.include? mapping[:classes].to_s
         mappings_failed.delete(mapping[:classes].to_s)
       end
       mapping_count += 1
-      sleep 0.5
+      sleep 0.4
     rescue => e
       logger.error("MAPPING BETWEEN: #{mapping[:classes].to_s} HAS FAILED. Message: #{e.message.to_s}")
       if e.class.to_s != "ArgumentError"
         #system "bprestart" => could generate error because not run by a user with enough permissions
-        # add the mappings to the error array (removed if manage to add after)
+        # add the mappings to the error array (removed if manage to add the mapping after)
         mappings_failed.push(mapping[:classes].to_s)
         logger.info("sleeping for 40s...")
         sleep 40

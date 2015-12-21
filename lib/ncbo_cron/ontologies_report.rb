@@ -1,5 +1,6 @@
 require 'logger'
 require 'benchmark'
+require 'fileutils'
 
 module NcboCron
   module Models
@@ -43,6 +44,7 @@ module NcboCron
         ont_to_include = acronyms
         if acronyms.empty?
           ont_to_include = []
+          # ont_to_include = ["PHENOMEBLAST", "MYOBI", "NCBIVIRUSESTAX", "OntoOrpha", "PERTANIAN", "PHENOMEBLAST", "RTEST-LOINC", "SSACAL", "TEST", "UU", "VIRUSESTAX"]
           # ont_to_include = ["AERO", "SBO", "EHDAA", "CCO", "ONLIRA", "VT", "ZEA", "SMASH", "PLIO", "OGI", "CO", "NCIT", "GO"]
           # ont_to_include = ["AEO", "DATA-CITE", "FLOPO", "ICF-d8", "OGG-MM", "PP", "PROV", "TESTONTOO"]
         end
@@ -95,7 +97,12 @@ module NcboCron
           redis.setex lock_key, 10, true
           report_to_write = acronyms.empty? ? empty_report : ontologies_report(true)
           report_to_write[:ontologies].merge!(report[:ontologies])
-          ontology_report_date(report_to_write, "date_generated") if acronyms.empty?
+
+          if acronyms.empty?
+            FileUtils.rm(@report_path, :force => true)
+            ontology_report_date(report_to_write, "report_date_generated")
+          end
+
           File.open(@report_path, 'w') { |file| file.write(::JSON.pretty_generate(report_to_write)) }
         ensure
           redis.del(lock_key)
@@ -134,11 +141,11 @@ module NcboCron
       private
 
       def empty_report
-        {ontologies: {}, date_generated: nil}
+        {ontologies: {}, report_date_generated: nil}
       end
 
       def generate_single_ontology_report(ont)
-        report = {problem: false, format: '', logFilePath: '', date_updated: nil}
+        report = {problem: false, format: '', date_created: '', logFilePath: '', report_date_updated: nil}
         ont.bring_remaining()
         ont.bring(:submissions)
         submissions = ont.submissions
@@ -150,7 +157,7 @@ module NcboCron
           else
             add_error_code(report, :summaryOnly)
           end
-          ontology_report_date(report, "date_updated")
+          ontology_report_date(report, "report_date_updated")
           return report
         end
 
@@ -159,9 +166,14 @@ module NcboCron
         if latest_any.nil?
           # no submissions, cannot continue
           add_error_code(report, :errNoSubmissions)
-          ontology_report_date(report, "date_updated")
+          ontology_report_date(report, "report_date_updated")
           return report
         end
+
+        # add creationDate of the first submission (AKA "ontology creation date")
+        first_sub = submissions.sort_by{ |sub| sub.id }.first
+        first_sub.bring(:creationDate)
+        ontology_report_date(report, "date_created", first_sub.creationDate)
 
         # path to most recent log file
         log_file_path = log_file(ont.acronym, latest_any.submissionId.to_s)
@@ -178,7 +190,7 @@ module NcboCron
           add_error_code(report, :errNoReadySubmission)
           # add error statuses from the latest non-ready submission
           latest_any.submissionStatus.each { |st| add_error_code(report, :errErrorStatus, st.get_code_from_id) if st.error? }
-          ontology_report_date(report, "date_updated")
+          ontology_report_date(report, "report_date_updated")
           return report
         end
 
@@ -279,12 +291,11 @@ module NcboCron
             add_error_code(report, :errNoSearch, [search_resp["response"]["numFound"], search_search_terms.join(delim)])
           end
         end
-        ontology_report_date(report, "date_updated")
+        ontology_report_date(report, "report_date_updated")
         report
       end
 
-      def ontology_report_date(report, date_str)
-        tm = Time.new
+      def ontology_report_date(report, date_str, tm=Time.new)
         tm_str = tm.strftime("%m/%d/%Y %I:%M%p")
         report[date_str.to_sym] = tm_str
       end

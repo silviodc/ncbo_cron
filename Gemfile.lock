@@ -1,6 +1,6 @@
 GIT
   remote: git://github.com/ncbo/goo.git
-  revision: 44c446f9440f9f7a1745488017e4251212728e57
+  revision: 9c3aeeb4d77547c56d5509db4a1eeec80f472ebd
   branch: master
   specs:
     goo (0.0.2)
@@ -16,7 +16,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ncbo_annotator.git
-  revision: ff65845735682365bba09162b3068b751d357b80
+  revision: 7a99e2ceedd9daa2f40945745c11f365058aae92
   branch: master
   specs:
     ncbo_annotator (0.0.1)
@@ -157,7 +157,7 @@ GEM
       mime-types (>= 1.16, < 3)
     memoist (0.12.0)
     method_source (0.8.2)
-    mime-types (2.6.2)
+    mime-types (2.99)
     minitest (4.7.5)
     mlanett-redis-lock (0.2.7)
       redis

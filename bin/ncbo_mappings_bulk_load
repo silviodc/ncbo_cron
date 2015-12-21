@@ -20,7 +20,7 @@ opt_parser = OptionParser.new do |opts|
   opts.on('-b', '--load FILEPATH', 'Load mappings from this file') do |filepath|
     options[:loadfile] = filepath
   end
-  options[:logfile] = "bulk_load_mapping.log"
+  options[:logfile] = "logs/bulk_load_mapping.log"
   opts.on( '-l', '--logfile FILE', "Write log to FILE (default is 'bulk_load_mapping.log')" ) do |filename|
     options[:logfile] = filename
   end

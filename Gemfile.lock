@@ -202,7 +202,6 @@ GEM
     slop (3.6.0)
     sys-proctable (1.0.0)
     systemu (2.6.5)
-    thread_safe (0.3.5)
     typhoeus (1.0.1)
       ethon (>= 0.8.0)
     tzinfo (0.3.46)

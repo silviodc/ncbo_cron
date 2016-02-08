@@ -1,6 +1,6 @@
 GIT
   remote: git://github.com/ncbo/goo.git
-  revision: 5b72f6490fa1aac6690108433ede23f80ccc39ad
+  revision: e2ba13fdd5d4086e79fa2cbfa00fb0402a55ae4b
   branch: master
   specs:
     goo (0.0.2)
@@ -16,7 +16,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ncbo_annotator.git
-  revision: 5a33f0627725b6bc77233371f4862d2a6b6768dd
+  revision: 80cf9160cb61f2c8aef64fe8fe610680f4e9e904
   branch: master
   specs:
     ncbo_annotator (0.0.1)
@@ -85,12 +85,9 @@ PATH
 GEM
   remote: https://rubygems.org/
   specs:
-    activesupport (4.0.13)
-      i18n (~> 0.6, >= 0.6.9)
-      minitest (~> 4.2)
-      multi_json (~> 1.3)
-      thread_safe (~> 0.1)
-      tzinfo (~> 0.3.37)
+    activesupport (3.2.22.1)
+      i18n (~> 0.6, >= 0.6.4)
+      multi_json (~> 1.0)
     addressable (2.3.5)
     autoparse (0.3.3)
       addressable (>= 2.3.1)
@@ -111,9 +108,10 @@ GEM
     elasticsearch-transport (1.0.15)
       faraday
       multi_json
-    email_spec (1.6.0)
+    email_spec (2.0.0)
+      htmlentities (~> 4.3.3)
       launchy (~> 2.1)
-      mail (~> 2.2)
+      mail (~> 2.6.3)
     ethon (0.8.1)
       ffi (>= 1.3.0)
     extlib (0.9.16)
@@ -139,6 +137,7 @@ GEM
       multi_json (~> 1.11)
       os (~> 0.9)
       signet (~> 0.7)
+    htmlentities (4.3.4)
     http-cookie (1.0.2)
       domain_name (~> 0.5)
     i18n (0.7.0)
@@ -220,6 +219,7 @@ DEPENDENCIES
   cube-ruby
   email_spec
   goo!
+  google-api-client (< 0.9)
   minitest (< 5.0)
   multi_json
   ncbo_annotator!

@@ -50,7 +50,7 @@ GIT
 
 GIT
   remote: git://github.com/sifrproject/ontologies_linked_data.git
-  revision: 6963ac0ed78c274d61fa88b62b2a446473532c45
+  revision: d60ff8bc0eca20148645453ceb027e14ba640ce9
   branch: sifr_multilingual
   specs:
     ontologies_linked_data (0.0.1)
@@ -202,7 +202,6 @@ GEM
     slop (3.6.0)
     sys-proctable (1.0.0)
     systemu (2.6.5)
-    thread_safe (0.3.5)
     typhoeus (1.0.1)
       ethon (>= 0.8.0)
     tzinfo (0.3.45)

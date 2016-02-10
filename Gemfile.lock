@@ -16,8 +16,8 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ncbo_annotator.git
-  revision: 80cf9160cb61f2c8aef64fe8fe610680f4e9e904
-  branch: master
+  revision: aabc4031d0eb7aef0bbe3321b9648a58841ebd59
+  branch: staging
   specs:
     ncbo_annotator (0.0.1)
       goo
@@ -27,8 +27,8 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ontologies_linked_data.git
-  revision: 30e12708258b2c08cfcc2f5790160fa703ac4ec2
-  branch: master
+  revision: 2296faa432e62918437c8b943122e0ec87e7d961
+  branch: staging
   specs:
     ontologies_linked_data (0.0.1)
       activesupport
@@ -98,7 +98,7 @@ GEM
     coderay (1.1.0)
     cube-ruby (0.0.3)
     dante (0.2.0)
-    domain_name (0.5.25)
+    domain_name (0.5.20160128)
       unf (>= 0.0.5, < 1.0.0)
     elasticsearch (1.0.15)
       elasticsearch-api (= 1.0.15)
@@ -166,7 +166,7 @@ GEM
     mysql2 (0.4.2)
     net-http-persistent (2.9.4)
     netrc (0.11.0)
-    oj (2.14.3)
+    oj (2.14.4)
     os (0.9.6)
     pony (1.11)
       mail (>= 2.0)
@@ -193,7 +193,7 @@ GEM
     rubyzip (1.1.7)
     rufus-scheduler (2.0.24)
       tzinfo (>= 0.3.22)
-    sequel (4.30.0)
+    sequel (4.31.0)
     signet (0.7.2)
       addressable (~> 2.3)
       faraday (~> 0.9)
@@ -209,7 +209,7 @@ GEM
       thread_safe (~> 0.1)
     unf (0.1.4)
       unf_ext
-    unf_ext (0.0.7.1)
+    unf_ext (0.0.7.2)
     uuid (2.3.8)
       macaddr (~> 1.0)
 

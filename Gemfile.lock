@@ -1,6 +1,6 @@
 GIT
   remote: git://github.com/ncbo/goo.git
-  revision: e2ba13fdd5d4086e79fa2cbfa00fb0402a55ae4b
+  revision: 34046a1d13ae55ef5f105a87cb65637ff792783a
   branch: master
   specs:
     goo (0.0.2)
@@ -16,7 +16,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ncbo_annotator.git
-  revision: 80cf9160cb61f2c8aef64fe8fe610680f4e9e904
+  revision: e1899d52b6e88ee4bdfbdbbdc58e5fb5d8b1be74
   branch: master
   specs:
     ncbo_annotator (0.0.1)
@@ -98,7 +98,7 @@ GEM
     coderay (1.1.0)
     cube-ruby (0.0.3)
     dante (0.2.0)
-    domain_name (0.5.25)
+    domain_name (0.5.20160128)
       unf (>= 0.0.5, < 1.0.0)
     elasticsearch (1.0.15)
       elasticsearch-api (= 1.0.15)
@@ -166,7 +166,7 @@ GEM
     mysql2 (0.4.2)
     net-http-persistent (2.9.4)
     netrc (0.11.0)
-    oj (2.14.3)
+    oj (2.14.4)
     os (0.9.6)
     pony (1.11)
       mail (>= 2.0)
@@ -193,7 +193,7 @@ GEM
     rubyzip (1.1.7)
     rufus-scheduler (2.0.24)
       tzinfo (>= 0.3.22)
-    sequel (4.30.0)
+    sequel (4.31.0)
     signet (0.7.2)
       addressable (~> 2.3)
       faraday (~> 0.9)
@@ -207,7 +207,7 @@ GEM
     tzinfo (0.3.46)
     unf (0.1.4)
       unf_ext
-    unf_ext (0.0.7.1)
+    unf_ext (0.0.7.2)
     uuid (2.3.8)
       macaddr (~> 1.0)
 

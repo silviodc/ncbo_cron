@@ -25,7 +25,9 @@ LinkedData.config do |config|
   config.smtp_user               = nil
   config.smtp_password           = nil
   config.smtp_auth_type          = :none
-  config.smtp_domain             = "localhost.localhost"  
+  config.smtp_domain             = "localhost.localhost"
+  # email of the instance administrator to get mail notifications when new user
+  config.email_admin             = "admin@domain.com"
 end
 
 Annotator.config do |config|

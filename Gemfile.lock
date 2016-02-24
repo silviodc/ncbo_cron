@@ -1,6 +1,6 @@
 GIT
   remote: git://github.com/ncbo/goo.git
-  revision: 34046a1d13ae55ef5f105a87cb65637ff792783a
+  revision: de6fceb58ecc1d17fe426586b62db4d8a1543137
   branch: master
   specs:
     goo (0.0.2)
@@ -16,7 +16,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ncbo_annotator.git
-  revision: e1899d52b6e88ee4bdfbdbbdc58e5fb5d8b1be74
+  revision: f5093484a754a8a5b13fefbe2c52b9fe6178cd41
   branch: master
   specs:
     ncbo_annotator (0.0.1)
@@ -95,7 +95,7 @@ GEM
       multi_json (>= 1.0.0)
     bcrypt (3.1.10)
     builder (3.2.2)
-    coderay (1.1.0)
+    coderay (1.1.1)
     cube-ruby (0.0.3)
     dante (0.2.0)
     domain_name (0.5.20160128)
@@ -157,7 +157,7 @@ GEM
       mime-types (>= 1.16, < 3)
     memoist (0.14.0)
     method_source (0.8.2)
-    mime-types (2.99)
+    mime-types (2.99.1)
     minitest (4.7.5)
     mlanett-redis-lock (0.2.7)
       redis
@@ -166,7 +166,7 @@ GEM
     mysql2 (0.4.2)
     net-http-persistent (2.9.4)
     netrc (0.11.0)
-    oj (2.14.4)
+    oj (2.14.5)
     os (0.9.6)
     pony (1.11)
       mail (>= 2.0)
@@ -187,10 +187,10 @@ GEM
       mime-types (>= 1.16, < 3.0)
       netrc (~> 0.7)
     retriable (1.4.1)
-    rsolr (1.0.13)
+    rsolr (1.1.1)
       builder (>= 2.1.2)
     ruby-xxHash (0.4.0.1)
-    rubyzip (1.1.7)
+    rubyzip (1.2.0)
     rufus-scheduler (2.0.24)
       tzinfo (>= 0.3.22)
     sequel (4.31.0)

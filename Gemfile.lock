@@ -16,8 +16,8 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ncbo_annotator.git
-  revision: a6fa6a937de1e48433accaaaf9bb88b063f00047
-  branch: staging
+  revision: c5a2601f4a6b4c6fcbfbecd3a397215f7c302cc2
+  branch: master
   specs:
     ncbo_annotator (0.0.1)
       goo
@@ -27,8 +27,8 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ontologies_linked_data.git
-  revision: f6bcae343b2d8ad0f3271c4838ccfa7f8980a79f
-  branch: staging
+  revision: 18e9c50ffd42a19afee9efd8a687edb5d4c0c967
+  branch: master
   specs:
     ontologies_linked_data (0.0.1)
       activesupport

@@ -193,7 +193,7 @@ GEM
     rubyzip (1.2.0)
     rufus-scheduler (2.0.24)
       tzinfo (>= 0.3.22)
-    sequel (4.31.0)
+    sequel (4.32.0)
     signet (0.7.2)
       addressable (~> 2.3)
       faraday (~> 0.9)

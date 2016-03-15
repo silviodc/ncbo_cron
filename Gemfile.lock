@@ -27,8 +27,8 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ontologies_linked_data.git
-  revision: c9387cb5a1dc82d768a00f40f1a089c7415fe21f
-  branch: master
+  revision: 3ba8a3766d94c6154b58d937bd939dfe34f38545
+  branch: staging
   specs:
     ontologies_linked_data (0.0.1)
       activesupport
@@ -47,7 +47,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/resource_index.git
-  revision: d43bd6a6c8b014ebd69eabeda843740b66560ebb
+  revision: 5ab2d63cd2d54f447507b00317924adf97fd76bb
   specs:
     ncbo_resource_index (0.0.1)
       elasticsearch
@@ -93,12 +93,12 @@ GEM
       addressable (>= 2.3.1)
       extlib (>= 0.9.15)
       multi_json (>= 1.0.0)
-    bcrypt (3.1.10)
+    bcrypt (3.1.11)
     builder (3.2.2)
     coderay (1.1.1)
     cube-ruby (0.0.3)
     dante (0.2.0)
-    domain_name (0.5.20160216)
+    domain_name (0.5.20160309)
       unf (>= 0.0.5, < 1.0.0)
     elasticsearch (1.0.15)
       elasticsearch-api (= 1.0.15)
@@ -148,7 +148,7 @@ GEM
       addressable (~> 2.3)
     libxml-ruby (2.8.0)
     little-plugger (1.1.4)
-    logging (2.0.0)
+    logging (2.1.0)
       little-plugger (~> 1.1)
       multi_json (~> 1.10)
     macaddr (1.7.1)
@@ -177,7 +177,7 @@ GEM
     rack (1.6.4)
     rack-test (0.6.3)
       rack (>= 1.0)
-    rake (10.5.0)
+    rake (11.1.1)
     rdf (1.0.8)
       addressable (>= 2.2)
     redis (3.2.2)

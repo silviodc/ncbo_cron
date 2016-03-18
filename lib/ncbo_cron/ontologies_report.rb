@@ -52,8 +52,7 @@ module NcboCron
       end
 
       def run
-        ont_to_include = ontologies_to_include([])
-        refresh_report(ont_to_include)
+        refresh_report([])
       end
 
       def refresh_report(acronyms=[])

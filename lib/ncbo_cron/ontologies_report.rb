@@ -248,8 +248,10 @@ module NcboCron
           add_error_code(report, :errNoMetricsLatestSubmission)
         else
           metrics.bring_remaining
+          cl = metrics.classes || 0
+          prop = metrics.properties || 0
 
-          if metrics.classes + metrics.properties < 10
+          if cl + prop < 10
             add_error_code(report, :errIncorrectMetricsLatestSubmission)
           end
         end

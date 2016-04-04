@@ -72,7 +72,7 @@ def generate_metrics_for_ontology(finished_ontologies, acronym, logger)
     end
     NcboCron::Models::OntologySubmissionParser.new.process_submission(logger, sub.id.to_s, {process_rdf: false,
                                                                       index_search: false, index_commit: false,
-                                                                      run_metrics: true, reasoning: false})
+                                                                      run_metrics: true, reasoning: false, diff: false})
     finished_ontologies << acronym
   rescue Exception => e
     msg = "Exception: #{e.to_json}"

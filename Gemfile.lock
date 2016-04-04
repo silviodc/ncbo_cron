@@ -1,7 +1,7 @@
 GIT
   remote: git://github.com/ncbo/goo.git
-  revision: 574c8e84c3145e092758a83b4538818a46853570
-  branch: master
+  revision: a3fd74364f19b5818b14abdfaac91e7a2152882e
+  branch: staging
   specs:
     goo (0.0.2)
       addressable (= 2.3.5)
@@ -16,8 +16,8 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ncbo_annotator.git
-  revision: a27979c335a3517f0002708f642603613bc1b9fb
-  branch: master
+  revision: 56f308f50220d3afa4988b027659194ffd028226
+  branch: staging
   specs:
     ncbo_annotator (0.0.1)
       goo
@@ -27,8 +27,8 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ontologies_linked_data.git
-  revision: 088caabcd2bde8e5b725a2a07a65ac74a293b67d
-  branch: master
+  revision: 68ea963e0696e6d321c2fce830635f40ae9b5a54
+  branch: staging
   specs:
     ontologies_linked_data (0.0.1)
       activesupport
@@ -47,7 +47,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/resource_index.git
-  revision: 2f69bdf6ee1e91aa974fe844b5097e465a2fe596
+  revision: f6fab1c3b993a2ea521af22086a34ba1feeffd02
   specs:
     ncbo_resource_index (0.0.1)
       elasticsearch
@@ -139,7 +139,7 @@ GEM
     i18n (0.7.0)
     json (1.8.3)
     json_pure (1.8.3)
-    jwt (1.5.3)
+    jwt (1.5.4)
     launchy (2.4.3)
       addressable (~> 2.3)
     libxml-ruby (2.8.0)
@@ -163,7 +163,7 @@ GEM
     multipart-post (2.0.0)
     mysql2 (0.4.3)
     net-http-persistent (2.9.4)
-    oj (2.14.6)
+    oj (2.15.0)
     os (0.9.6)
     pony (1.11)
       mail (>= 2.0)
@@ -174,7 +174,7 @@ GEM
     rack (1.6.4)
     rack-test (0.6.3)
       rack (>= 1.0)
-    rake (11.1.1)
+    rake (11.1.2)
     rdf (1.0.8)
       addressable (>= 2.2)
     redis (3.2.2)
@@ -188,7 +188,7 @@ GEM
     rubyzip (1.2.0)
     rufus-scheduler (2.0.24)
       tzinfo (>= 0.3.22)
-    sequel (4.32.0)
+    sequel (4.33.0)
     signet (0.7.2)
       addressable (~> 2.3)
       faraday (~> 0.9)

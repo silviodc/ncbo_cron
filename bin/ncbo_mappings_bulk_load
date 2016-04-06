@@ -1,0 +1,95 @@
+#!/usr/bin/env ruby
+
+# Exit cleanly from an early interrupt
+Signal.trap("INT") { exit 1 }
+
+# Setup the bundled gems in our environment
+require 'bundler/setup'
+
+# Configure the process for the current cron configuration.
+require_relative '../lib/ncbo_cron'
+config_exists = File.exist?(File.expand_path('../../config/config.rb', __FILE__))
+abort("Please create a config/config.rb file using the config/config.rb.sample as a template") unless config_exists
+require_relative '../config/config';
+
+require 'optparse'
+options = {}
+opt_parser = OptionParser.new do |opts|
+  # Set a banner, displayed at the top of the help screen.
+  #opts.banner = "Usage: ncbo_mappings_bulk_load [options]"
+  opts.on('-b', '--load FILEPATH', 'Load mappings from this file') do |filepath|
+    options[:loadfile] = filepath
+  end
+  options[:logfile] = "logs/bulk_load_mapping.log"
+  opts.on( '-l', '--logfile FILE', "Write log to FILE (default is 'bulk_load_mapping.log')" ) do |filename|
+    options[:logfile] = filename
+  end
+  # Display the help screen, all programs are assumed to have this option.
+  opts.on( '-h', '--help', 'Display this screen' ) do
+    puts opts
+    exit
+  end
+end
+# Parse the command-line. The 'parse' method simply parses ARGV, while the 'parse!' method parses ARGV and removes
+# any options found there, as well as any parameters for the options.
+opt_parser.parse!
+
+
+#######################################################################################################################
+#
+# MAIN
+#
+
+logger = Logger.new(options[:logfile])
+puts "Processing details are logged to #{options[:logfile]}"
+
+if options[:loadfile]
+  logger.info("Loading file: #{options[:loadfile].to_s}")
+  t0 = Time.now
+  logger.info("Begin: #{t0.to_s}")
+  mapping_count = 0
+  json_load = JSON.parse(File.read(options[:loadfile]), {:symbolize_names => true})
+  mappings_failed = []
+  json_load.each do |mapping|
+    begin
+      loaded_mapping = LinkedData::Mappings.bulk_load_mapping(mapping, logger)
+      str_result = "Mapping ##{mapping_count} loaded: "
+      loaded_mapping.classes.each do |cls|
+        if cls.respond_to?"id"
+          # case it is an internal mapping
+          str_result += cls.id.to_s
+        else
+          # case it is an external or interportal mapping
+          str_result += cls[:id].to_s
+        end
+        str_result += " and "
+      end
+      logger.info(str_result[0..-5])
+      # remove the mapping from the error array if successfully added
+      if mappings_failed.include? mapping[:classes].to_s
+        mappings_failed.delete(mapping[:classes].to_s)
+      end
+      mapping_count += 1
+      sleep 0.4
+    rescue => e
+      logger.error("MAPPING BETWEEN: #{mapping[:classes].to_s} HAS FAILED. Message: #{e.message.to_s}")
+      if e.class.to_s != "ArgumentError"
+        #system "bprestart" => could generate error because not run by a user with enough permissions
+        # add the mappings to the error array (removed if manage to add the mapping after)
+        mappings_failed.push(mapping[:classes].to_s)
+        logger.info("sleeping for 40s...")
+        sleep 40
+        retry
+      end
+      next
+    end
+  end
+  logger.info("End: #{Time.now.to_s}")
+  logger.info("Execution time: #{Time.now - t0}")
+  logger.info("Mappings failed: #{mappings_failed.to_s}")
+  logger.info("Mappinds uploaded count: #{mapping_count.to_s}")
+else
+  puts opt_parser.help
+  exit(1)
+end
+

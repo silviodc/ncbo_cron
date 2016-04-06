@@ -28,6 +28,8 @@ module NcboCron
     @settings.enable_processing ||= true
     @settings.enable_pull ||= true
     @settings.enable_flush ||= true
+    # Don't remove graphs from deleted ontologies by default when flushing classes
+    @settings.remove_zombie_graphs ||= false
     @settings.enable_warmq ||= true
     @settings.enable_mapping_counts ||= true
     # enable ontology analytics
@@ -38,13 +40,17 @@ module NcboCron
     @settings.pull_umls_url ||= ""
     @settings.enable_pull_umls ||= false
 
-    # Schedulues
+    # Schedules
+    # 30 */4 * * * - run every 4 hours, starting at 00:30
     @settings.cron_schedule ||= "30 */4 * * *"
-    # Pull schedule
+    # Pull schedule.
+    # 00 18 * * * - run daily at 6 a.m. (18:00)
     @settings.pull_schedule ||= "00 18 * * *"
-    # Delete class graphs of archive submissions
+    # Delete class graphs of archive submissions.
+    # 00 22 * * 2 - run once per week on tuesday at 10 a.m. (22:00)
     @settings.cron_flush ||= "00 22 * * 2"
-    # Warmup long time running queries
+    # Warmup long time running queries.
+    # 00 */3 * * * - run every 3 hours (beginning at 00:00)
     @settings.cron_warmq ||= "00 */3 * * *"
     # Create mapping counts schedule
     # 30 0 * * 6 - run once per week on Saturday at 12:30AM

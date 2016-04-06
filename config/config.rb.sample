@@ -9,6 +9,13 @@ LinkedData.config do |config|
   config.http_redis_port = 6379
   config.goo_redis_host = "localhost"
   config.goo_redis_port = 6379
+  config.enable_resource_index = false
+
+  # Used to define other bioportal that can be mapped to
+  # Example to map to ncbo bioportal : {"ncbo" => {"api" => "http://data.bioontology.org", "ui" => "http://bioportal.bioontology.org", "apikey" => ""}
+  # Then create the mapping using the following class in JSON : "http://purl.bioontology.org/ontology/MESH/C585345": "ncbo:MESH"
+  # Where "ncbo" is the namespace used as key in the interportal_hash
+  config.interportal_hash   = {}
 
   # Email notifications.
   config.enable_notifications    = true
@@ -18,7 +25,9 @@ LinkedData.config do |config|
   config.smtp_user               = nil
   config.smtp_password           = nil
   config.smtp_auth_type          = :none
-  config.smtp_domain             = "localhost.localhost"  
+  config.smtp_domain             = "localhost.localhost"
+  # email of the instance administrator to get mail notifications when new user
+  config.admin_emails             = ["admin@domain.com"]
 end
 
 Annotator.config do |config|
@@ -31,14 +40,20 @@ Annotator.config do |config|
 end
 
 NcboCron.config do |config|
+  # see https://github.com/ncbo/ncbo_cron/blob/master/lib/ncbo_cron/config.rb for default config
   config.redis_host  ||= "localhost"
   config.redis_port  ||= 6379
   config.search_index_all_url = "http://localhost:8983/solr/core2"
 
   # Ontologies Report config
+  config.enable_ontologies_report  = true
   config.ontology_report_path = "./test/reports/ontologies_report.json"
 
+  # Remove graphs from deleted ontologies when running process_flush_classes
+  config.remove_zombie_graphs      = false
+
   # Google Analytics config
+  config.enable_ontology_analytics = false
   config.analytics_service_account_email_address = "123456789999-sikipho0wk8q0atflrmw62dj4kpwoj3c@developer.gserviceaccount.com"
   config.analytics_path_to_key_file              = "config/bioportal-analytics.p12"
   config.analytics_profile_id                    = "ga:1234567"

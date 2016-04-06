@@ -50,8 +50,8 @@ GIT
 
 GIT
   remote: git://github.com/sifrproject/ontologies_linked_data.git
-  revision: d60ff8bc0eca20148645453ceb027e14ba640ce9
-  branch: sifr_multilingual
+  revision: afbec4eccf865ebe2ed458c7e3c975bce54ac4ca
+  branch: sifr_metadata
   specs:
     ontologies_linked_data (0.0.1)
       activesupport
@@ -93,7 +93,7 @@ GEM
       addressable (>= 2.3.1)
       extlib (>= 0.9.15)
       multi_json (>= 1.0.0)
-    bcrypt (3.1.10)
+    bcrypt (3.1.11)
     builder (3.2.2)
     coderay (1.1.1)
     cube-ruby (0.0.3)
@@ -232,3 +232,6 @@ DEPENDENCIES
   redis
   sparql-client!
   sys-proctable
+
+BUNDLED WITH
+   1.11.2

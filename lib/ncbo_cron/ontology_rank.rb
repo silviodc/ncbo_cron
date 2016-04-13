@@ -116,14 +116,14 @@ module NcboCron
 end
 
 
-require 'ontologies_linked_data'
-require 'goo'
-require 'ncbo_annotator'
-require 'ncbo_cron/config'
-require_relative '../../config/config'
-
-ontology_rank_path = File.join("logs", "ontology-rank.log")
-ontology_rank_logger = Logger.new(ontology_rank_path)
-NcboCron::Models::OntologyRank.new(ontology_rank_logger).run
+# require 'ontologies_linked_data'
+# require 'goo'
+# require 'ncbo_annotator'
+# require 'ncbo_cron/config'
+# require_relative '../../config/config'
+#
+# ontology_rank_path = File.join("logs", "ontology-rank.log")
+# ontology_rank_logger = Logger.new(ontology_rank_path)
+# NcboCron::Models::OntologyRank.new(ontology_rank_logger).run
 
 

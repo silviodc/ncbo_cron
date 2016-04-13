@@ -1,4 +1,5 @@
-
+require 'logger'
+require 'benchmark'
 
 module NcboCron
   module Models
@@ -21,23 +22,30 @@ module NcboCron
       end
 
       def run
+        @logger.info("Generating ontology rankings..."); @logger.flush
+        @logger.flush
 
-        # redis = Redis.new(:host => NcboCron.settings.redis_host, :port => NcboCron.settings.redis_port)
+        time = Benchmark.realtime do
+          redis = Redis.new(:host => NcboCron.settings.redis_host, :port => NcboCron.settings.redis_port)
+          ontology_rank = rank_ontologies
+          redis.set(ONTOLOGY_RANK_REDIS_FIELD, Marshal.dump(ontology_rank))
+        end
+        @logger.info("Finished generating ontology rankings in #{time} sec."); @logger.flush
+      end
 
-
-
-        umls_scr = umls_scores
-        analytics_scr = analytics_scores
-
-
-        # redis.set(ONTOLOGY_RANK_REDIS_FIELD, Marshal.dump(ontology_analytics))
-
+      def rank_ontologies
+        ontology_rank = {}
+        ontologies = LinkedData::Models::Ontology.where.include(:acronym, :group).to_a
+        analytics_scr = analytics_scores(ontologies)
+        umls_scr = umls_scores(ontologies)
+        analytics_scr.each {|acronym, score| ontology_rank[acronym] = {bioportalScore: score.round(3), umlsScore: umls_scr[acronym] ? umls_scr[acronym].round(3) : 0.0}}
+        ontology_rank
       end
 
       private
 
-      def analytics_scores
-        visits_hash = visits_for_period(BP_VISITS_NUMBER_MONTHS, Time.now.year, Time.now.month)
+      def analytics_scores(ontologies)
+        visits_hash = visits_for_period(ontologies, BP_VISITS_NUMBER_MONTHS, Time.now.year, Time.now.month)
 
         # log10 normalization and range change to [0,1]
         if !visits_hash.values.max.nil? && visits_hash.values.max > 0
@@ -50,14 +58,13 @@ module NcboCron
           norm_visits = visits > 0 ? Math.log10(visits) : 0
           visits_hash[acr] = normalize(norm_visits, 0, norm_max_visits, 0, 1)
         end
-
+        visits_hash
       end
 
-      def umls_scores
+      def umls_scores(ontologies)
         scores = {}
-        onts = LinkedData::Models::Ontology.where.filter(Goo::Filter.new(:viewOf).unbound).include(:acronym, :group).to_a
 
-        onts.each do |ont|
+        ontologies.each do |ont|
           if ont.group && !ont.group.empty?
             umls_gr = ont.group.select {|gr| acronym_from_id(gr.id.to_s).include?('UMLS')}
             scores[ont.acronym] = umls_gr.empty? ? 0 : 1
@@ -80,9 +87,10 @@ module NcboCron
       end
 
       # Return a hash |acronym, visits| for the last num_months. The result is ranked by visits
-      def visits_for_period(num_months, current_year, current_month)
+      def visits_for_period(ontologies, num_months, current_year, current_month)
         # Visits for all BioPortal ontologies
-        bp_all_visits = LinkedData::Models::Ontology.analytics
+        acronyms = ontologies.map {|o| o.acronym }
+        bp_all_visits = LinkedData::Models::Ontology.analytics(nil, nil, acronyms)
         periods = last_periods(num_months, current_year, current_month)
         period_visits = Hash.new
         bp_all_visits.each do |acronym, visits|
@@ -115,7 +123,6 @@ module NcboCron
   end
 end
 
-
 # require 'ontologies_linked_data'
 # require 'goo'
 # require 'ncbo_annotator'
@@ -125,5 +132,3 @@ end
 # ontology_rank_path = File.join("logs", "ontology-rank.log")
 # ontology_rank_logger = Logger.new(ontology_rank_path)
 # NcboCron::Models::OntologyRank.new(ontology_rank_logger).run
-
-

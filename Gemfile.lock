@@ -50,7 +50,7 @@ GIT
 
 GIT
   remote: git://github.com/sifrproject/ontologies_linked_data.git
-  revision: 9b1ad9c1d770ee368fc3897b412a91fdead3c6f7
+  revision: 6b3ef087b35b94ee3766321efc1c1c3c7d62a12f
   branch: sifr_stage_metadata
   specs:
     ontologies_linked_data (0.0.1)

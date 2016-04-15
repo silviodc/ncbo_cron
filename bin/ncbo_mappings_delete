@@ -1,0 +1,100 @@
+#!/usr/bin/env ruby
+
+# Exit cleanly from an early interrupt
+Signal.trap("INT") { exit 1 }
+
+# Setup the bundled gems in our environment
+require 'bundler/setup'
+
+# Configure the process for the current cron configuration.
+require_relative '../lib/ncbo_cron'
+config_exists = File.exist?(File.expand_path('../../config/config.rb', __FILE__))
+abort("Please create a config/config.rb file using the config/config.rb.sample as a template") unless config_exists
+require_relative '../config/config';
+
+require 'optparse'
+options = {}
+opt_parser = OptionParser.new do |opts|
+  # Set a banner, displayed at the top of the help screen.
+  #opts.banner = "Usage: ncbo_ontology_process [options]"
+  opts.on('-o', '--ontologies ACRONYM[,ACRONYM,...]', 'Delete all mappings from/to this ontology acronym(s).') do |acronym|
+    options[:ontologies] = acronym.split(',')
+  end
+  opts.on('--delete-all', 'Delete ALL REST mapping of the BioPortal instance') do |d|
+    options[:delete_all] = true
+  end
+  options[:logfile] = "delete_mapping.log"
+  opts.on( '-l', '--logfile FILE', "Write log to FILE (default is 'delete_mapping.log')" ) do |filename|
+    options[:logfile] = filename
+  end
+  # Display the help screen, all programs are assumed to have this option.
+  opts.on( '-h', '--help', 'Display this screen' ) do
+    puts opts
+    exit
+  end
+end
+# Parse the command-line. The 'parse' method simply parses ARGV, while the 'parse!' method parses ARGV and removes
+# any options found there, as well as any parameters for the options.
+opt_parser.parse!
+
+
+#######################################################################################################################
+#
+# MAIN
+#
+
+logger = Logger.new(options[:logfile])
+puts "Processing details are logged to #{options[:logfile]}"
+
+if options[:delete_all]
+  puts "WARNING: you are going to delete ALL REST MAPPINGS from the Bioportal appliance."
+  puts "Type 'yes' to continue: "
+  $stdout.flush
+  confirm = $stdin.gets
+  abort("Aborting...\n\n") unless (confirm.strip == 'yes')
+
+  logger.info("DELETING ALL MAPPINGS")
+  # Go through all RestBackupMapping and delete all of them
+  LinkedData::Models::RestBackupMapping.all.each do |m|
+    backup = LinkedData::Models::RestBackupMapping.find(RDF::URI.new(m.id.to_s)).first
+    backup.delete
+  end
+  # Go through all MappingProcess and delete all of them
+  LinkedData::Models::MappingProcess.all.each do |m|
+    process = LinkedData::Models::MappingProcess.find(RDF::URI.new(m.id.to_s)).first
+    process.delete
+  end
+  # Go through all triples that link mappings to class to delete them (use of metadata/def/mappingRest predicate)
+  LinkedData::Mappings.delete_all_rest_mappings_from_sparql
+
+elsif options[:ontologies]
+  # Go through all REST mapping and delete only the one corresponding to the ontology acronyms
+  options[:ontologies].each do |acronym|
+    ont = LinkedData::Models::Ontology.find(acronym).first
+    if ont.nil?
+      msg = "Error, ontology not found: #{acronym}"
+      logger.error(msg)
+      puts msg
+      next
+    end
+    logger.info("DELETING #{acronym} MAPPINGS")
+    LinkedData::Models::RestBackupMapping.all.each do |m|
+      mapping_id = RDF::URI.new(m.id.to_s)
+      begin
+        backup = LinkedData::Models::RestBackupMapping.find(mapping_id).include(:class_urns).first
+        backup.class_urns.each do |urn|
+          if urn.split(":")[1] == acronym
+            logger.info("#{LinkedData::Mappings.delete_rest_mapping(mapping_id)} has been deleted")
+          end
+        end
+      rescue
+        logger.error("#{m.id.to_s} FAILED")
+        next
+      end
+    end
+  end
+else
+  puts opt_parser.help
+  exit(1)
+end
+

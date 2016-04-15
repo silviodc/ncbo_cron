@@ -50,8 +50,8 @@ GIT
 
 GIT
   remote: git://github.com/sifrproject/ontologies_linked_data.git
-  revision: afbec4eccf865ebe2ed458c7e3c975bce54ac4ca
-  branch: sifr_metadata
+  revision: 9b1ad9c1d770ee368fc3897b412a91fdead3c6f7
+  branch: sifr_stage_metadata
   specs:
     ontologies_linked_data (0.0.1)
       activesupport
@@ -204,7 +204,7 @@ GEM
     systemu (2.6.5)
     typhoeus (1.0.1)
       ethon (>= 0.8.0)
-    tzinfo (0.3.45)
+    tzinfo (0.3.46)
     unf (0.1.4)
       unf_ext
     unf_ext (0.0.7.2)

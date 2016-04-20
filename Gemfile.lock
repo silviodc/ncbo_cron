@@ -1,6 +1,6 @@
 GIT
   remote: git://github.com/ncbo/goo.git
-  revision: 26c6190f7b9c7438be4f2cd33ec6fd1a88fd70af
+  revision: 95b31daa186d5a99ad43c0ce94ca9213b9a553b5
   branch: staging
   specs:
     goo (0.0.2)
@@ -16,7 +16,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ncbo_annotator.git
-  revision: 7502be499910940313f4a4ca74f5f3ba61f0d451
+  revision: 78413d38972a8978358f201ccd5d52f6f809309a
   branch: staging
   specs:
     ncbo_annotator (0.0.1)
@@ -27,7 +27,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ontologies_linked_data.git
-  revision: a772b2a235b424e6b31b68667c961d55bb750b6c
+  revision: 0e38954bf84f8cb06318a37a491f70e3e5537d55
   branch: staging
   specs:
     ontologies_linked_data (0.0.1)
@@ -161,7 +161,7 @@ GEM
       redis
     multi_json (1.11.2)
     multipart-post (2.0.0)
-    mysql2 (0.4.3)
+    mysql2 (0.4.4)
     net-http-persistent (2.9.4)
     oj (2.15.0)
     os (0.9.6)
@@ -177,7 +177,7 @@ GEM
     rake (11.1.2)
     rdf (1.0.8)
       addressable (>= 2.2)
-    redis (3.2.2)
+    redis (3.3.0)
     ref (2.0.0)
     rest-client (1.6.7)
       mime-types (>= 1.16)

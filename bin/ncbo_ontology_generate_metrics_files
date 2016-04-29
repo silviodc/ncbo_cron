@@ -1,0 +1,63 @@
+#!/usr/bin/env ruby
+
+# Exit cleanly from an early interrupt
+Signal.trap("INT") { exit 1 }
+
+# Setup the bundled gems in our environment
+require 'bundler/setup'
+
+# Configure the process for the current cron configuration.
+require_relative '../lib/ncbo_cron'
+config_exists = File.exist?(File.expand_path('../../config/config.rb', __FILE__))
+abort("Please create a config/config.rb file using the config/config.rb.sample as a template") unless config_exists
+require_relative '../config/config'
+
+platform = "local"
+if LinkedData.settings.goo_host.include? "stage"
+  platform = "stage"
+elsif LinkedData.settings.goo_host.include? "prod"
+  platform = "prod"
+end
+puts "Running on #{platform} platform"
+
+includes = LinkedData::Models::OntologySubmission.goo_attrs_to_load
+includes << :submissionStatus unless includes.include?(:submissionStatus)
+submissions_query = LinkedData::Models::OntologySubmission.where(submissionStatus: [code: "RDF"])
+submissions = submissions_query.include(includes).to_a
+
+# Figure out latest parsed submissions using all submissions
+latest_submissions = {}
+
+submissions.each do |sub|
+  acronym = sub.ontology.acronym
+  latest_submissions[acronym] ||= sub
+  latest_submissions[acronym] = sub if sub.submissionId > latest_submissions[acronym].submissionId
+end
+
+latest_submissions.each do |acronym, sub|
+  if sub.hasOntologyLanguage.umls?
+    sub.generate_umls_metrics_file
+  else
+    metrics_id = RDF::URI.new(sub.id.to_s + "/metrics")
+    metrics = LinkedData::Models::Metric.find(metrics_id).first
+
+    binding.pry
+  end
+
+
+
+
+
+
+
+end
+
+
+
+
+
+
+
+
+puts "Num Sumbssions: #{submissions.length}"
+puts "Num Latest Submissions #{latest_submissions.length}"

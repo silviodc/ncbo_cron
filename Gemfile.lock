@@ -16,7 +16,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ncbo_annotator.git
-  revision: ca2ac37c62ce2408639ce7d61b2831a4e991e80a
+  revision: e39bc8d37cab27bac973d41a211594d9df3cffbd
   branch: staging
   specs:
     ncbo_annotator (0.0.1)
@@ -27,7 +27,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ontologies_linked_data.git
-  revision: 5c0b13c93076cc9434eead71afe0f4dea11a3613
+  revision: 29e9b7c5af8c24f292a9f03c6dd1c06a5f23bfee
   branch: staging
   specs:
     ontologies_linked_data (0.0.1)
@@ -159,7 +159,7 @@ GEM
     minitest (4.7.5)
     mlanett-redis-lock (0.2.7)
       redis
-    multi_json (1.11.2)
+    multi_json (1.11.3)
     multipart-post (2.0.0)
     mysql2 (0.4.4)
     net-http-persistent (2.9.4)

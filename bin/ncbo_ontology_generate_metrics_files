@@ -83,9 +83,20 @@ begin
       if sub.hasOntologyLanguage.umls?
         sub.generate_umls_metrics_file
         logger.info("Generated metrics file for submission #{sub.id.to_s} using UMLS TTL file")
+        logger.flush
       else
         metrics_id = RDF::URI.new(sub.id.to_s + "/metrics")
         metrics = LinkedData::Models::Metric.find(metrics_id).first
+
+        unless metrics
+          logger.info("No existing metrics found for submission #{sub.id.to_s}. Generating...")
+          logger.flush
+          NcboCron::Models::OntologySubmissionParser.new.process_submission(logger, sub.id.to_s,
+                                                                            {process_rdf: false, diff: false,
+                                                                             index_search: false, index_commit: false,
+                                                                             run_metrics: true, reasoning: false})
+          metrics = LinkedData::Models::Metric.find(metrics_id).first
+        end
 
         if metrics
           metrics.bring(:classes)
@@ -93,13 +104,15 @@ begin
           metrics.bring(:properties)
           sub.generate_metrics_file(metrics.classes, metrics.individuals, metrics.properties)
           logger.info("Generated metrics file for submission #{sub.id.to_s} using existing metrics")
+          logger.flush
         else
-          raise Exception.new("No existing metrics found")
+          raise Exception.new("No existing metrics found and an attempt at generating metrics failed.")
         end
       end
     rescue Exception => e
       msg = "Error generating metrics file for submission #{sub.id.to_s}: #{e.message}"
       logger.error(msg)
+      logger.flush
     end
   end
 rescue Exception => e

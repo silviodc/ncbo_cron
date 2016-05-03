@@ -55,7 +55,7 @@ opt_parser = OptionParser.new do |opts|
   #end
 
   options[:logfile] = STDOUT
-  opts.on( '-l', '--logfile FILE', "Write log to FILE (default is 'logs/indexing.log')" ) do |filename|
+  opts.on( '-l', '--logfile FILE', "Write log to FILE (default is STDOUT)" ) do |filename|
     options[:logfile] = filename
   end
 

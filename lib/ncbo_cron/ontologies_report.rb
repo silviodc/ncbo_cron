@@ -307,6 +307,9 @@ module NcboCron
         classes_size = 10
         good_classes = Array.new
         paging = LinkedData::Models::Class.in(submission).include(:prefLabel, :synonym).page(page_num, page_size)
+        cls_count = submission.class_count(@logger)
+        # prevent a COUNT SPARQL query if possible
+        paging.page_count_set(cls_count) if cls_count > -1
 
         begin
           page_classes = nil
@@ -315,7 +318,7 @@ module NcboCron
             page_classes = paging.page(page_num, page_size).all
           rescue Exception =>  e
             # some obscure error that happens intermittently
-            @logger.error("#{e.class}: #{e.message}")
+            @logger.error("Error during ontologies report paging - #{e.class}: #{e.message}")
             @logger.error("Sub: #{submission.id}")
             throw e
           end

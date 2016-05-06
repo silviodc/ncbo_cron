@@ -27,7 +27,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/ontologies_linked_data.git
-  revision: 3b21c0cae57bb52480dd3038188227e3e6d08663
+  revision: 790c894cbcb04c35d7fdee24f7035be95da2fad1
   branch: staging
   specs:
     ontologies_linked_data (0.0.1)
@@ -60,7 +60,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/sparql-client.git
-  revision: 41dab44973c3f086bf335c2513cc208144e99a74
+  revision: 190fa44c3b63907d11555f5c18a86493cb9722d0
   branch: staging
   specs:
     sparql-client (1.0.4.1)
@@ -106,7 +106,7 @@ GEM
     elasticsearch-transport (1.0.17)
       faraday
       multi_json
-    email_spec (2.0.0)
+    email_spec (2.1.0)
       htmlentities (~> 4.3.3)
       launchy (~> 2.1)
       mail (~> 2.6.3)

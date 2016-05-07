@@ -44,7 +44,7 @@ module NcboCron
         end
 
         submissions_query = submissions_query.filter(Goo::Filter.new(ontology: [:viewOf]).unbound) unless include_views
-        submissions = submissions_query.include(:submissionStatus, :submissionId, ontology: [:acronym]).to_a
+        submissions = submissions_query.include(:submissionStatus, :submissionId, ontology: [:acronym], metrics: :classes).to_a
         latest_submissions = {}
 
         submissions.each do |sub|

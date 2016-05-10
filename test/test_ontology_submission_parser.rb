@@ -151,4 +151,49 @@ class TestOntologySubmissionParser < TestCase
     assert zombies.first["/TEST-ONT-0/submissions/2"]
   end
 
+  def test_extract_metadata
+    parser = NcboCron::Models::OntologySubmissionParser.new
+    archived_submissions = []
+    not_archived_submissions = []
+
+    o1 = @@ontologies[0]
+    o1.bring(:submissions)
+    o1_sub1 = o1.submissions.select { |x| x.id.to_s["/submissions/1"]}.first
+    o1_sub1.bring(:submissionStatus)
+    o1_sub2 = o1.submissions.select { |x| x.id.to_s["/submissions/2"]}.first
+    o1_sub2.bring(:submissionStatus)
+
+    o2 = @@ontologies[1]
+    o2.bring(:submissions)
+    o2_sub1 = o2.submissions.select { |x| x.id.to_s["/submissions/1"]}.first
+    o2_sub1.bring(:submissionStatus)
+    o2_sub2 = o2.submissions.select { |x| x.id.to_s["/submissions/2"]}.first
+    o2_sub2.bring(:submissionStatus)
+
+    options_o1 = { :all => true, :params => { :homepage => "o1 homepage" }}
+
+    options_o2 = {
+        dummy_action: false, process_rdf: true, index_search: false, :diff => true,
+        dummy_metrics: true, run_metrics: false, process_annotator: true,
+        another_dummy_action: true, all: false, :params => { "homepage" => "o2 homepage" }
+    }
+
+    parser.queue_submission(o1_sub1, options_o1)
+    parser.queue_submission(o2_sub1, options_o2)
+
+    parser.process_queue_submissions
+
+    o1_sub1 = LinkedData::Models::OntologySubmission.find(RDF::IRI.new(o1_sub1.id)).first
+    o1_sub1.bring(:submissionStatus)
+
+    o2_sub1 = LinkedData::Models::OntologySubmission.find(RDF::IRI.new(o2_sub1.id)).first
+    o2_sub1.bring(:submissionStatus)
+
+    o1_sub1_statusCodes = LinkedData::Models::SubmissionStatus.get_status_codes(o1_sub1.submissionStatus)
+    o2_sub1_statusCodes = LinkedData::Models::SubmissionStatus.get_status_codes(o2_sub1.submissionStatus)
+
+    assert_equal [], ["UPLOADED", "RDF", "RDF_LABELS", "INDEXED"] - o1_sub1_statusCodes
+    assert_equal [], ["UPLOADED", "RDF", "RDF_LABELS", "ANNOTATOR"] - o2_sub1_statusCodes
+  end
+
 end

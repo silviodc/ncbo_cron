@@ -13,17 +13,25 @@ module NcboCron
         :index_search => true,
         :run_metrics => true,
         :process_annotator => true,
-        :diff => true
+        :diff => true,
+        :params => nil
       }
 
       def initialize()
       end
 
+      # Add a submission in the queue
       def queue_submission(submission, actions={:all => true})
         redis = Redis.new(:host => NcboCron.settings.redis_host, :port => NcboCron.settings.redis_port)
-
         if (actions[:all])
-          actions = ACTIONS.dup
+          if !actions[:params].nil?
+            # Retrieve params added by the user
+            user_params = actions[:params].dup
+            actions = ACTIONS.dup
+            actions[:params] = user_params.dup
+          else
+            actions = ACTIONS.dup
+          end
         else
           actions.delete_if {|k, v| !ACTIONS.has_key?(k)}
         end
@@ -31,6 +39,7 @@ module NcboCron
         redis.hset(QUEUE_HOLDER, get_prefixed_id(submission.id), actionStr) unless actions.empty?
       end
 
+      # Process submissions waiting in the queue
       def process_queue_submissions(options = {})
         logger = options[:logger]
         logger ||= Kernel.const_defined?("LOGGER") ? Kernel.const_get("LOGGER") : Logger.new(STDOUT)

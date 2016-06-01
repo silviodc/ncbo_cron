@@ -40,7 +40,7 @@ GIT
 
 GIT
   remote: git://github.com/ncbo/sparql-client.git
-  revision: 962e5af6615045a437d79fe27a7301df69d31012
+  revision: 5c3bbd2c9d28d1c2f3efcc8c26de969c2fd4a433
   branch: master
   specs:
     sparql-client (1.0.4.1)
@@ -50,7 +50,7 @@ GIT
 
 GIT
   remote: git://github.com/sifrproject/ontologies_linked_data.git
-  revision: afbec4eccf865ebe2ed458c7e3c975bce54ac4ca
+  revision: 7e148f7df8c9f52fde749e6ad02207074f9f9f09
   branch: sifr_metadata
   specs:
     ontologies_linked_data (0.0.1)
@@ -234,4 +234,4 @@ DEPENDENCIES
   sys-proctable
 
 BUNDLED WITH
-   1.11.2
+   1.12.3

@@ -326,7 +326,10 @@ runner.execute do |opts|
         logger.info "Starting ontology analytics refresh"; logger.flush
         logger.info "Logging ontology analytics refresh details to #{ontology_analytics_log_path}"; logger.flush
         t0 = Time.now
+        # Generate ontology analytics
         NcboCron::Models::OntologyAnalytics.new(ontology_analytics_logger).run
+        # Generate ontology ranking
+        NcboCron::Models::OntologyRank.new(ontology_analytics_logger).run
         logger.info "Ontology analytics refresh job completed in #{Time.now - t0} sec."; logger.flush
         logger.info "Finished ontology analytics refresh"; logger.flush
       end

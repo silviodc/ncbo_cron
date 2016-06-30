@@ -1,4 +1,15 @@
 GIT
+  remote: git://github.com/agroportal/ncbo_annotator.git
+  revision: c045e6e90a008f3df60750d93b6f845507798082
+  branch: hack-14
+  specs:
+    ncbo_annotator (0.0.1)
+      goo
+      ontologies_linked_data
+      redis
+      ruby-xxHash
+
+GIT
   remote: git://github.com/ncbo/goo.git
   revision: 1ed644e3b969d9edfa71caab861900135dc86fee
   branch: master
@@ -13,17 +24,6 @@ GIT
       sparql-client
       systemu
       uuid
-
-GIT
-  remote: git://github.com/ncbo/ncbo_annotator.git
-  revision: 6689cf7f170dc32c7f5844053a8fe2044688bec3
-  branch: hack-14
-  specs:
-    ncbo_annotator (0.0.1)
-      goo
-      ontologies_linked_data
-      redis
-      ruby-xxHash
 
 GIT
   remote: git://github.com/ncbo/ontologies_linked_data.git
